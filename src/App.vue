@@ -1,26 +1,32 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div>
+    <Menu :loggedIn="loggedIn"/>
+    <div>
+      <router-view/>
+    </div>
+  </div>
+  <!--fa :icon="['fab', 'youtube']" /-->
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import './assets/tailwind.css'
+import Menu from './components/Menu.vue'
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
+
+name: 'App',
+components: {
+  Menu
+},
+computed: {
+  loggedIn() {
+    return this.$store.state.auth.status.loggedIn;
+  },
+},
+created() {
+  if (this.loggedIn) {
+    this.$router.push("/dashboard");
   }
+},
 }
 </script>
-
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
