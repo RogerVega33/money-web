@@ -12,7 +12,7 @@ const endpoints = {
 
 class TransactionService {
     async getTransactions(walletId, year, month){
-        return await axios.get(`${endpoints.transaction.get}?walletId=${walletId}&year=${year}&month=${month}`, { headers: authHeader() })
+        return await axios.get(`${endpoints.transaction.get}?walletId=${walletId}&year=${year}${month?'&month='+month:''}`, { headers: authHeader() })
     }
 }
 

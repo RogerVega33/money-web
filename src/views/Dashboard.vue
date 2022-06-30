@@ -38,7 +38,15 @@
             <div class="flow-root">
               <div>
                 <label>Fecha</label>
-                <Datepicker v-model="month" monthPicker autoApply />
+                <Datepicker v-model="month" monthPicker autoApply v-if="!showTransactionsByYear"/>
+                <Datepicker v-model="month.year" yearPicker autoApply v-else/>
+              </div>
+              <div class="mt-4">
+                <label for="checked-toggle-year" class="relative inline-flex items-center mb-4 cursor-pointer">
+                  <input type="checkbox" value="" id="checked-toggle-year" class="sr-only peer" v-model="showTransactionsByYear">
+                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+                  <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Buscar por año</span>
+                </label>
               </div>
               <div class="mt-4">
                 <label for="checked-toggle" class="relative inline-flex items-center mb-4 cursor-pointer">
@@ -122,7 +130,7 @@
                       <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
                         <div class="flex-1 min-w-0">
                           <p class="text-sm truncate">
-                            {{transaction.detail || 'Sin detalle'}}
+                            <span class="font-bold">{{getTransactionDate(transaction.date)}}</span> | {{transaction.detail || 'Sin detalle'}}
                           </p>
                         </div>
                         <div class="inline-flex items-center text-sm" :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
@@ -178,6 +186,7 @@ import WalletService from "../services/wallet.service";
 import TransactionService from "../services/transaction.service";
 import { ref } from 'vue';
 import BarChart from '../components/BarChart'
+import moment from 'moment'
 
 export default {
   name: 'Dashboard',
@@ -194,6 +203,7 @@ export default {
     const showTransactionsByCategory = ref(true);
     const chartLabels = ref([]);
     const chartData = ref([]);
+    const showTransactionsByYear = ref(false);
     return {
       month,
       wallets,
@@ -201,6 +211,7 @@ export default {
       transactionsByCategory,
       selectedWallet,
       showTransactionsByCategory,
+      showTransactionsByYear,
       chartLabels,
       chartData
     }
@@ -220,7 +231,9 @@ export default {
         this.getTransactions(this.selectedWallet.id, this.month.year, this.month.month+1)
     },
     getTransactions(walletId, year, month){
-      TransactionService.getTransactions(walletId, year, month).then(
+      let monthSelected = month;
+      if(this.showTransactionsByYear) monthSelected = null;
+      TransactionService.getTransactions(walletId, year, monthSelected).then(
         (response) => {
           this.transactions = response.data.body;
         }
@@ -258,6 +271,9 @@ export default {
     },
     showDetail(category){
       category.showDetail = !category.showDetail;
+    },
+    getTransactionDate(transactionDate){
+      return moment(String(transactionDate)).format('MM')
     }
   },
   mounted() {
@@ -271,6 +287,9 @@ export default {
   },
   watch: {
     month(){
+      this.changeDate()
+    },
+    showTransactionsByYear(){
       this.changeDate()
     },
     transactions(){
