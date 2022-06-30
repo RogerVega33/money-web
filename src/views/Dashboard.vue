@@ -102,9 +102,13 @@
           <div class="flex justify-between items-center mb-4">
             <h5 class="text-xl font-bold leading-none text-gray-900">Transacciones {{showTransactionsByCategory? 'x categoría' : ''}}</h5>
           </div>
+          <div>
+            <input type="text" v-model="transactionFilter"
+                   class="w-full rounded text-gray-700 mr-3 py-1 px-2 leading-tight">
+          </div>
           <div v-if="showTransactionsByCategory" class="flow-root">
             <ul role="list" class="divide-y divide-gray-200">
-              <li class="py-3 sm:py-4" v-for="category in transactionsByCategory" :key="category.categoryName" @click="showDetail(category)">
+              <li class="py-3 sm:py-4" v-for="category in transactionsByCategory" :key="category.categoryName+category.total" @click="showDetail(category)">
                 <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 text-left w-full">
                   <div class="flex-shrink-0">
                     <fa icon="sack-dollar" class="text-green-700 h-8" />
@@ -198,22 +202,26 @@ export default {
     });
     const wallets = ref([]);
     const transactions = ref([]);
+    const transactionsTemp = ref([]);
     const selectedWallet = ref([]);
     const transactionsByCategory = ref([]);
     const showTransactionsByCategory = ref(true);
     const chartLabels = ref([]);
     const chartData = ref([]);
     const showTransactionsByYear = ref(false);
+    const transactionFilter = ref("");
     return {
       month,
       wallets,
       transactions,
+      transactionsTemp,
       transactionsByCategory,
       selectedWallet,
       showTransactionsByCategory,
       showTransactionsByYear,
       chartLabels,
-      chartData
+      chartData,
+      transactionFilter,
     }
   },
   computed: {
@@ -231,15 +239,18 @@ export default {
         this.getTransactions(this.selectedWallet.id, this.month.year, this.month.month+1)
     },
     getTransactions(walletId, year, month){
+      this.transactionFilter = "";
       let monthSelected = month;
       if(this.showTransactionsByYear) monthSelected = null;
       TransactionService.getTransactions(walletId, year, monthSelected).then(
         (response) => {
           this.transactions = response.data.body;
+          this.transactionsTemp = [...response.data.body.transactions];
         }
       ).catch(() => {
-        this.transactions = []
-      })
+        this.transactions = [];
+        this.transactionsTemp = [];
+      });
     },
     groupBy(key){
       let result = [];
@@ -274,6 +285,14 @@ export default {
     },
     getTransactionDate(transactionDate){
       return moment(String(transactionDate)).format('MM')
+    },
+    filterTransactions(){
+      const val = this.transactionFilter.toLowerCase();
+      this.transactions.transactions = this.transactionsTemp.filter(function (t) {
+        let data1 = t.detail? t.detail.toLowerCase() : '';
+        let data2 = t.categoryName? t.categoryName.toLowerCase() : '';
+        return data1.indexOf(val) !== -1 || data2.indexOf(val) !== -1 || !val;
+      });
     }
   },
   mounted() {
@@ -286,14 +305,23 @@ export default {
     })
   },
   watch: {
-    month(){
-      this.changeDate()
+    month: {
+      handler() {
+        this.changeDate();
+      },
+      deep: true
     },
     showTransactionsByYear(){
       this.changeDate()
     },
-    transactions(){
-      this.transactionsByCategory = this.groupBy('categoryName')
+    transactions: {
+      handler() {
+        this.transactionsByCategory = this.groupBy('categoryName');
+      },
+      deep: true
+    },
+    transactionFilter(){
+      this.filterTransactions();
     }
   }
 };
