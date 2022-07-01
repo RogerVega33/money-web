@@ -1,24 +1,29 @@
-# money-web
+# Money app Frontend
 
-## Project setup
+Money app te ayuda a llevar un registro de tus gastos
+
+## Installation
+
+### Node
+Ejecutar:
+
 ```
 npm install
-```
-
-### Compiles and hot-reloads for development
-```
 npm run serve
 ```
+### Docker compose
+Editar las variables de entorno en el archivo .env.
 
-### Compiles and minifies for production
-```
-npm run build
-```
+Ejecutar:
 
-### Lints and fixes files
-```
-npm run lint
+```bash
+docker-compose up
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### Docker
+Ejecutar:
+
+```bash
+sudo docker build -t money-app-web .
+sudo docker run --publish 80:80  money-app-web
+```
