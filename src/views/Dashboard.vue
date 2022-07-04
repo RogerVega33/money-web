@@ -1,37 +1,38 @@
 <template>
-  <div class="container mx-auto flex flex-col lg:flex-row">
-    <div class="lg:basis-1/3">
-      <div class="flex flex-col w-full">
-        <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
-          <div class="flex justify-between items-center mb-4">
-            <h5 class="text-xl font-bold leading-none text-gray-900">Billeteras</h5>
+  <div class="dashboard">
+    <div class="container mx-auto flex flex-col lg:flex-row">
+      <div class="lg:basis-1/3">
+        <div class="flex flex-col w-full">
+          <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
+            <div class="flex justify-between items-center mb-4">
+              <h5 class="text-xl font-bold leading-none text-gray-900">Billeteras</h5>
+            </div>
+            <div class="flow-root">
+              <ul role="list" class="divide-y divide-gray-200">
+                <li class="py-3 sm:py-4" v-for="wallet in wallets" :key="wallet.id">
+                  <div @click="selectWallet(wallet)"
+                       :class="{ 'text-blue-700': selectedWallet.id === wallet.id }"
+                       class="flex items-center space-x-4 text-gray-900 hover:text-blue-500 cursor-pointer">
+                    <div class="flex-shrink-0">
+                      <fa icon="sack-dollar" class="text-green-700 h-8" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium truncate">
+                        {{wallet.name}}
+                      </p>
+                      <p class="text-sm truncate" v-if="currentUser">
+                        {{currentUser.name}}
+                      </p>
+                    </div>
+                    <div class="inline-flex items-center text-base font-semibold">
+                      {{wallet.total}} $
+                    </div>
+                  </div>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div class="flow-root">
-            <ul role="list" class="divide-y divide-gray-200">
-              <li class="py-3 sm:py-4" v-for="wallet in wallets" :key="wallet.id">
-                <div @click="selectWallet(wallet)"
-                     :class="{ 'text-blue-700': selectedWallet.id === wallet.id }"
-                     class="flex items-center space-x-4 text-gray-900 hover:text-blue-500 cursor-pointer">
-                  <div class="flex-shrink-0">
-                    <fa icon="sack-dollar" class="text-green-700 h-8" />
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium truncate">
-                      {{wallet.name}}
-                    </p>
-                    <p class="text-sm truncate" v-if="currentUser">
-                      {{currentUser.name}}
-                    </p>
-                  </div>
-                  <div class="inline-flex items-center text-base font-semibold">
-                    {{wallet.total}} $
-                  </div>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div class="w-full mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
+          <div class="w-full mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
             <div class="flex justify-between items-center mb-4">
               <h5 class="text-xl font-bold leading-none text-gray-900">Configuración</h5>
             </div>
@@ -61,141 +62,141 @@
               </div>
             </div>
           </div>
+        </div>
       </div>
-    </div>
 
-    <div class="lg:basis-1/3">
-      <div class="flex flex-col w-full">
-        <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
-          <div class="flex justify-between items-center mb-4">
-            <h5 class="text-xl font-bold leading-none text-gray-900">Resumen</h5>
-          </div>
-          <div class="flow-root">
-            <div class="flex space-x-4 text-gray-900">
-              <div class="font-medium w-full">
-                <div class="flex flex-row" v-if="selectedWallet && dateRangePicked === 'all'">
-                  <div class="basis-1/2">
-                    Monto inicial
+      <div class="lg:basis-1/3">
+        <div class="flex flex-col w-full">
+          <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
+            <div class="flex justify-between items-center mb-4">
+              <h5 class="text-xl font-bold leading-none text-gray-900">Resumen</h5>
+            </div>
+            <div class="flow-root">
+              <div class="flex space-x-4 text-gray-900">
+                <div class="font-medium w-full">
+                  <div class="flex flex-row" v-if="selectedWallet && dateRangePicked === 'all'">
+                    <div class="basis-1/2">
+                      Monto inicial
+                    </div>
+                    <div class="basis-1/2 text-right">
+                      {{selectedWallet.startingAmount || '0.0'}} $
+                    </div>
                   </div>
-                  <div class="basis-1/2 text-right">
-                    {{selectedWallet.startingAmount || '0.0'}} $
+                  <div class="flex flex-row">
+                    <div class="basis-1/2">
+                      Ingresos
+                    </div>
+                    <div class="basis-1/2 text-right">
+                      {{transactions.totalIncome || '0.0'}} $
+                    </div>
                   </div>
-                </div>
-                <div class="flex flex-row">
-                  <div class="basis-1/2">
-                    Ingresos
+                  <div class="flex flex-row">
+                    <div class="basis-1/2">
+                      Gastos
+                    </div>
+                    <div class="basis-1/2 text-right">
+                      {{transactions.totalExpense || '0.0'}} $
+                    </div>
                   </div>
-                  <div class="basis-1/2 text-right">
-                    {{transactions.totalIncome || '0.0'}} $
-                  </div>
-                </div>
-                <div class="flex flex-row">
-                  <div class="basis-1/2">
-                    Gastos
-                  </div>
-                  <div class="basis-1/2 text-right">
-                    {{transactions.totalExpense || '0.0'}} $
-                  </div>
-                </div>
-                <hr/>
-                <div class="flex flex-row">
-                  <div class="basis-1/2">
-                    Ahorro
-                  </div>
-                  <div class="basis-1/2 text-right">
-                    {{totalSavings}} $
+                  <hr/>
+                  <div class="flex flex-row">
+                    <div class="basis-1/2">
+                      Ahorro
+                    </div>
+                    <div class="basis-1/2 text-right">
+                      {{totalSavings}} $
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-        <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
-          <div class="flex justify-between items-center mb-4">
-            <h5 class="text-xl font-bold leading-none text-gray-900">Transacciones {{showTransactionsByCategory? 'x categoría' : ''}}</h5>
-          </div>
-          <div>
-            <input type="text" v-model="transactionFilter"
-                   class="w-full rounded text-gray-700 mr-3 py-1 px-2 leading-tight">
-          </div>
-          <div v-if="showTransactionsByCategory" class="flow-root">
-            <ul role="list" class="divide-y divide-gray-200">
-              <li class="py-3 sm:py-4" v-for="category in transactionsByCategory" :key="category.categoryName+category.total" @click="showDetail(category)">
-                <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 text-left w-full">
-                  <div class="flex-shrink-0">
-                    <fa icon="sack-dollar" class="text-green-700 h-8" />
+          <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
+            <div class="flex justify-between items-center mb-4">
+              <h5 class="text-xl font-bold leading-none text-gray-900">Transacciones {{showTransactionsByCategory? 'x categoría' : ''}}</h5>
+            </div>
+            <div>
+              <input type="text" v-model="transactionFilter"
+                     class="w-full rounded text-gray-700 mr-3 py-1 px-2 leading-tight">
+            </div>
+            <div v-if="showTransactionsByCategory" class="flow-root">
+              <ul role="list" class="divide-y divide-gray-200">
+                <li class="py-3 sm:py-4" v-for="category in transactionsByCategory" :key="category.categoryName+category.total" @click="showDetail(category)">
+                  <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 text-left w-full">
+                    <div class="flex-shrink-0">
+                      <fa icon="sack-dollar" class="text-green-700 h-8" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium truncate">
+                        {{category.categoryName}}
+                      </p>
+                      <p class="text-sm truncate">
+                        {{category.transactions.length}} transacciones
+                      </p>
+                    </div>
+                    <div class="inline-flex items-center text-base font-semibold" :class="category.type === 'expense'?'text-red-500':'text-green-500'">
+                      {{category.type === 'expense'? '-' : '+'}}{{category.total.toFixed(2)}} $
+                    </div>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium truncate">
-                      {{category.categoryName}}
-                    </p>
-                    <p class="text-sm truncate">
-                      {{category.transactions.length}} transacciones
-                    </p>
-                  </div>
-                  <div class="inline-flex items-center text-base font-semibold" :class="category.type === 'expense'?'text-red-500':'text-green-500'">
-                    {{category.type === 'expense'? '-' : '+'}}{{category.total.toFixed(2)}} $
-                  </div>
-                </div>
-                <div v-show="category.showDetail">
-                  <div class="flex justify-between items-center mt-5">
-                    <span class="font-medium text-gray-900">Detalle</span>
-                  </div>
-                  <ul role="list" class="divide-y divide-gray-200">
-                    <li class="py-3 sm:py-4" v-for="transaction in category.transactions" :key="transaction.id">
-                      <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
-                        <div class="flex-1 min-w-0">
-                          <p class="text-sm truncate">
-                            <span class="font-bold">{{getTransactionDate(transaction.date)}}</span> | {{transaction.detail || 'Sin detalle'}}
-                          </p>
+                  <div v-show="category.showDetail">
+                    <div class="flex justify-between items-center mt-5">
+                      <span class="font-medium text-gray-900">Detalle</span>
+                    </div>
+                    <ul role="list" class="divide-y divide-gray-200">
+                      <li class="py-3 sm:py-4" v-for="transaction in category.transactions" :key="transaction.id">
+                        <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
+                          <div class="flex-1 min-w-0">
+                            <p class="text-sm truncate">
+                              <span class="font-bold">{{getTransactionDate(transaction.date)}}</span> | {{transaction.detail || 'Sin detalle'}}
+                            </p>
+                          </div>
+                          <div class="inline-flex items-center text-sm" :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
+                            {{transaction.type === 'expense'? '-' : '+'}}{{transaction.amount.toFixed(2)}} $
+                          </div>
                         </div>
-                        <div class="inline-flex items-center text-sm" :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
-                          {{transaction.type === 'expense'? '-' : '+'}}{{transaction.amount.toFixed(2)}} $
-                        </div>
-                      </div>
-                    </li>
-                  </ul>
-                </div>
-              </li>
-            </ul>
-          </div>
-          <div v-else class="flow-root">
-            <ul role="list" class="divide-y divide-gray-200">
-              <li class="py-3 sm:py-4" v-for="transaction in transactions.transactions" :key="transaction.id">
-                <div
-                        class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
-                  <div class="flex-shrink-0">
-                    <fa icon="sack-dollar" class="text-green-700 h-8" />
+                      </li>
+                    </ul>
                   </div>
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium truncate">
-                      {{transaction.categoryName}}
-                    </p>
-                    <p class="text-sm truncate">
-                      {{transaction.detail}}
-                    </p>
+                </li>
+              </ul>
+            </div>
+            <div v-else class="flow-root">
+              <ul role="list" class="divide-y divide-gray-200">
+                <li class="py-3 sm:py-4" v-for="transaction in transactions.transactions" :key="transaction.id">
+                  <div
+                          class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
+                    <div class="flex-shrink-0">
+                      <fa icon="sack-dollar" class="text-green-700 h-8" />
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-sm font-medium truncate">
+                        {{transaction.categoryName}}
+                      </p>
+                      <p class="text-sm truncate">
+                        {{transaction.detail}}
+                      </p>
+                    </div>
+                    <div class="inline-flex items-center text-base font-semibold" :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
+                      {{transaction.type === 'expense'? '-' : '+'}}{{transaction.amount.toFixed(2)}} $
+                    </div>
                   </div>
-                  <div class="inline-flex items-center text-base font-semibold" :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
-                    {{transaction.type === 'expense'? '-' : '+'}}{{transaction.amount.toFixed(2)}} $
-                  </div>
-                </div>
-              </li>
-            </ul>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="lg:basis-1/3" v-if="chartLabels.length && chartData.length">
-      <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
-        <div class="flex justify-between items-center mb-4">
-          <h5 class="text-xl font-bold leading-none text-gray-900">Gastos</h5>
+      <div class="lg:basis-1/3" v-if="chartLabels.length && chartData.length">
+        <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
+          <div class="flex justify-between items-center mb-4">
+            <h5 class="text-xl font-bold leading-none text-gray-900">Gastos</h5>
+          </div>
+          <BarChart :labels="chartLabels" :data="chartData" title="Gastos"/>
         </div>
-        <BarChart :labels="chartLabels" :data="chartData" title="Gastos"/>
       </div>
     </div>
   </div>
-
 </template>
 <script>
 import WalletService from "../services/wallet.service";

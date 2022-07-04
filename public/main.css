@@ -1,0 +1,4 @@
+.dashboard, .home, .login{
+    min-height: 100vh;
+    background-image: linear-gradient(to right bottom, #4dc294, #32c07e, #17bd63, #00b943, #00b40f);
+}

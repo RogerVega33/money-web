@@ -1,5 +1,5 @@
 <template>
-    <div id="menu" class="bg-green-100 p-7">
+    <div id="menu" class="bg-green-100 p-2">
         <nav class="container mx-auto">
             <div class="flex flex-wrap justify-between items-center mx-auto">
                 <router-link to="/">
