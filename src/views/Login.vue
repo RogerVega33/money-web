@@ -7,7 +7,7 @@
             Usuario
           </label>
           <input id="username" type="text" v-model="state.user.username" :class="{ 'border-red-500': v$.user.username.$error }"
-                 class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" required>
+                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
           <p v-if="v$.user.username.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.username.$errors[0].$message}}</p>
         </div>
         <div class="mt-4">
@@ -15,15 +15,15 @@
             Contraseña
           </label>
           <input id="password" type="password" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
-                 class="shadow appearance-none border rounded w-full py-2 px-3 text-grey-darker" required>
+                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
           <p v-if="v$.user.password.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.password.$errors[0].$message}}</p>
         </div>
         <div class="mt-6">
           <button type="button" @click="login" :disabled="!state.user.username || !state.user.username"
-                  class="text-white font-bold py-2 px-4 rounded w-full"
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full"
                   :class="{'bg-blue-400': !state.user.username || !state.user.password,
                   'bg-blue-500 hover:bg-blue-600': state.user.username && state.user.password}">
-            Log In
+            Iniciar sesión
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
         </div>
