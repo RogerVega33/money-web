@@ -37,16 +37,20 @@
             </div>
             <div class="flow-root">
               <div>
-                <label>Fecha</label>
-                <Datepicker v-model="month" monthPicker autoApply v-if="!showTransactionsByYear"/>
-                <Datepicker v-model="month.year" yearPicker autoApply v-else/>
+                <label>Buscar por:</label>
+                <br>
+                <input type="radio" id="month" value="month" v-model="dateRangePicked">
+                <label for="month"> Mes</label>
+                <br>
+                <input type="radio" id="year" value="year" v-model="dateRangePicked">
+                <label for="year"> Año</label>
+                <br>
+                <input type="radio" id="all" value="all" v-model="dateRangePicked">
+                <label for="all"> Histórico</label>
               </div>
-              <div class="mt-4">
-                <label for="checked-toggle-year" class="relative inline-flex items-center mb-4 cursor-pointer">
-                  <input type="checkbox" value="" id="checked-toggle-year" class="sr-only peer" v-model="showTransactionsByYear">
-                  <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
-                  <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Buscar por año</span>
-                </label>
+              <div v-if="dateRangePicked !== 'all'" class="mt-2">
+                <Datepicker v-model="month" monthPicker autoApply v-if="dateRangePicked === 'month'"/>
+                <Datepicker v-model="month.year" yearPicker autoApply v-if="dateRangePicked === 'year'"/>
               </div>
               <div class="mt-4">
                 <label for="checked-toggle" class="relative inline-flex items-center mb-4 cursor-pointer">
@@ -69,6 +73,14 @@
           <div class="flow-root">
             <div class="flex space-x-4 text-gray-900">
               <div class="font-medium w-full">
+                <div class="flex flex-row" v-if="selectedWallet && dateRangePicked === 'all'">
+                  <div class="basis-1/2">
+                    Monto inicial
+                  </div>
+                  <div class="basis-1/2 text-right">
+                    {{selectedWallet.startingAmount || '0.0'}} $
+                  </div>
+                </div>
                 <div class="flex flex-row">
                   <div class="basis-1/2">
                     Ingresos
@@ -91,7 +103,7 @@
                     Ahorro
                   </div>
                   <div class="basis-1/2 text-right">
-                    {{transactions.savings || '0.0'}} $
+                    {{totalSavings}} $
                   </div>
                 </div>
               </div>
@@ -208,8 +220,8 @@ export default {
     const showTransactionsByCategory = ref(true);
     const chartLabels = ref([]);
     const chartData = ref([]);
-    const showTransactionsByYear = ref(false);
     const transactionFilter = ref("");
+    const dateRangePicked = ref("month");
     return {
       month,
       wallets,
@@ -218,16 +230,24 @@ export default {
       transactionsByCategory,
       selectedWallet,
       showTransactionsByCategory,
-      showTransactionsByYear,
       chartLabels,
       chartData,
       transactionFilter,
+      dateRangePicked,
     }
   },
   computed: {
     currentUser(){
       return this.$store.state.auth.user;
     },
+    totalSavings(){
+      if(this.transactions.savings && this.selectedWallet.startingAmount){
+        if(this.dateRangePicked === 'all')
+          return (+this.transactions.savings + +this.selectedWallet.startingAmount).toFixed(2);
+        return (+this.transactions.savings).toFixed(2);
+      }
+      return (0).toFixed(2);
+    }
   },
   methods: {
     selectWallet(wallet){
@@ -241,8 +261,11 @@ export default {
     getTransactions(walletId, year, month){
       this.transactionFilter = "";
       let monthSelected = month;
-      if(this.showTransactionsByYear) monthSelected = null;
-      TransactionService.getTransactions(walletId, year, monthSelected).then(
+      let yearSelected = year;
+      if(this.dateRangePicked === 'year' || this.dateRangePicked === 'all') monthSelected = null;
+      if(this.dateRangePicked === 'all') yearSelected = null;
+
+      TransactionService.getTransactions(walletId, yearSelected, monthSelected).then(
         (response) => {
           this.transactions = response.data.body;
           this.transactionsTemp = [...response.data.body.transactions];
@@ -284,7 +307,7 @@ export default {
       category.showDetail = !category.showDetail;
     },
     getTransactionDate(transactionDate){
-      return moment(String(transactionDate)).format('MM')
+      return moment(String(transactionDate)).format('MM/YY')
     },
     filterTransactions(){
       const val = this.transactionFilter.toLowerCase();
@@ -311,7 +334,7 @@ export default {
       },
       deep: true
     },
-    showTransactionsByYear(){
+    dateRangePicked(){
       this.changeDate()
     },
     transactions: {
