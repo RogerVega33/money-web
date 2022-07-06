@@ -6,7 +6,8 @@ const baseURL = 'http://192.168.1.148:3000';
 
 const endpoints = {
     wallet: {
-        get: `${baseURL}/api/wallet`
+        get: `${baseURL}/api/wallet`,
+        save: `${baseURL}/api/wallet`,
     }
 };
 
@@ -14,6 +15,14 @@ const endpoints = {
 class WalletService {
     async getWallets(){
         return await axios.get(endpoints.wallet.get, { headers: authHeader() }).catch(function (e) {
+            const error = e.toJSON();
+            if(error.status === 403) AuthService.logout();
+            else throw error;
+        });
+    }
+
+    async saveWallet(wallet){
+        return await axios.post(endpoints.wallet.save, wallet, { headers: authHeader() }).catch(function (e) {
             const error = e.toJSON();
             if(error.status === 403) AuthService.logout();
             else throw error;

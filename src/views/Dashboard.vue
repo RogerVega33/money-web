@@ -4,24 +4,29 @@
 
       <div class="lg:basis-1/3">
         <div class="flex flex-col w-full">
-          <Wallet :wallets="wallets" @select-wallet="selectWallet" />
-          <SearchSettings @change-search-settings="changeSearchSettings"/>
+          <Wallet :wallets="wallets" :show-form-new-wallet="showFormNewWallet" @select-wallet="selectWallet" @add-wallet="addWallet"/>
+          <SearchSettings v-if="selectedWallet && !showFormNewWallet" @change-search-settings="changeSearchSettings"/>
         </div>
       </div>
 
       <div class="lg:basis-1/3">
         <div class="flex flex-col w-full">
-          <Summary :selected-wallet="selectedWallet"
+          <Summary v-if="selectedWallet && !showFormNewWallet"
+                   :selected-wallet="selectedWallet"
                    :transactions="transactions"
                    :show-starting-amount="searchSettings.dateRangePicked === 'all'"/>
-          <BarChart :labels="chartLabels"
+          <BarChart v-if="selectedWallet && !showFormNewWallet"
+                    :labels="chartLabels"
+                    :selected-wallet="selectedWallet"
                     :data="chartData"
                     title="Gastos"/>
+          <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
         </div>
       </div>
 
       <div class="lg:basis-1/3">
-        <Transactions :search-settings="searchSettings"
+        <Transactions v-if="selectedWallet && !showFormNewWallet"
+                      :search-settings="searchSettings"
                       :transactions-by-category="transactionsByCategory"
                       :transactions="transactions"
                       @update-transaction-filter="updateTransactionFilter"/>
@@ -39,19 +44,21 @@ import Wallet from '../components/Wallet'
 import SearchSettings from '../components/SearchSettings'
 import Summary from '../components/Summary'
 import Transactions from "../components/Transactions";
+import NewWallet from "../components/NewWallet";
 
 export default {
   name: 'Dashboard',
-  components: {Transactions, BarChart, Wallet, SearchSettings, Summary },
+  components: {Transactions, BarChart, Wallet, SearchSettings, Summary, NewWallet },
   setup() {
     const wallets = ref([]);
     const transactions = ref([]);
     const transactionsTemp = ref([]);
-    const selectedWallet = ref([]);
+    const selectedWallet = ref();
     const transactionsByCategory = ref([]);
     const chartLabels = ref([]);
     const chartData = ref([]);
     const transactionFilter = ref("");
+    const showFormNewWallet = ref(false);
     const searchSettings = ref({
       dateSelected: {
         month: new Date().getMonth(),
@@ -70,6 +77,7 @@ export default {
       chartData,
       transactionFilter,
       searchSettings,
+      showFormNewWallet,
     }
   },
   computed: {
@@ -78,6 +86,15 @@ export default {
     },
   },
   methods: {
+    async getWallets(){
+      await WalletService.getWallets().then(
+          (response) => {
+              this.wallets = response.data.body;
+          }
+      ).catch(() => {
+          this.wallets = []
+      })
+    },
     selectWallet(wallet){
       this.selectedWallet = wallet;
       this.getTransactions(this.selectedWallet.id, this.searchSettings.dateSelected.year, this.searchSettings.dateSelected.month+1)
@@ -91,6 +108,13 @@ export default {
     },
     updateTransactionFilter(transactionFilter){
       this.transactionFilter = transactionFilter;
+    },
+    addWallet(value){
+      this.showFormNewWallet = value;
+    },
+    walletSaved(value){
+      if(value) this.getWallets();
+      this.showFormNewWallet = false;
     },
     getTransactions(walletId, year, month){
       this.transactionFilter = "";
@@ -147,13 +171,7 @@ export default {
     }
   },
   mounted() {
-    WalletService.getWallets().then(
-      (response) => {
-        this.wallets = response.data.body;
-      }
-    ).catch(() => {
-      this.wallets = []
-    })
+    this.getWallets();
   },
   watch: {
     searchSettings: {
