@@ -5,23 +5,23 @@ import AuthService from '../services/auth.service';
 const baseURL = 'http://192.168.1.148:3000';
 
 const endpoints = {
-    wallet: {
-        get: `${baseURL}/api/wallet`,
-        save: `${baseURL}/api/wallet`,
+    category: {
+        get: `${baseURL}/api/category`,
+        save: `${baseURL}/api/category`,
     }
 };
 
-class WalletService {
-    async getWallets(){
-        return await axios.get(endpoints.wallet.get, { headers: authHeader() }).catch(function (e) {
+class CategoryService {
+    async getCategories(walletId){
+        return await axios.get(`${endpoints.category.get}?walletId=${walletId}`, { headers: authHeader() }).catch(function (e) {
             const error = e.toJSON();
             if(error.status === 403) AuthService.logout();
             else throw error;
         });
     }
 
-    async saveWallet(wallet){
-        return await axios.post(endpoints.wallet.save, wallet, { headers: authHeader() }).catch(function (e) {
+    async saveCategory(category){
+        return await axios.post(endpoints.category.save, category,{ headers: authHeader() }).catch(function (e) {
             const error = e.toJSON();
             if(error.status === 403) AuthService.logout();
             else throw error;
@@ -29,4 +29,4 @@ class WalletService {
     }
 }
 
-export default new WalletService()
+export default new CategoryService()

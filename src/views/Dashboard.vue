@@ -4,28 +4,35 @@
 
       <div class="lg:basis-1/3">
         <div class="flex flex-col w-full">
-          <Wallet :wallets="wallets" :show-form-new-wallet="showFormNewWallet" @select-wallet="selectWallet" @add-wallet="addWallet"/>
-          <SearchSettings v-if="selectedWallet && !showFormNewWallet" @change-search-settings="changeSearchSettings"/>
+          <Wallet :wallets="wallets"
+                  :show-form-new-wallet="showFormNewWallet"
+                  :show-form-edit-wallet="showFormEditWallet"
+                  @select-wallet="selectWallet"
+                  @add-wallet="addWallet"
+                  @hide-forms="hideForms"
+                  @edit-wallet="editWallet"/>
+          <SearchSettings v-if="selectedWallet && !showForm" @change-search-settings="changeSearchSettings"/>
         </div>
       </div>
 
       <div class="lg:basis-1/3">
         <div class="flex flex-col w-full">
-          <Summary v-if="selectedWallet && !showFormNewWallet"
+          <Summary v-if="selectedWallet && !showForm"
                    :selected-wallet="selectedWallet"
                    :transactions="transactions"
                    :show-starting-amount="searchSettings.dateRangePicked === 'all'"/>
-          <BarChart v-if="selectedWallet && !showFormNewWallet"
+          <BarChart v-if="selectedWallet && !showForm"
                     :labels="chartLabels"
                     :selected-wallet="selectedWallet"
                     :data="chartData"
                     title="Gastos"/>
           <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
+          <EditWallet v-if="showFormEditWallet" :selected-wallet="selectedWallet"/>
         </div>
       </div>
 
       <div class="lg:basis-1/3">
-        <Transactions v-if="selectedWallet && !showFormNewWallet"
+        <Transactions v-if="selectedWallet && !showForm"
                       :search-settings="searchSettings"
                       :transactions-by-category="transactionsByCategory"
                       :transactions="transactions"
@@ -45,10 +52,11 @@ import SearchSettings from '../components/SearchSettings'
 import Summary from '../components/Summary'
 import Transactions from "../components/Transactions";
 import NewWallet from "../components/NewWallet";
+import EditWallet from "../components/EditWallet";
 
 export default {
   name: 'Dashboard',
-  components: {Transactions, BarChart, Wallet, SearchSettings, Summary, NewWallet },
+  components: {Transactions, BarChart, Wallet, SearchSettings, Summary, NewWallet, EditWallet },
   setup() {
     const wallets = ref([]);
     const transactions = ref([]);
@@ -59,6 +67,7 @@ export default {
     const chartData = ref([]);
     const transactionFilter = ref("");
     const showFormNewWallet = ref(false);
+    const showFormEditWallet = ref(false);
     const searchSettings = ref({
       dateSelected: {
         month: new Date().getMonth(),
@@ -78,12 +87,16 @@ export default {
       transactionFilter,
       searchSettings,
       showFormNewWallet,
+      showFormEditWallet,
     }
   },
   computed: {
     currentUser(){
       return this.$store.state.auth.user;
     },
+    showForm(){
+      return this.showFormNewWallet || this.showFormEditWallet;
+    }
   },
   methods: {
     async getWallets(){
@@ -109,8 +122,15 @@ export default {
     updateTransactionFilter(transactionFilter){
       this.transactionFilter = transactionFilter;
     },
-    addWallet(value){
-      this.showFormNewWallet = value;
+    addWallet(){
+      this.showFormNewWallet = true;
+    },
+    hideForms(){
+      this.showFormNewWallet = false;
+      this.showFormEditWallet = false;
+    },
+    editWallet(){
+      this.showFormEditWallet = true;
     },
     walletSaved(value){
       if(value) this.getWallets();

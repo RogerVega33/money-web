@@ -3,9 +3,16 @@
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
       <div class="flex justify-between items-center mb-4">
         <h5 class="text-xl font-bold leading-none text-gray-900">Billeteras</h5>
-        <fa :icon="showIconNewWallet? 'plus':'xmark'"
-            class="cursor-pointer"
-            :class="showIconNewWallet? 'text-green-600':'text-red-600'" @click="addWallet"/>
+        <div>
+          <fa icon="plus" v-if="!showForm"
+              class="cursor-pointer text-green-600" @click="addWallet"/>
+          <fa icon="gear" v-if="selectedWallet.id && !showForm" @click="editWallet"
+              class="cursor-pointer text-gray-600 pl-2"
+          />
+          <fa icon="xmark" v-if="showForm" @click="hideForms"
+              class="cursor-pointer text-red-600"
+          />
+        </div>
       </div>
       <div class="flow-root">
         <ul role="list" class="divide-y divide-gray-200" v-if="wallets.length > 0">
@@ -40,13 +47,12 @@ export default {
   props: {
     wallets: Array,
     showFormNewWallet: Boolean,
+    showFormEditWallet: Boolean,
   },
-  setup(props) {
+  setup() {
     const selectedWallet = ref({});
-    const showIconNewWallet = ref(!props.showFormNewWallet);
     return {
       selectedWallet,
-      showIconNewWallet
     }
   },
   methods: {
@@ -55,14 +61,19 @@ export default {
       this.$emit('select-wallet', wallet);
     },
     addWallet(){
-      this.showIconNewWallet = !this.showIconNewWallet;
-      this.$emit('add-wallet', !this.showIconNewWallet);
+      this.$emit('add-wallet');
+    },
+    editWallet(){
+      this.$emit('edit-wallet');
+    },
+    hideForms(){
+      this.$emit('hide-forms');
     }
   },
-  watch: {
-    showFormNewWallet(newValue){
-      this.showIconNewWallet = !newValue;
-    },
+  computed: {
+    showForm(){
+        return this.showFormNewWallet || this.showFormEditWallet;
+    }
   },
 }
 </script>
