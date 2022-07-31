@@ -4,6 +4,7 @@
       <h5 class="text-xl font-bold leading-none text-gray-900">{{title}}</h5>
     </div>
     <DoughnutChart :chartData="chartData" :options="options" v-if="labels.length && data.length"/>
+    <span v-else>Sin registro</span>
   </div>
 </template>
 

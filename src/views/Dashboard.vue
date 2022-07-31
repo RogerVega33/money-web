@@ -22,10 +22,15 @@
                    :transactions="transactions"
                    :show-starting-amount="searchSettings.dateRangePicked === 'all'"/>
           <BarChart v-if="selectedWallet && !showForm"
-                    :labels="chartLabels"
+                    :labels="chartLabelsExpense"
                     :selected-wallet="selectedWallet"
-                    :data="chartData"
+                    :data="chartDataExpense"
                     title="Gastos"/>
+          <BarChart v-if="selectedWallet && !showForm"
+                    :labels="chartLabelsIncome"
+                    :selected-wallet="selectedWallet"
+                    :data="chartDataIncome"
+                    title="Ingresos"/>
           <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
           <EditWallet v-if="showFormEditWallet" :selected-wallet="selectedWallet"/>
         </div>
@@ -63,8 +68,10 @@ export default {
     const transactionsTemp = ref([]);
     const selectedWallet = ref();
     const transactionsByCategory = ref([]);
-    const chartLabels = ref([]);
-    const chartData = ref([]);
+    const chartLabelsExpense = ref([]);
+    const chartLabelsIncome = ref([]);
+    const chartDataExpense = ref([]);
+    const chartDataIncome = ref([]);
     const transactionFilter = ref("");
     const showFormNewWallet = ref(false);
     const showFormEditWallet = ref(false);
@@ -82,8 +89,10 @@ export default {
       transactionsTemp,
       transactionsByCategory,
       selectedWallet,
-      chartLabels,
-      chartData,
+      chartLabelsExpense,
+      chartLabelsIncome,
+      chartDataExpense,
+      chartDataIncome,
       transactionFilter,
       searchSettings,
       showFormNewWallet,
@@ -170,12 +179,17 @@ export default {
           element.transactions.push(t);
         }
       });
-      this.chartLabels = [];
-      this.chartData = [];
+      this.chartLabelsExpense = [];
+      this.chartDataExpense = [];
+      this.chartLabelsIncome = [];
+      this.chartDataIncome = [];
       result.forEach(t => {
         if(t.type === 'expense'){
-          this.chartLabels.push(t[key]);
-          this.chartData.push(t.total);
+          this.chartLabelsExpense.push(t[key]);
+          this.chartDataExpense.push(t.total);
+        } else if(t.type === 'income') {
+            this.chartLabelsIncome.push(t[key]);
+            this.chartDataIncome.push(t.total);
         }
       });
 

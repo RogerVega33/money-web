@@ -5,6 +5,7 @@
       <li class="py-3 sm:py-4" v-for="category in categories" :key="category.id">
         <div class="relative w-full" v-if="categorySelected && category.id === categorySelected.id">
           <input type="text" id="voice-search" v-model="categorySelected.name"
+                 v-on:keyup.enter="editCategory" v-on:keyup.esc="cancel"
                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
           <button type="button" class="flex absolute inset-y-0 right-6 items-center pr-3">
             <fa icon="check" class="text-green-500 cursor-pointer" @click="editCategory"/>
