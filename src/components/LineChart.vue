@@ -1,7 +1,8 @@
 <template>
-  <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
+  <div class="w-full card mx-auto p-4 bg-white rounded-lg border shadow-md sm:p-8" :class="{'max-w-md': !fullScreen}">
     <div class="flex justify-between items-center mb-4">
       <h5 class="text-xl font-bold leading-none text-gray-900">{{title}}</h5>
+      <fa icon="up-right-and-down-left-from-center" class="cursor-pointer" @click="requestFullScreen"/>
     </div>
     <LineChart :chartData="chartData" :options="options" v-if="labels.length && datasets.length"/>
   </div>
@@ -21,12 +22,14 @@ export default defineComponent({
   props: {
     labels: Array,
     datasets: Array,
-    title: String
+    title: String,
+    fullScreen: Boolean
   },
 
   setup(props) {
     const options = ref({
       responsive: true,
+      aspectRatio: '1',
       plugins: {
         legend: {
           position: 'top',
@@ -45,6 +48,11 @@ export default defineComponent({
 
     return { chartData, options };
   },
+  methods: {
+    requestFullScreen(){
+      this.$emit('requestFullScreen');
+    }
+  },
   watch: {
     labels: function (newData) {
       this.chartData.labels = newData;
@@ -52,6 +60,10 @@ export default defineComponent({
     datasets: function (newData) {
       this.chartData.datasets = newData;
     },
+    fullScreen: function (newData) {
+      this.options.maintainAspectRatio = !newData || undefined;
+      this.options.aspectRatio = newData? '1:2':'1';
+    }
   }
 });
 </script>

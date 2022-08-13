@@ -21,18 +21,30 @@
                    :selected-wallet="selectedWallet"
                    :transactions="transactions"
                    :show-starting-amount="searchSettings.dateRangePicked === 'all'"/>
-          <BarChart v-if="selectedWallet && !showForm"
-                    :labels="chartLabelsExpense"
-                    :data="chartDataExpense"
-                    title="Gastos"/>
-          <BarChart v-if="selectedWallet && !showForm"
-                    :labels="chartLabelsIncome"
-                    :data="chartDataIncome"
-                    title="Ingresos"/>
-          <LineChart v-if="selectedWallet && !showForm"
-                    :labels="chartLabelsProfitLoss"
-                    :datasets="chartDataProfitLoss"
-                    title="Histórico"/>
+          <div ref="expenseChartContainer" id="expenseChartContainer">
+            <BarChart v-if="selectedWallet && !showForm"
+                      :labels="chartLabelsExpense"
+                      :data="chartDataExpense"
+                      :fullScreen="fullScreenExpense"
+                      @requestFullScreen="fullScreenChart('expenseChartContainer')"
+                      title="Gastos"/>
+          </div>
+          <div ref="incomeChartContainer" id="incomeChartContainer">
+            <BarChart v-if="selectedWallet && !showForm"
+                      :labels="chartLabelsIncome"
+                      :data="chartDataIncome"
+                      :fullScreen="fullScreenIncome"
+                      @requestFullScreen="fullScreenChart('incomeChartContainer')"
+                      title="Ingresos"/>
+          </div>
+          <div ref="profitLossContainer" id="profitLossContainer">
+            <LineChart v-if="selectedWallet && !showForm"
+                       :labels="chartLabelsProfitLoss"
+                       :datasets="chartDataProfitLoss"
+                       :fullScreen="fullScreenProfitLoss"
+                       @requestFullScreen="fullScreenChart('profitLossContainer')"
+                       title="Histórico"/>
+          </div>
           <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
           <EditWallet v-if="showFormEditWallet" :selected-wallet="selectedWallet"/>
         </div>
@@ -80,6 +92,9 @@ export default {
     const transactionFilter = ref("");
     const showFormNewWallet = ref(false);
     const showFormEditWallet = ref(false);
+    const fullScreenIncome = ref(false);
+    const fullScreenExpense = ref(false);
+    const fullScreenProfitLoss = ref(false);
     const searchSettings = ref({
       dateSelected: {
         month: new Date().getMonth(),
@@ -105,6 +120,9 @@ export default {
       searchSettings,
       showFormNewWallet,
       showFormEditWallet,
+      fullScreenIncome,
+      fullScreenExpense,
+      fullScreenProfitLoss,
     }
   },
   computed: {
@@ -252,10 +270,28 @@ export default {
         let data2 = t.categoryName? t.categoryName.toLowerCase() : '';
         return data1.indexOf(val) !== -1 || data2.indexOf(val) !== -1 || !val;
       });
+    },
+    fullScreenChart(refs){
+        const elem = this.$refs[refs];
+        if (elem.requestFullscreen && !document.webkitIsFullScreen) {
+          elem.requestFullscreen();
+        } else {
+            document.exitFullscreen();
+        }
+    },
+    handleFullScreen(event){
+      const idContainer = event.target.id;
+      this.fullScreenExpense = document.webkitIsFullScreen && idContainer === 'expenseChartContainer';
+      this.fullScreenIncome = document.webkitIsFullScreen && idContainer === 'incomeChartContainer';
+      this.fullScreenProfitLoss = document.webkitIsFullScreen && idContainer === 'profitLossContainer';
     }
   },
   mounted() {
     this.getWallets();
+    this.$el.addEventListener('fullscreenchange', this.handleFullScreen);
+  },
+  unmonunted() {
+    this.$el.removeEventListener('fullscreenchange');
   },
   watch: {
     searchSettings: {

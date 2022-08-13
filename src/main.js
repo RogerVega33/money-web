@@ -7,16 +7,17 @@ import './assets/tailwind.css'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { fas } from '@fortawesome/free-solid-svg-icons'
+import { far } from '@fortawesome/free-regular-svg-icons'
 import { fab } from '@fortawesome/free-brands-svg-icons'
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import 'flowbite';
 
-library.add(fas, fab)
+library.add(fas, fab, far);
 
 createApp(App)
     .use(router)
     .use(store)
     .component('fa', FontAwesomeIcon)
     .component('Datepicker', Datepicker)
-    .mount('#app')
+    .mount('#app');
