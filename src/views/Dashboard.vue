@@ -23,14 +23,16 @@
                    :show-starting-amount="searchSettings.dateRangePicked === 'all'"/>
           <BarChart v-if="selectedWallet && !showForm"
                     :labels="chartLabelsExpense"
-                    :selected-wallet="selectedWallet"
                     :data="chartDataExpense"
                     title="Gastos"/>
           <BarChart v-if="selectedWallet && !showForm"
                     :labels="chartLabelsIncome"
-                    :selected-wallet="selectedWallet"
                     :data="chartDataIncome"
                     title="Ingresos"/>
+          <LineChart v-if="selectedWallet && !showForm"
+                    :labels="chartLabelsProfitLoss"
+                    :datasets="chartDataProfitLoss"
+                    title="Histórico"/>
           <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
           <EditWallet v-if="showFormEditWallet" :selected-wallet="selectedWallet"/>
         </div>
@@ -43,7 +45,6 @@
                       :transactions="transactions"
                       @update-transaction-filter="updateTransactionFilter"/>
       </div>
-
     </div>
   </div>
 </template>
@@ -52,6 +53,7 @@ import WalletService from "../services/wallet.service";
 import TransactionService from "../services/transaction.service";
 import { ref } from 'vue';
 import BarChart from '../components/BarChart'
+import LineChart from '../components/LineChart'
 import Wallet from '../components/Wallet'
 import SearchSettings from '../components/SearchSettings'
 import Summary from '../components/Summary'
@@ -61,17 +63,20 @@ import EditWallet from "../components/EditWallet";
 
 export default {
   name: 'Dashboard',
-  components: {Transactions, BarChart, Wallet, SearchSettings, Summary, NewWallet, EditWallet },
+  components: {Transactions, BarChart, LineChart, Wallet, SearchSettings, Summary, NewWallet, EditWallet },
   setup() {
     const wallets = ref([]);
     const transactions = ref([]);
     const transactionsTemp = ref([]);
     const selectedWallet = ref();
     const transactionsByCategory = ref([]);
+    const profitLoss = ref([]);
     const chartLabelsExpense = ref([]);
     const chartLabelsIncome = ref([]);
+    const chartLabelsProfitLoss = ref([]);
     const chartDataExpense = ref([]);
     const chartDataIncome = ref([]);
+    const chartDataProfitLoss = ref([]);
     const transactionFilter = ref("");
     const showFormNewWallet = ref(false);
     const showFormEditWallet = ref(false);
@@ -88,11 +93,14 @@ export default {
       transactions,
       transactionsTemp,
       transactionsByCategory,
+      profitLoss,
       selectedWallet,
       chartLabelsExpense,
       chartLabelsIncome,
+      chartLabelsProfitLoss,
       chartDataExpense,
       chartDataIncome,
+      chartDataProfitLoss,
       transactionFilter,
       searchSettings,
       showFormNewWallet,
@@ -119,7 +127,8 @@ export default {
     },
     selectWallet(wallet){
       this.selectedWallet = wallet;
-      this.getTransactions(this.selectedWallet.id, this.searchSettings.dateSelected.year, this.searchSettings.dateSelected.month+1)
+      this.getTransactions(this.selectedWallet.id, this.searchSettings.dateSelected.year, this.searchSettings.dateSelected.month+1);
+      this.getProfitLoss(this.selectedWallet.id);
     },
     changeSearchSettings(searchSettings){
       this.searchSettings = searchSettings;
@@ -160,6 +169,47 @@ export default {
       ).catch(() => {
         this.transactions = [];
         this.transactionsTemp = [];
+      });
+    },
+    getProfitLoss(walletId){
+      TransactionService.getProfitLoss(walletId).then((response) => {
+        this.profitLoss = response.data.body.profitLoss;
+        this.chartLabelsProfitLoss = [];
+        this.chartDataProfitLoss = [];
+        let income = {
+          label: "Ingresos",
+          data: [],
+          fill: false,
+          borderColor: '#109618',
+        };
+        let expense = {
+          label: "Gastos",
+          data: [],
+          fill: false,
+          borderColor: '#dc3912',
+        };
+        let savings = {
+          label: "Ahorros",
+          data: [],
+          fill: false,
+          borderColor: '#ff9900',
+        };
+        let total = {
+          label: "Total",
+          data: [],
+          fill: false,
+          borderColor: '#3366cc',
+        };
+        this.profitLoss.forEach(pl => {
+          this.chartLabelsProfitLoss.push(pl.date.split("T")[0]);
+          income.data.push(pl.income);
+          expense.data.push(pl.expense);
+          savings.data.push(pl.savings);
+          total.data.push(pl.total);
+        });
+        this.chartDataProfitLoss.push(income, expense, savings, total);
+      }).catch(() => {
+        this.profitLoss = [];
       });
     },
     groupBy(key){
