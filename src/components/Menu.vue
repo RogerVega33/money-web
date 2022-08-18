@@ -1,7 +1,7 @@
 <template>
     <div id="menu" class="bg-green-800 p-2">
         <nav class="container mx-auto">
-            <div class="flex flex-wrap justify-between items-center mx-auto text-white">
+            <div class="flex justify-between text-white p-1 lg:px-5">
                 <router-link to="/">
                     <fa icon="sack-dollar" class="text-green-300" /> <span class="hover:text-cyan-300">Money app</span>
                 </router-link>

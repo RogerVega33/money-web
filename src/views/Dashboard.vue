@@ -2,7 +2,7 @@
   <div class="dashboard">
     <div class="container mx-auto flex flex-col lg:flex-row">
 
-      <div class="lg:basis-1/3">
+      <div class="lg:basis-1/3 p-1 lg:p-2">
         <div class="flex flex-col w-full">
           <Wallet :wallets="wallets"
                   :show-form-new-wallet="showFormNewWallet"
@@ -15,7 +15,7 @@
         </div>
       </div>
 
-      <div class="lg:basis-1/3">
+      <div class="lg:basis-1/3 p-1 lg:p-2">
         <div class="flex flex-col w-full">
           <Summary v-if="selectedWallet && !showForm"
                    :selected-wallet="selectedWallet"
@@ -50,7 +50,7 @@
         </div>
       </div>
 
-      <div class="lg:basis-1/3">
+      <div class="lg:basis-1/3 p-1 lg:p-2">
         <Transactions v-if="selectedWallet && !showForm"
                       :search-settings="searchSettings"
                       :transactions-by-category="transactionsByCategory"
