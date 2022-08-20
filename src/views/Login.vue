@@ -20,9 +20,8 @@
         </div>
         <div class="mt-6">
           <button type="button" @click="login" :disabled="!state.user.username || !state.user.username"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full"
-                  :class="{'bg-blue-400': !state.user.username || !state.user.password,
-                  'bg-blue-500 hover:bg-blue-600': state.user.username && state.user.password}">
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
+                  disabled:opacity-75 disabled:hover:bg-blue-500">
             Iniciar sesión
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
