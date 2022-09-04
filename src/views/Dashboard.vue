@@ -55,6 +55,7 @@
                       :search-settings="searchSettings"
                       :transactions-by-category="transactionsByCategory"
                       :transactions="transactions"
+                      :selected-wallet="selectedWallet"
                       @update-transaction-filter="updateTransactionFilter"/>
       </div>
     </div>
@@ -312,6 +313,8 @@ export default {
   }
 };
 </script>
+
+<style src="@vueform/multiselect/themes/default.css"></style>
 
 <style>
   .card{

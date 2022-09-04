@@ -12,6 +12,7 @@ import { fab } from '@fortawesome/free-brands-svg-icons'
 import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import 'flowbite';
+import Multiselect from '@vueform/multiselect'
 
 library.add(fas, fab, far);
 
@@ -20,4 +21,5 @@ createApp(App)
     .use(store)
     .component('fa', FontAwesomeIcon)
     .component('Datepicker', Datepicker)
+    .component('Multiselect', Multiselect)
     .mount('#app');
