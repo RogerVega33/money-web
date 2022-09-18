@@ -56,6 +56,7 @@
                       :transactions-by-category="transactionsByCategory"
                       :transactions="transactions"
                       :selected-wallet="selectedWallet"
+                      @new-transaction="getAll"
                       @update-transaction-filter="updateTransactionFilter"/>
       </div>
     </div>
@@ -172,6 +173,11 @@ export default {
     walletSaved(value){
       if(value) this.getWallets();
       this.showFormNewWallet = false;
+    },
+    getAll(){
+        this.getWallets();
+        this.getTransactions(this.selectedWallet.id, this.searchSettings.dateSelected.year, this.searchSettings.dateSelected.month+1);
+        this.getProfitLoss(this.selectedWallet.id);
     },
     getTransactions(walletId, year, month){
       this.transactionFilter = "";

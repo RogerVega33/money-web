@@ -50,7 +50,9 @@
           <div class="mt-4">
             <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
             <button type="button" @click="saveTransaction"
-                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600">
+                    :disabled="!newTransaction.date || !newTransaction.amount || !newTransaction.categoryId"
+                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
+                    disabled:opacity-75 disabled:hover:bg-blue-500">
               Guardar
             </button>
             <button type="button" @click="cancelNewTransaction"
@@ -150,6 +152,7 @@
 import {ref} from 'vue';
 import moment from 'moment'
 import CategoryService from "../services/category.service";
+import TransactionService from "../services/transaction.service";
 
 export default {
     name: 'Transactions',
@@ -187,14 +190,29 @@ export default {
             category.showDetail = !category.showDetail;
         },
         addTransaction() {
+            this.resetNewTransaction();
             this.getCategories();
             this.showIconNewTransaction = !this.showIconNewTransaction;
         },
         saveTransaction() {
-            console.log(this.newTransaction)
+            this.errorMessage = '';
+            TransactionService.saveTransaction(this.newTransaction).then(() => {
+                this.resetNewTransaction();
+                this.$emit('new-transaction');
+            }).catch((error) => {
+                this.errorMessage = (error.response &&
+                    error.response.data &&
+                    error.response.data.body?.message) ||
+                    error.message ||
+                    error.toString()
+            })
         },
-        cancelNewCategory() {
-            this.newTransaction = {type: 'income'};
+        resetNewTransaction() {
+            this.errorMessage = '';
+            this.newTransaction = {categoryId: null, date: new Date()};
+        },
+        cancelNewTransaction(){
+            this.resetNewTransaction();
             this.showIconNewTransaction = true;
         },
         getCategories() {

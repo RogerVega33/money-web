@@ -8,6 +8,7 @@ const endpoints = {
     transaction: {
         get: `${baseURL}/api/transaction`,
         getProfitLoss: `${baseURL}/api/transaction/profitLoss`,
+        save: `${baseURL}/api/transaction`,
     }
 };
 
@@ -18,7 +19,7 @@ class TransactionService {
             { headers: authHeader() }).catch(function (e) {
             const error = e.toJSON();
             if(error.status === 403) AuthService.logout();
-            else throw error;
+            else throw e;
         });
     }
 
@@ -27,7 +28,15 @@ class TransactionService {
             { headers: authHeader() }).catch(function (e) {
             const error = e.toJSON();
             if(error.status === 403) AuthService.logout();
-            else throw error;
+            else throw e;
+        });
+    }
+
+    async saveTransaction(transaction){
+        return await axios.post(endpoints.transaction.save, transaction,{ headers: authHeader() }).catch(function (e) {
+            const error = e.toJSON();
+            if(error.status === 403) AuthService.logout();
+            else throw e;
         });
     }
 }
