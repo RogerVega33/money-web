@@ -1,19 +1,11 @@
 import axios from 'axios'
 import authHeader from './auth-header';
 import AuthService from '../services/auth.service';
-
-const baseURL = 'http://192.168.1.148:3000';
-
-const endpoints = {
-    wallet: {
-        get: `${baseURL}/api/wallet`,
-        save: `${baseURL}/api/wallet`,
-    }
-};
+import store from '../store'
 
 class WalletService {
     async getWallets(){
-        return await axios.get(endpoints.wallet.get, { headers: authHeader() }).catch(function (e) {
+        return await axios.get(`${store.state.app.backend}/api/wallet`, { headers: authHeader() }).catch(function (e) {
             const error = e.toJSON();
             if(error.status === 403) AuthService.logout();
             else throw error;
@@ -21,7 +13,7 @@ class WalletService {
     }
 
     async saveWallet(wallet){
-        return await axios.post(endpoints.wallet.save, wallet, { headers: authHeader() }).catch(function (e) {
+        return await axios.post(`${store.state.app.backend}/api/wallet`, wallet, { headers: authHeader() }).catch(function (e) {
             const error = e.toJSON();
             if(error.status === 403) AuthService.logout();
             else throw error;

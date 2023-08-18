@@ -28,5 +28,8 @@ created() {
     this.$router.push("/dashboard");
   }
 },
+mounted() {
+    this.$store.commit('app/SET_BACKEND', window.config.backend)
+}
 }
 </script>

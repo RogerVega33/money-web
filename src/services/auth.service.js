@@ -1,6 +1,5 @@
 import axios from 'axios'
-
-const baseURL = 'http://192.168.1.148:3000'
+import store from '../store'
 
 const options = {
     headers: {
@@ -9,17 +8,10 @@ const options = {
     }
 }
 
-const endpoints = {
-    auth: {
-        login: `${baseURL}/api/auth/login`
-    }
-}
-
-
 class AuthService {
 
     async login(user){
-        const response = await axios.post(endpoints.auth.login, user, options)
+        const response = await axios.post(`${store.state.app.backend}/api/auth/login`, user, options)
         if (response.data.body?.token) {
             localStorage.setItem('user', JSON.stringify(response.data.body))
         }

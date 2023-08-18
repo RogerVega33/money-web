@@ -7,6 +7,14 @@
     <link rel="icon" href="<%= BASE_URL %>favicon.png">
     <link rel="stylesheet" href="main.css">
     <title>Money app</title>
+    <script>
+      ;(async function(){
+          var xmlHttp = new XMLHttpRequest();
+          xmlHttp.open('GET', 'config.json', false);
+          xmlHttp.send(null);
+          window.config = JSON.parse(xmlHttp.responseText)
+      })()
+    </script>
   </head>
   <body>
     <noscript>
