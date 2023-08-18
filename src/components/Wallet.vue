@@ -29,7 +29,7 @@
                 </p>
               </div>
               <div class="inline-flex items-center text-base font-semibold">
-                {{wallet.total}} $
+                {{formatCurrency(wallet.total)}}
               </div>
             </div>
           </li>
@@ -41,6 +41,7 @@
 
 <script>
 import { ref } from 'vue';
+import { formatCurrency } from '../utils/formats';
 
 export default {
   name: 'Wallet',
@@ -73,6 +74,9 @@ export default {
   computed: {
     showForm(){
         return this.showFormNewWallet || this.showFormEditWallet;
+    },
+    formatCurrency() {
+        return formatCurrency;
     }
   },
 }

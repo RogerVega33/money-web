@@ -93,7 +93,7 @@
               </div>
               <div class="inline-flex items-center text-base font-semibold"
                    :class="category.type === 'expense'?'text-red-500':'text-green-500'">
-                {{category.type === 'expense'? '-' : '+'}}{{category.total.toFixed(2)}} $
+                {{category.type === 'expense'? '-' : '+'}}{{formatCurrency(category.total.toFixed(2))}}
               </div>
             </div>
             <div v-show="category.showDetail">
@@ -111,7 +111,7 @@
                     </div>
                     <div class="inline-flex items-center text-sm"
                          :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
-                      {{transaction.type === 'expense'? '-' : '+'}}{{transaction.amount.toFixed(2)}} $
+                      {{transaction.type === 'expense'? '-' : '+'}}{{formatCurrency(transaction.amount.toFixed(2))}}
                     </div>
                   </div>
                 </li>
@@ -138,7 +138,7 @@
               </div>
               <div class="inline-flex items-center text-base font-semibold"
                    :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
-                {{transaction.type === 'expense'? '-' : '+'}}{{transaction.amount.toFixed(2)}} $
+                {{transaction.type === 'expense'? '-' : '+'}}{{formatCurrency(transaction.amount.toFixed(2))}}
               </div>
             </div>
           </li>
@@ -153,6 +153,7 @@ import {ref} from 'vue';
 import moment from 'moment'
 import CategoryService from "../services/category.service";
 import TransactionService from "../services/transaction.service";
+import { formatCurrency } from '../utils/formats';
 
 export default {
     name: 'Transactions',
@@ -237,6 +238,11 @@ export default {
             },
             deep: true
         },
-    }
+    },
+    computed: {
+        formatCurrency() {
+            return formatCurrency;
+        }
+    },
 }
 </script>

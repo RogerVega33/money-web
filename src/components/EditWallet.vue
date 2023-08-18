@@ -8,7 +8,7 @@
         <p>Id: {{selectedWallet.id}}</p>
         <p>Nombre: {{selectedWallet.name}}</p>
         <p v-show="selectedWallet.detail">Detalle: {{selectedWallet.detail}}</p>
-        <p>Monto inicial: $ {{selectedWallet.startingAmount}}</p>
+        <p>Monto inicial: {{formatCurrency(selectedWallet.startingAmount)}}</p>
       </div>
     </div>
 
@@ -62,6 +62,7 @@
 import CategoryService from "../services/category.service";
 import {ref} from 'vue';
 import Category from "../components/Category";
+import { formatCurrency } from '../utils/formats';
 
 export default {
   name: 'EditWallet',
@@ -122,6 +123,11 @@ export default {
     selectedWallet(){
       this.getCategories();
     }
-  }
+  },
+  computed: {
+    formatCurrency() {
+        return formatCurrency;
+    }
+  },
 }
 </script>

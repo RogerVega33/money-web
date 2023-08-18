@@ -12,7 +12,7 @@
                 Monto inicial
               </div>
               <div class="basis-1/2 text-right">
-                {{selectedWallet.startingAmount || '0.0'}} $
+                {{formatCurrency(selectedWallet.startingAmount || '0.0')}}
               </div>
             </div>
             <div class="flex flex-row">
@@ -20,7 +20,7 @@
                 Ingresos
               </div>
               <div class="basis-1/2 text-right">
-                {{transactions.totalIncome || '0.0'}} $
+                {{formatCurrency(transactions.totalIncome || '0.0')}}
               </div>
             </div>
             <div class="flex flex-row">
@@ -28,7 +28,7 @@
                 Gastos
               </div>
               <div class="basis-1/2 text-right">
-                {{transactions.totalExpense || '0.0'}} $
+                {{formatCurrency(transactions.totalExpense || '0.0')}}
               </div>
             </div>
             <hr/>
@@ -37,7 +37,7 @@
                 Ahorro
               </div>
               <div class="basis-1/2 text-right">
-                {{totalSavings}} $
+                {{formatCurrency(totalSavings)}}
               </div>
             </div>
           </div>
@@ -48,6 +48,7 @@
 </template>
 
 <script>
+import { formatCurrency } from '../utils/formats';
 
 export default {
   name: 'Summary',
@@ -64,6 +65,9 @@ export default {
         return (+this.transactions.savings).toFixed(2);
       }
       return (0).toFixed(2);
+    },
+    formatCurrency() {
+        return formatCurrency;
     }
   },
 }
