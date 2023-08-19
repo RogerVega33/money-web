@@ -26,6 +26,7 @@
                       :labels="chartLabelsExpense"
                       :data="chartDataExpense"
                       :fullScreen="fullScreenExpense"
+                      :hideMoney="hideMoney"
                       @requestFullScreen="fullScreenChart('expenseChartContainer')"
                       title="Gastos"/>
           </div>
@@ -34,6 +35,7 @@
                       :labels="chartLabelsIncome"
                       :data="chartDataIncome"
                       :fullScreen="fullScreenIncome"
+                      :hideMoney="hideMoney"
                       @requestFullScreen="fullScreenChart('incomeChartContainer')"
                       title="Ingresos"/>
           </div>
@@ -42,6 +44,7 @@
                        :labels="chartLabelsProfitLoss"
                        :datasets="chartDataProfitLoss"
                        :fullScreen="fullScreenProfitLoss"
+                       :hideMoney="hideMoney"
                        @requestFullScreen="fullScreenChart('profitLossContainer')"
                        title="Histórico"/>
           </div>
@@ -74,6 +77,7 @@ import Summary from '../components/Summary'
 import Transactions from "../components/Transactions";
 import NewWallet from "../components/NewWallet";
 import EditWallet from "../components/EditWallet";
+import store from '../store'
 
 export default {
   name: 'Dashboard',
@@ -105,6 +109,7 @@ export default {
       dateRangePicked: "month",
       showTransactionsByCategory: true
     });
+    const hideMoney = ref(store.state.app.hideMoney)
     return {
       wallets,
       transactions,
@@ -125,6 +130,7 @@ export default {
       fullScreenIncome,
       fullScreenExpense,
       fullScreenProfitLoss,
+      hideMoney,
     }
   },
   computed: {
@@ -133,7 +139,7 @@ export default {
     },
     showForm(){
       return this.showFormNewWallet || this.showFormEditWallet;
-    }
+    },
   },
   methods: {
     async getWallets(){
@@ -315,6 +321,9 @@ export default {
     },
     transactionFilter(){
       this.filterTransactions();
+    },
+    '$store.state.app.hideMoney': function(newValue) {
+        this.hideMoney = newValue
     }
   }
 };

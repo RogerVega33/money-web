@@ -23,7 +23,8 @@ export default defineComponent({
     labels: Array,
     datasets: Array,
     title: String,
-    fullScreen: Boolean
+    fullScreen: Boolean,
+    hideMoney: Boolean,
   },
 
   setup(props) {
@@ -38,6 +39,16 @@ export default defineComponent({
           display: false,
           text: props.title,
         },
+        tooltip: {
+            enabled: !props.hideMoney,
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+              display: !props.hideMoney,
+          }
+        }
       },
     });
 
@@ -63,6 +74,10 @@ export default defineComponent({
     fullScreen: function (newData) {
       this.options.maintainAspectRatio = !newData || undefined;
       this.options.aspectRatio = newData? '1:2':'1';
+    },
+    hideMoney: function (newData) {
+      this.options.scales.y.ticks.display = !newData;
+      this.options.plugins.tooltip.enabled = !newData;
     }
   }
 });

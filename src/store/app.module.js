@@ -1,7 +1,8 @@
 export const app = {
     namespaced: true,
     state: {
-        backend: ''
+        backend: '',
+        hideMoney: null
     },
     actions: {
 
@@ -10,5 +11,9 @@ export const app = {
         SET_BACKEND(state, value) {
             state.backend = value;
         },
+        SET_HIDE_MONEY(state, value) {
+            state.hideMoney = value;
+            localStorage.setItem("hideMoney", value.toString());
+        }
     },
 };
