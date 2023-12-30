@@ -48,6 +48,15 @@
                        @requestFullScreen="fullScreenChart('profitLossContainer')"
                        title="Histórico"/>
           </div>
+          <div ref="totalByCategoryContainer" id="totalByCategoryContainer" v-if="chartLabelsTotalByCategory.length > 1">
+            <LineChart v-if="selectedWallet && !showForm"
+                       :labels="chartLabelsTotalByCategory"
+                       :datasets="chartDataTotalByCategory"
+                       :fullScreen="fullScreenTotalByCategory"
+                       :hideMoney="hideMoney"
+                       @requestFullScreen="fullScreenChart('totalByCategoryContainer')"
+                       title="Total por categoría"/>
+          </div>
           <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
           <EditWallet v-if="showFormEditWallet" :selected-wallet="selectedWallet"/>
         </div>
@@ -89,18 +98,22 @@ export default {
     const selectedWallet = ref();
     const transactionsByCategory = ref([]);
     const profitLoss = ref([]);
+    const totalByCategory = ref([]);
     const chartLabelsExpense = ref([]);
     const chartLabelsIncome = ref([]);
     const chartLabelsProfitLoss = ref([]);
+    const chartLabelsTotalByCategory = ref([]);
     const chartDataExpense = ref([]);
     const chartDataIncome = ref([]);
     const chartDataProfitLoss = ref([]);
+    const chartDataTotalByCategory = ref([]);
     const transactionFilter = ref("");
     const showFormNewWallet = ref(false);
     const showFormEditWallet = ref(false);
     const fullScreenIncome = ref(false);
     const fullScreenExpense = ref(false);
     const fullScreenProfitLoss = ref(false);
+    const fullScreenTotalByCategory = ref(false);
     const searchSettings = ref({
       dateSelected: {
         month: new Date().getMonth(),
@@ -116,13 +129,16 @@ export default {
       transactionsTemp,
       transactionsByCategory,
       profitLoss,
+      totalByCategory,
       selectedWallet,
       chartLabelsExpense,
       chartLabelsIncome,
       chartLabelsProfitLoss,
+      chartLabelsTotalByCategory,
       chartDataExpense,
       chartDataIncome,
       chartDataProfitLoss,
+      chartDataTotalByCategory,
       transactionFilter,
       searchSettings,
       showFormNewWallet,
@@ -130,6 +146,7 @@ export default {
       fullScreenIncome,
       fullScreenExpense,
       fullScreenProfitLoss,
+      fullScreenTotalByCategory,
       hideMoney,
     }
   },
@@ -283,6 +300,100 @@ export default {
         let data2 = t.categoryName? t.categoryName.toLowerCase() : '';
         return data1.indexOf(val) !== -1 || data2.indexOf(val) !== -1 || !val;
       });
+      this.getTotalCategories();
+    },
+    getTotalCategories(){
+      this.totalByCategory = [];
+      this.chartLabelsTotalByCategory = [];
+      this.chartDataTotalByCategory = [];
+
+      // Agrupa las transacciones por fecha-categoria-tipo, saca su total y devuelve un array
+      const groupedData = this.transactions.transactions.reduce((acc, transaction) => {
+        const key = `${transaction.date}-${transaction.categoryName}-${transaction.type}`;
+
+        if (!acc[key]) {
+          acc[key] = {
+            date: transaction.date,
+            detail: transaction.categoryName,
+            type: transaction.type,
+            totalAmount: transaction.amount
+          };
+        } else {
+          acc[key].totalAmount += transaction.amount;
+        }
+
+        return acc;
+      }, {});
+      const resultArray = Object.values(groupedData);
+
+      // Transforma el array en otro array donde su clave es la categoria calculada anteriormente
+      const groupedData2 = resultArray.reduce((acc, transaction) => {
+        const key = `${transaction.detail}-${transaction.type}`;
+        const type = transaction.type === 'income' ? '(+)' : '(-)'
+        if (!acc[key]) {
+          acc[key] = {
+            detail: `${transaction.detail} ${type}`,
+            transactions: [
+              {
+                date: transaction.date,
+                totalAmount: transaction.totalAmount
+              }
+            ]
+          };
+        } else {
+          const existingTransaction = acc[key].transactions.find(t => t.date === transaction.date);
+
+          if (existingTransaction) {
+            existingTransaction.totalAmount += transaction.totalAmount;
+          } else {
+            acc[key].transactions.push({
+              date: transaction.date,
+              totalAmount: transaction.totalAmount
+            });
+          }
+        }
+
+        return acc;
+      }, {});
+      this.totalByCategory = Object.values(groupedData2);
+
+      if(!this.totalByCategory || this.totalByCategory.length === 0) return;
+
+      const biggerCategory = this.totalByCategory.reduce((maxObj, obj) => {
+        return obj.transactions.length > maxObj.transactions.length ? obj : maxObj;
+      }, this.totalByCategory[0]);
+
+      let cat1 = {
+        label: biggerCategory.detail,
+        data: [],
+        fill: false,
+        borderColor: '#109618',
+      };
+
+      let avg = {
+        label: 'Promedio',
+        data: [],
+        fill: false,
+        borderColor: '#3366cc',
+      };
+
+      let labels = [];
+      let total = [];
+
+      biggerCategory.transactions.forEach(t => {
+        labels.push(t.date.split("T")[0]);
+        total.push(+t.totalAmount.toFixed(2));
+      });
+      this.chartLabelsTotalByCategory.push(...labels);
+      cat1.data.push(...total);
+
+      const totalAmount = cat1.data.reduce((total, amount) => total + amount, 0);
+      const average = totalAmount / cat1.data.length;
+      const averageArray = new Array(cat1.data.length);
+      averageArray.fill(+average.toFixed(2));
+      avg.data = averageArray;
+
+      this.chartDataTotalByCategory.push(cat1, avg);
     },
     fullScreenChart(refs){
         const elem = this.$refs[refs];
@@ -297,6 +408,7 @@ export default {
       this.fullScreenExpense = document.webkitIsFullScreen && idContainer === 'expenseChartContainer';
       this.fullScreenIncome = document.webkitIsFullScreen && idContainer === 'incomeChartContainer';
       this.fullScreenProfitLoss = document.webkitIsFullScreen && idContainer === 'profitLossContainer';
+      this.fullScreenTotalByCategory = document.webkitIsFullScreen && idContainer === 'totalByCategoryContainer';
     }
   },
   mounted() {
