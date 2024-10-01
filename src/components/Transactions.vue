@@ -185,7 +185,7 @@ export default {
     },
     methods: {
         getTransactionDate(transactionDate) {
-            return moment(String(transactionDate)).format('MM/YY')
+            return moment(String(transactionDate)).add({M:1}).format('MM/YY')
         },
         showDetail(category) {
             category.showDetail = !category.showDetail;
