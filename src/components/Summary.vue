@@ -40,6 +40,14 @@
                 {{formatCurrency(totalSavings)}}
               </div>
             </div>
+            <div class="flex flex-row" v-if="!Number.isNaN(+savingsPercentage)">
+              <div class="basis-1/2">
+                Porcentaje de ahorro
+              </div>
+              <div class="basis-1/2 text-right">
+                {{savingsPercentage}} %
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -65,6 +73,9 @@ export default {
         return (+this.transactions.savings).toFixed(2);
       }
       return (0).toFixed(2);
+    },
+    savingsPercentage(){
+      return ((+this.transactions.savings * 100)/+this.transactions.totalIncome).toFixed(2);
     },
     formatCurrency() {
         return formatCurrency;
