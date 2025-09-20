@@ -21,7 +21,8 @@
                  :class="{ 'text-blue-700': selectedWallet.id === wallet.id }"
                  class="flex items-center space-x-4 text-gray-900 hover:text-blue-500 cursor-pointer">
               <div class="flex-shrink-0">
-                <fa icon="sack-dollar" class="text-green-600 h-8" />
+                <fa icon="sack-dollar" class="text-green-500 h-8" v-if="wallet.type === 'fiat'"/>
+                <fa :icon="['fab', 'bitcoin']" class="text-yellow-300 h-8" v-if="wallet.type === 'crypto'"/>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm truncate" :class="selectedWallet.id === wallet.id? 'font-bold':'font-medium'">

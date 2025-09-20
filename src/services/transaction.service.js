@@ -13,6 +13,15 @@ class TransactionService {
         });
     }
 
+    async getCryptoWalletTransactions(walletId){
+        return await axios.get(`${store.state.app.backend}/api/transaction/crypto?walletId=${walletId}`,
+            { headers: authHeader() }).catch(function (e) {
+            const error = e.toJSON();
+            if(error.status === 403) AuthService.logout();
+            else throw e;
+        });
+    }
+
     async getProfitLoss(walletId){
         return await axios.get(`${store.state.app.backend}/api/transaction/profitLoss?walletId=${walletId}`,
             { headers: authHeader() }).catch(function (e) {

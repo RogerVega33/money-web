@@ -2,8 +2,9 @@
   <div class="transactions">
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
       <div class="flex justify-between items-center mb-4">
-        <h5 class="text-xl font-bold leading-none text-gray-900">Transacciones
+        <h5 v-if="selectedWallet.type !== 'crypto'" class="text-xl font-bold leading-none text-gray-900">Transacciones
           {{searchSettings.showTransactionsByCategory? 'x categoría' : ''}}</h5>
+        <h5 v-else class="text-xl font-bold leading-none text-gray-900">Holdings</h5>
         <div>
           <fa :icon="showIconNewTransaction? 'plus':'xmark'"
               class="cursor-pointer"
@@ -75,7 +76,7 @@
         <input type="text" v-model="transactionFilter"
                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
       </div>
-      <div v-if="searchSettings.showTransactionsByCategory" class="flow-root">
+      <div v-if="searchSettings.showTransactionsByCategory && selectedWallet.type !== 'crypto'" class="flow-root">
         <ul role="list" class="divide-y divide-gray-200">
           <li class="py-3 sm:py-4" v-for="category in transactionsByCategory"
               :key="category.categoryName+category.total" @click="showDetail(category)">
@@ -104,7 +105,7 @@
                 <li class="py-3 sm:py-4" v-for="transaction in category.transactions" :key="transaction.id">
                   <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
                     <div class="flex-1 min-w-0">
-                      <p class="text-sm truncate">
+                      <p class="text-sm truncate" :title="transaction.detail || 'Sin detalle'">
                         <span class="font-bold">{{getTransactionDate(transaction.date)}}</span> | {{transaction.detail
                         || 'Sin detalle'}}
                       </p>
@@ -121,7 +122,7 @@
         </ul>
       </div>
       <div v-else class="flow-root">
-        <ul role="list" class="divide-y divide-gray-200">
+        <ul v-if="selectedWallet.type !== 'crypto'" role="list" class="divide-y divide-gray-200">
           <li class="py-3 sm:py-4" v-for="transaction in transactions.transactions" :key="transaction.id">
             <div
               class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
@@ -132,13 +133,34 @@
                 <p class="text-sm font-medium truncate">
                   {{transaction.categoryName}}
                 </p>
-                <p class="text-sm truncate">
-                  {{transaction.detail}}
+                <p class="text-sm truncate" :title="transaction.detail || 'Sin detalle'">
+                  <span class="font-bold">{{getTransactionDate(transaction.date)}}</span>  | {{transaction.detail || 'Sin detalle'}}
                 </p>
               </div>
               <div class="inline-flex items-center text-base font-semibold"
                    :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
                 {{transaction.type === 'expense'? '-' : '+'}}{{formatCurrency(transaction.amount.toFixed(2))}}
+              </div>
+            </div>
+          </li>
+        </ul>
+        <ul v-else role="list" class="divide-y divide-gray-200">
+          <li class="py-3 sm:py-4" v-for="transaction in transactions.transactions" :key="transaction.id">
+            <div
+                class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
+              <div class="flex-shrink-0">
+                <fa icon="coins"  class="text-yellow-500 h-8"/>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium truncate">
+                  {{formatCryptoHoldings(transaction.amount)}} {{transaction.symbol}}
+                </p>
+                <p class="text-sm truncate" :title="'Última actualización: ' + formatDateTime(transaction.date)">
+                  1 {{transaction.symbol}} = {{formatCurrency(transaction.price.toFixed(2))}}
+                </p>
+              </div>
+              <div class="inline-flex items-center text-base font-semibold text-green-500">
+                {{formatCurrency(transaction.total.toFixed(2))}}
               </div>
             </div>
           </li>
@@ -153,7 +175,7 @@ import {ref} from 'vue';
 import moment from 'moment'
 import CategoryService from "../services/category.service";
 import TransactionService from "../services/transaction.service";
-import { formatCurrency } from '../utils/formats';
+import { formatCurrency, formatCryptoHoldings, formatDateTime } from '@/utils/formats';
 
 export default {
     name: 'Transactions',
@@ -240,9 +262,15 @@ export default {
         },
     },
     computed: {
-        formatCurrency() {
-            return formatCurrency;
-        }
+      formatCurrency() {
+          return formatCurrency;
+      },
+      formatCryptoHoldings() {
+        return formatCryptoHoldings;
+      },
+      formatDateTime() {
+        return formatDateTime;
+      },
     },
 }
 </script>

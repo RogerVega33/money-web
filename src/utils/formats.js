@@ -14,3 +14,22 @@ export function formatCurrency(value) {
     });
     return formatter.format(value);
 }
+
+export function formatCryptoHoldings(value){
+    if (store.state.app.hideMoney) {
+        return "****";
+    }
+    return value;
+}
+
+export function formatDateTime(dateTime) {
+    return new Intl.DateTimeFormat("es-EC", {
+        timeZone: "America/Guayaquil",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+    }).format(new Date(dateTime));
+}

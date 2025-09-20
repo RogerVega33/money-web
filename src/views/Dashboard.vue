@@ -11,11 +11,11 @@
                   @add-wallet="addWallet"
                   @hide-forms="hideForms"
                   @edit-wallet="editWallet"/>
-          <SearchSettings v-if="selectedWallet && !showForm" @change-search-settings="changeSearchSettings"/>
+          <SearchSettings v-if="selectedWallet && !showForm" :selected-wallet="selectedWallet" @change-search-settings="changeSearchSettings"/>
         </div>
       </div>
 
-      <div class="lg:basis-1/3 p-1 lg:p-2">
+      <div v-if="selectedWallet && selectedWallet.type !=='crypto'" class="lg:basis-1/3 p-1 lg:p-2">
         <div class="flex flex-col w-full">
           <Summary v-if="selectedWallet && !showForm"
                    :selected-wallet="selectedWallet"
@@ -170,8 +170,12 @@ export default {
     },
     selectWallet(wallet){
       this.selectedWallet = wallet;
-      this.getTransactions(this.selectedWallet.id, this.searchSettings.dateSelected.year, this.searchSettings.dateSelected.month+1);
-      this.getProfitLoss(this.selectedWallet.id);
+      if(wallet.type === 'crypto'){
+        this.getCryptoWalletTransactions(this.selectedWallet.id, this.searchSettings.dateSelected.year, this.searchSettings.dateSelected.month+1);
+      } else {
+        this.getTransactions(this.selectedWallet.id, this.searchSettings.dateSelected.year, this.searchSettings.dateSelected.month+1);
+        this.getProfitLoss(this.selectedWallet.id);
+      }
     },
     changeSearchSettings(searchSettings){
       this.searchSettings = searchSettings;
@@ -214,6 +218,17 @@ export default {
           this.transactions = response.data.body;
           this.transactionsTemp = [...response.data.body.transactions];
         }
+      ).catch(() => {
+        this.transactions = [];
+        this.transactionsTemp = [];
+      });
+    },
+    getCryptoWalletTransactions(walletId){
+      TransactionService.getCryptoWalletTransactions(walletId).then(
+          (response) => {
+            this.transactions = response.data.body;
+            this.transactionsTemp = [...response.data.body.transactions];
+          }
       ).catch(() => {
         this.transactions = [];
         this.transactionsTemp = [];
