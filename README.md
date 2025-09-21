@@ -25,5 +25,5 @@ Ejecutar:
 
 ```bash
 sudo docker build -t money-app-web .
-sudo docker run --publish 80:80  money-app-web
+sudo docker run -d --publish 80:80  money-app-web
 ```
