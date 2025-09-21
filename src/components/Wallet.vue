@@ -34,6 +34,18 @@
               </div>
             </div>
           </li>
+          <li class="py-3 sm:py-4">
+            <div  class="flex items-center space-x-4 text-gray-900 hover:text-blue-500">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm truncate font-bold">
+                  TOTAL
+                </p>
+              </div>
+              <div class="inline-flex items-center text-base font-semibold">
+                {{ formatCurrency(getTotalWallets) }}
+              </div>
+            </div>
+          </li>
         </ul>
       </div>
     </div>
@@ -78,6 +90,11 @@ export default {
     },
     formatCurrency() {
         return formatCurrency;
+    },
+    getTotalWallets(){
+      return this.wallets.reduce((acum, item) => {
+        return acum + Number(item.total); // o parseInt(item.total, 10)
+      }, 0);
     }
   },
 }
