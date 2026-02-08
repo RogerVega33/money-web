@@ -29,7 +29,6 @@ created() {
   }
 },
 mounted() {
-    this.$store.commit('app/SET_BACKEND', window.config.backend)
     this.$store.commit('app/SET_HIDE_MONEY', localStorage.getItem("hideMoney") === "true")
 }
 }

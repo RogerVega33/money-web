@@ -1,5 +1,4 @@
 import axios from 'axios'
-import store from '../store'
 
 const options = {
     headers: {
@@ -11,7 +10,7 @@ const options = {
 class AuthService {
 
     async login(user){
-        const response = await axios.post(`${store.state.app.backend}/api/auth/login`, user, options)
+        const response = await axios.post(`/api/auth/login`, user, options)
         if (response.data.body?.token) {
             localStorage.setItem('user', JSON.stringify(response.data.body))
         }
