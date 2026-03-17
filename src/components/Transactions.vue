@@ -94,7 +94,7 @@
               </div>
               <div class="inline-flex items-center text-base font-semibold"
                    :class="category.type === 'expense'?'text-red-500':'text-green-500'">
-                {{category.type === 'expense'? '-' : '+'}}{{formatCurrency(category.total.toFixed(2))}}
+                {{category.type === 'expense'? '-' : '+'}}{{formatCurrency(category.total?.toFixed(2))}}
               </div>
             </div>
             <div v-show="category.showDetail">
@@ -112,7 +112,7 @@
                     </div>
                     <div class="inline-flex items-center text-sm"
                          :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
-                      {{transaction.type === 'expense'? '-' : '+'}}{{formatCurrency(transaction.amount.toFixed(2))}}
+                      {{transaction.type === 'expense'? '-' : '+'}}{{formatCurrency(transaction.amount?.toFixed(2))}}
                     </div>
                   </div>
                 </li>
@@ -139,7 +139,7 @@
               </div>
               <div class="inline-flex items-center text-base font-semibold"
                    :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
-                {{transaction.type === 'expense'? '-' : '+'}}{{formatCurrency(transaction.amount.toFixed(2))}}
+                {{transaction.type === 'expense'? '-' : '+'}}{{formatCurrency(transaction.amount?.toFixed(2))}}
               </div>
             </div>
           </li>
@@ -156,11 +156,11 @@
                   {{formatCryptoHoldings(transaction.amount)}} {{transaction.symbol}}
                 </p>
                 <p class="text-sm truncate" :title="'Última actualización: ' + formatDateTime(transaction.date)">
-                  1 {{transaction.symbol}} = {{formatCurrency(transaction.price.toFixed(2))}}
+                  1 {{transaction.symbol}} = {{formatCurrency(transaction.price?.toFixed(2))}}
                 </p>
               </div>
               <div class="inline-flex items-center text-base font-semibold text-green-500">
-                {{formatCurrency(transaction.total.toFixed(2))}}
+                {{formatCurrency(transaction.total?.toFixed(2))}}
               </div>
             </div>
           </li>
