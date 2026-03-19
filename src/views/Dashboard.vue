@@ -69,6 +69,7 @@
                       :transactions="transactions"
                       :selected-wallet="selectedWallet"
                       @new-transaction="getAll"
+                      @new-crypto-transaction="getAllCrypto"
                       @update-transaction-filter="updateTransactionFilter"/>
       </div>
     </div>
@@ -205,6 +206,10 @@ export default {
         this.getWallets();
         this.getTransactions(this.selectedWallet.id, this.searchSettings.dateSelected.year, this.searchSettings.dateSelected.month+1);
         this.getProfitLoss(this.selectedWallet.id);
+    },
+    getAllCrypto(){
+      this.getWallets();
+      this.getCryptoWalletTransactions(this.selectedWallet.id);
     },
     getTransactions(walletId, year, month){
       this.transactionFilter = "";

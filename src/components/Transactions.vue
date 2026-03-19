@@ -14,7 +14,7 @@
       <div class="flow-root mb-5" v-if="!showIconNewTransaction">
         <hr class="mb-5">
         <h6 class="font-semibold">Nueva Transacción</h6>
-        <div>
+        <div v-if="selectedWallet.type !== 'crypto'">
           <div class="mt-2">
             <label>Categoría: {{newTransaction.category}}</label>
             <br>
@@ -52,6 +52,35 @@
             <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
             <button type="button" @click="saveTransaction"
                     :disabled="!newTransaction.date || !newTransaction.amount || !newTransaction.categoryId"
+                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
+                    disabled:opacity-75 disabled:hover:bg-blue-500">
+              Guardar
+            </button>
+            <button type="button" @click="cancelNewTransaction"
+                    class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600">
+              Cancelar
+            </button>
+          </div>
+        </div>
+        <div v-else>
+          <div class="mt-2">
+            <label for="transactionDetail">Símbolo:</label>
+            <br>
+            <input id="transactionDetail" type="text" v-model="newCryptoTransaction.symbol"
+                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                   required>
+          </div>
+          <div class="mt-2">
+            <label for="transactionAmount">Monto:</label>
+            <br>
+            <input id="transactionAmount" type="number" v-model="newCryptoTransaction.amount" placeholder="0"
+                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                   required>
+          </div>
+          <div class="mt-4">
+            <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
+            <button type="button" @click="saveTransaction"
+                    :disabled="!newCryptoTransaction.symbol || !newCryptoTransaction.amount"
                     class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
                     disabled:opacity-75 disabled:hover:bg-blue-500">
               Guardar
@@ -190,6 +219,7 @@ export default {
         const transactionFilter = ref("");
         const showIconNewTransaction = ref(true);
         const newTransaction = ref({date: new Date()});
+        const newCryptoTransaction = ref({});
         const errorMessage = ref("");
         const options = ref(['Select option', 'a', 'b']);
         const value = ref("");
@@ -198,6 +228,7 @@ export default {
             transactionFilter,
             showIconNewTransaction,
             newTransaction,
+            newCryptoTransaction,
             categories,
             errorMessage,
             options,
@@ -213,26 +244,43 @@ export default {
             category.showDetail = !category.showDetail;
         },
         addTransaction() {
-            this.resetNewTransaction();
+          if(this.selectedWallet.type !== 'crypto') {
             this.getCategories();
-            this.showIconNewTransaction = !this.showIconNewTransaction;
+          }
+          this.resetNewTransaction();
+          this.showIconNewTransaction = !this.showIconNewTransaction;
         },
         saveTransaction() {
             this.errorMessage = '';
-            TransactionService.saveTransaction(this.newTransaction).then(() => {
+            if(this.selectedWallet.type !== 'crypto') {
+              TransactionService.saveTransaction(this.newTransaction).then(() => {
                 this.resetNewTransaction();
                 this.$emit('new-transaction');
-            }).catch((error) => {
+              }).catch((error) => {
                 this.errorMessage = (error.response &&
-                    error.response.data &&
-                    error.response.data.body?.message) ||
+                        error.response.data &&
+                        error.response.data.body?.message) ||
                     error.message ||
                     error.toString()
-            })
+              })
+            } else {
+              this.newCryptoTransaction.walletId = this.selectedWallet.id;
+              TransactionService.saveCryptoTransaction(this.newCryptoTransaction).then(() => {
+                this.resetNewTransaction();
+                this.$emit('new-crypto-transaction');
+              }).catch((error) => {
+                this.errorMessage = (error.response &&
+                        error.response.data &&
+                        error.response.data.body?.message) ||
+                    error.message ||
+                    error.toString()
+              })
+            }
         },
         resetNewTransaction() {
             this.errorMessage = '';
             this.newTransaction = {categoryId: null, date: new Date()};
+            this.newCryptoTransaction = {};
         },
         cancelNewTransaction(){
             this.resetNewTransaction();

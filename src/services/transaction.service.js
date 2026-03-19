@@ -37,6 +37,14 @@ class TransactionService {
             else throw e;
         });
     }
+
+    async saveCryptoTransaction(transaction){
+        return await axios.post(`/api/transaction/crypto`, transaction,{ headers: authHeader() }).catch(function (e) {
+            const error = e.toJSON();
+            if(error.status === 403) AuthService.logout();
+            else throw e;
+        });
+    }
 }
 
 export default new TransactionService()
