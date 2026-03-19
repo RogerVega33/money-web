@@ -93,7 +93,7 @@ export default {
     },
     getTotalWallets(){
       return this.wallets.reduce((acum, item) => {
-        return acum + Number(item.total); // o parseInt(item.total, 10)
+        return acum + Number(item.total);
       }, 0);
     }
   },

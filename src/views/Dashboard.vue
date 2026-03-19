@@ -15,15 +15,13 @@
         </div>
       </div>
 
-      <div v-if="selectedWallet && selectedWallet.type !=='crypto'" class="lg:basis-1/3 p-1 lg:p-2">
+      <div v-if="selectedWallet && selectedWallet.type !== 'crypto' && !showForm" class="lg:basis-1/3 p-1 lg:p-2">
         <div class="flex flex-col w-full">
-          <Summary v-if="selectedWallet && !showForm"
-                   :selected-wallet="selectedWallet"
+          <Summary :selected-wallet="selectedWallet"
                    :transactions="transactions"
                    :show-starting-amount="searchSettings.dateRangePicked === 'all'"/>
           <div ref="expenseChartContainer" id="expenseChartContainer">
-            <BarChart v-if="selectedWallet && !showForm"
-                      :labels="chartLabelsExpense"
+            <BarChart :labels="chartLabelsExpense"
                       :data="chartDataExpense"
                       :fullScreen="fullScreenExpense"
                       :hideMoney="hideMoney"
@@ -31,8 +29,7 @@
                       title="Gastos"/>
           </div>
           <div ref="incomeChartContainer" id="incomeChartContainer">
-            <BarChart v-if="selectedWallet && !showForm"
-                      :labels="chartLabelsIncome"
+            <BarChart :labels="chartLabelsIncome"
                       :data="chartDataIncome"
                       :fullScreen="fullScreenIncome"
                       :hideMoney="hideMoney"
@@ -40,8 +37,7 @@
                       title="Ingresos"/>
           </div>
           <div ref="profitLossContainer" id="profitLossContainer">
-            <LineChart v-if="selectedWallet && !showForm"
-                       :labels="chartLabelsProfitLoss"
+            <LineChart :labels="chartLabelsProfitLoss"
                        :datasets="chartDataProfitLoss"
                        :fullScreen="fullScreenProfitLoss"
                        :hideMoney="hideMoney"
@@ -49,14 +45,18 @@
                        title="Histórico"/>
           </div>
           <div ref="totalByCategoryContainer" id="totalByCategoryContainer" v-if="chartLabelsTotalByCategory.length > 1">
-            <LineChart v-if="selectedWallet && !showForm"
-                       :labels="chartLabelsTotalByCategory"
+            <LineChart :labels="chartLabelsTotalByCategory"
                        :datasets="chartDataTotalByCategory"
                        :fullScreen="fullScreenTotalByCategory"
                        :hideMoney="hideMoney"
                        @requestFullScreen="fullScreenChart('totalByCategoryContainer')"
                        title="Total por categoría"/>
           </div>
+        </div>
+      </div>
+
+      <div v-if="selectedWallet && showForm" class="lg:basis-1/3 p-1 lg:p-2">
+        <div class="flex flex-col w-full">
           <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
           <EditWallet v-if="showFormEditWallet" :selected-wallet="selectedWallet"/>
         </div>

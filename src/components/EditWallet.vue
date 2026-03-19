@@ -1,5 +1,5 @@
 <template>
-  <div class="new-wallet">
+  <div class="edit-wallet">
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
       <div class="flex justify-between items-center mb-4">
         <h5 class="text-xl font-bold leading-none text-gray-900">Billetera</h5>
@@ -12,7 +12,7 @@
       </div>
     </div>
 
-    <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
+    <div v-if="selectedWallet && selectedWallet.type !=='crypto'" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
       <div class="flex justify-between items-center mb-4">
         <h5 class="text-xl font-bold leading-none text-gray-900">Categorias</h5>
         <fa :icon="showIconNewCategory? 'plus':'xmark'"
