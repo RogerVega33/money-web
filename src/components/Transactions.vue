@@ -11,6 +11,7 @@
               :class="showIconNewTransaction? 'text-green-600':'text-red-600'" @click="addTransaction"/>
         </div>
       </div>
+      <!-- Nueva transacción -->
       <div class="flow-root mb-5" v-if="!showIconNewTransaction">
         <hr class="mb-5">
         <h6 class="font-semibold">Nueva Transacción</h6>
@@ -74,6 +75,7 @@
             <label for="transactionAmount">Monto:</label>
             <br>
             <input id="transactionAmount" type="number" v-model="newCryptoTransaction.amount" placeholder="0"
+                   @keydown="blockInvalidChars"
                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    required>
           </div>
@@ -93,6 +95,7 @@
         </div>
         <hr class="mt-5">
       </div>
+      <!-- Barra de búsqueda -->
       <div class="relative w-full">
         <div class="flex absolute inset-y-0 left-0 items-center pl-3 pointer-events-none">
           <svg class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor" viewBox="0 0 20 20"
@@ -105,11 +108,13 @@
         <input type="text" v-model="transactionFilter"
                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
       </div>
+      <!-- Lista de transacciones por categoría -->
       <div v-if="searchSettings.showTransactionsByCategory && selectedWallet.type !== 'crypto'" class="flow-root">
         <ul role="list" class="divide-y divide-gray-200">
           <li class="py-3 sm:py-4" v-for="category in transactionsByCategory"
-              :key="category.categoryName+category.total" @click="showDetail(category)">
-            <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 text-left w-full">
+              :key="category.categoryName+category.total">
+            <!-- Resumen de la categoría -->
+            <div @click="showDetail(category)" class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 text-left w-full">
               <div class="flex-shrink-0">
                 <fa icon="sack-dollar" class="text-green-700 h-8"/>
               </div>
@@ -126,13 +131,64 @@
                 {{category.type === 'expense'? '-' : '+'}}{{formatCurrency(category.total?.toFixed(2))}}
               </div>
             </div>
+            <!-- Lista de transacciones -->
             <div v-show="category.showDetail">
               <div class="flex justify-between items-center mt-5">
                 <span class="font-medium text-gray-900">Detalle</span>
               </div>
               <ul role="list" class="divide-y divide-gray-200">
                 <li class="py-3 sm:py-4" v-for="transaction in category.transactions" :key="transaction.id">
-                  <div class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
+                  <!-- Edición de transacciones -->
+                  <div v-if="transactionSelected && transaction.id === transactionSelected.id && showEditTransactionSection" class="relative w-full" >
+                    <h6 class="font-semibold">Editar transacción</h6>
+                    <div class="mt-2">
+                      <label>Categoría: {{transactionSelected.category}}</label>
+                      <br>
+                      <Multiselect v-model="transactionSelected.categoryId"
+                                   valueProp="id"
+                                   :groups="true"
+                                   :searchable="true"
+                                   :options="categories"
+                                   group-options="categoryList"
+                                   group-label="category"
+                                   track-by="name"
+                                   label="name">
+                      </Multiselect>
+                    </div>
+                    <div class="mt-2">
+                      <label for="transactionDetail">Detalle:</label>
+                      <br>
+                      <input id="transactionDetail" type="text" v-model="transactionSelected.detail"
+                             placeholder="Detalle"
+                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                             required>
+                    </div>
+                    <div class="mt-2">
+                      <label for="transactionAmount">Monto:</label>
+                      <br>
+                      <input id="transactionAmount" type="number" v-model="transactionSelected.amount" placeholder="$ 0.00"
+                             @keydown="blockInvalidChars"
+                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                             required>
+                    </div>
+                    <div class="mt-2">
+                      <label>Fecha:</label>
+                      <br>
+                      <Datepicker v-model="transactionSelected.date" autoApply :format="datepickerFormat"/>
+                    </div>
+                    <div class="mt-4">
+                      <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
+                      <button type="button" @click="updateTransaction(transactionSelected)"
+                              :disabled="!transactionSelected.date || !transactionSelected.amount || !transactionSelected.categoryId"
+                              class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:hover:bg-blue-500">
+                        Guardar
+                      </button>
+                      <button type="button" @click="cancel" class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600">
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                  <div v-else class="flex items-center space-x-4 text-gray-900 hover:text-blue-600">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm truncate" :title="transaction.detail || 'Sin detalle'">
                         <span class="font-bold">{{getTransactionDate(transaction.date)}}</span> | {{transaction.detail
@@ -143,6 +199,26 @@
                          :class="transaction.type === 'expense'?'text-red-500':'text-green-500'">
                       {{transaction.type === 'expense'? '-' : '+'}}{{formatCurrency(transaction.amount?.toFixed(2))}}
                     </div>
+                    <!-- Menú 3 puntos -->
+                    <div class="relative" @click.stop>
+                      <button @click="toggleMenu(transaction.id)"
+                              class="flex items-center text-gray-500 hover:text-gray-700 p-1 rounded hover:bg-gray-100">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M12 8a2 2 0 100-4 2 2 0 000 4zm0 2a2 2 0 100 4 2 2 0 000-4zm0 6a2 2 0 100 4 2 2 0 000-4z"/>
+                        </svg>
+                      </button>
+                      <div v-if="openMenuId === transaction.id"
+                           class="absolute right-0 top-8 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                        <div @click="showEditTransaction(transaction)"
+                             class="px-4 py-2 text-sm text-sky-500 hover:bg-gray-100 cursor-pointer rounded-t-lg">
+                          <fa icon="pencil"/> Editar
+                        </div>
+                        <div @click="deleteTransaction(transaction)"
+                             class="px-4 py-2 text-sm text-red-500 hover:bg-red-50 cursor-pointer rounded-b-lg">
+                          <fa icon="trash-can"/> Eliminar
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </li>
               </ul>
@@ -150,6 +226,7 @@
           </li>
         </ul>
       </div>
+      <!-- Lista de transacciones sin agrupar -->
       <div v-else class="flow-root">
         <ul v-if="selectedWallet.type !== 'crypto'" role="list" class="divide-y divide-gray-200">
           <li class="py-3 sm:py-4" v-for="transaction in transactions.transactions" :key="transaction.id">
@@ -175,6 +252,7 @@
         </ul>
         <ul v-else role="list" class="divide-y divide-gray-200">
           <li class="py-3 sm:py-4" v-for="transaction in transactions.transactions" :key="transaction.id">
+            <!-- Edición de transacciones -->
             <div v-if="transactionSelected && transaction.id === transactionSelected.id && showEditTransactionSection" class="relative w-full" >
               <input type="number" v-model="transactionSelected.amount"
                      v-on:keyup.enter="updateTransaction(transactionSelected)" v-on:keyup.esc="cancel"
@@ -283,9 +361,6 @@ export default {
             category.showDetail = !category.showDetail;
         },
         addTransaction() {
-          if(this.selectedWallet.type !== 'crypto') {
-            this.getCategories();
-          }
           this.resetNewTransaction();
           this.showIconNewTransaction = !this.showIconNewTransaction;
         },
@@ -326,15 +401,13 @@ export default {
             this.showIconNewTransaction = true;
         },
         getCategories() {
-            //if (this.categories.length === 0) {
-                CategoryService.getCategories(this.selectedWallet.id).then((response) => {
-                    const incomes = response.data.body.filter(c => c.type === 'income');
-                    const expenses = response.data.body.filter(c => c.type === 'expense');
-                    this.categories = [{category: 'Ingresos', categoryList: incomes}, {category: 'Gastos', categoryList: expenses}];
-                }).catch((error) => {
-                    console.log(error)
-                })
-            //}
+          CategoryService.getCategories(this.selectedWallet.id).then((response) => {
+              const incomes = response.data.body.filter(c => c.type === 'income');
+              const expenses = response.data.body.filter(c => c.type === 'expense');
+              this.categories = [{category: 'Ingresos', categoryList: incomes}, {category: 'Gastos', categoryList: expenses}];
+          }).catch((error) => {
+              console.log(error)
+          })
         },
         toggleMenu(id) {
           this.openMenuId = this.openMenuId === id ? null : id;
@@ -349,17 +422,23 @@ export default {
           this.showEditTransactionSection = true;
         },
         updateTransaction(transaction) {
-          if(this.selectedWallet.type === 'crypto') {
+          if(this.selectedWallet.type !== 'crypto') {
+            TransactionService.updateTransaction(transaction).then(() => {
+              this.cancel();
+              this.resetNewTransaction();
+              this.$emit('update-transaction');
+            }).catch((error) => {
+              console.error(error)
+              Swal.fire("No se pudo eliminar la transacción", "", "error");
+            })
+          } else {
             TransactionService.updateCryptoTransaction(transaction).then(() => {
               this.cancel();
               this.resetNewTransaction();
               this.$emit('update-crypto-transaction');
             }).catch((error) => {
-              this.errorMessage = (error.response &&
-                      error.response.data &&
-                      error.response.data.body?.message) ||
-                  error.message ||
-                  error.toString()
+              console.error(error)
+              Swal.fire("No se pudo eliminar la transacción", "", "error");
             })
           }
         },
@@ -367,24 +446,30 @@ export default {
           Swal.fire({
             title: 'Eliminar transacción',
             text: '¿Seguro que deseas eliminar esta transacción?',
-            icon: 'warning',
             showCancelButton: true,
             confirmButtonText: 'Eliminar',
             cancelButtonText: 'Cancelar',
           }).then((result) => {
             if (result.isConfirmed) {
-              if(this.selectedWallet.type === 'crypto') {
+              if(this.selectedWallet.type !== 'crypto') {
+                TransactionService.deleteTransaction(transaction.id).then(() => {
+                  this.cancel();
+                  this.resetNewTransaction();
+                  this.hideEditTransactionMenu();
+                  this.$emit('delete-transaction', transaction);
+                }).catch((error) => {
+                  console.error("error", error)
+                  Swal.fire("No se pudo eliminar la transacción", "", "error");
+                })
+              } else {
                 TransactionService.deleteCryptoTransaction(transaction.id).then(() => {
                   this.cancel();
                   this.resetNewTransaction();
                   this.hideEditTransactionMenu();
                   this.$emit('delete-crypto-transaction', transaction);
                 }).catch((error) => {
-                  this.errorMessage = (error.response &&
-                          error.response.data &&
-                          error.response.data.body?.message) ||
-                      error.message ||
-                      error.toString()
+                  console.error("error", error)
+                  Swal.fire("No se pudo eliminar la transacción", "", "error");
                 })
               }
             }
@@ -405,6 +490,7 @@ export default {
         }
     },
     mounted() {
+      this.getCategories();
       document.addEventListener('click', this.hideEditTransactionMenu);
     },
     unmounted() {
@@ -419,6 +505,9 @@ export default {
                 this.transactionFilter = "";
             },
             deep: true
+        },
+        selectedWallet() {
+          this.getCategories();
         },
     },
     computed: {

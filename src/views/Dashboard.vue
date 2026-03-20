@@ -69,6 +69,8 @@
                       :transactions="transactions"
                       :selected-wallet="selectedWallet"
                       @new-transaction="getAll"
+                      @update-transaction="getAll"
+                      @delete-transaction="getAll"
                       @new-crypto-transaction="getAllCrypto"
                       @update-crypto-transaction="getAllCrypto"
                       @delete-crypto-transaction="getAllCrypto"

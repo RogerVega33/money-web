@@ -54,8 +54,25 @@ class TransactionService {
         });
     }
 
+    async updateTransaction(transaction){
+        return await axios.put(`/api/transaction`, transaction,{ headers: authHeader() }).catch(function (e) {
+            const error = e.toJSON();
+            if(error.status === 403) AuthService.logout();
+            else throw e;
+        });
+    }
+
     async deleteCryptoTransaction(transactionId){
         return await axios.delete(`/api/transaction/crypto?transactionId=${transactionId}`,
+            { headers: authHeader() }).catch(function (e) {
+            const error = e.toJSON();
+            if(error.status === 403) AuthService.logout();
+            else throw e;
+        });
+    }
+
+    async deleteTransaction(transactionId){
+        return await axios.delete(`/api/transaction?transactionId=${transactionId}`,
             { headers: authHeader() }).catch(function (e) {
             const error = e.toJSON();
             if(error.status === 403) AuthService.logout();
