@@ -45,6 +45,23 @@ class TransactionService {
             else throw e;
         });
     }
+
+    async updateCryptoTransaction(transaction){
+        return await axios.put(`/api/transaction/crypto`, transaction,{ headers: authHeader() }).catch(function (e) {
+            const error = e.toJSON();
+            if(error.status === 403) AuthService.logout();
+            else throw e;
+        });
+    }
+
+    async deleteCryptoTransaction(transactionId){
+        return await axios.delete(`/api/transaction/crypto?transactionId=${transactionId}`,
+            { headers: authHeader() }).catch(function (e) {
+            const error = e.toJSON();
+            if(error.status === 403) AuthService.logout();
+            else throw e;
+        });
+    }
 }
 
 export default new TransactionService()

@@ -70,6 +70,8 @@
                       :selected-wallet="selectedWallet"
                       @new-transaction="getAll"
                       @new-crypto-transaction="getAllCrypto"
+                      @update-crypto-transaction="getAllCrypto"
+                      @delete-crypto-transaction="getAllCrypto"
                       @update-transaction-filter="updateTransactionFilter"/>
       </div>
     </div>

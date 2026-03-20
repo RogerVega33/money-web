@@ -2,3 +2,13 @@
     min-height: 100vh;
     background-image: linear-gradient(to right bottom, #4dc294, #32c07e, #17bd63, #00b943, #00b40f);
 }
+
+/* Para que no aparezca en los input tipo number las flechas */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}

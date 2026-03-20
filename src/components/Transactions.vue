@@ -175,7 +175,19 @@
         </ul>
         <ul v-else role="list" class="divide-y divide-gray-200">
           <li class="py-3 sm:py-4" v-for="transaction in transactions.transactions" :key="transaction.id">
-            <div
+            <div v-if="transactionSelected && transaction.id === transactionSelected.id && showEditTransactionSection" class="relative w-full" >
+              <input type="number" v-model="transactionSelected.amount"
+                     v-on:keyup.enter="updateTransaction(transactionSelected)" v-on:keyup.esc="cancel"
+                     @keydown="blockInvalidChars"
+                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
+              <button type="button" class="flex absolute inset-y-0 right-6 items-center pr-3">
+                <fa icon="check" class="text-green-500 cursor-pointer" @click="updateTransaction(transactionSelected)"/>
+              </button>
+              <button type="button" class="flex absolute inset-y-0 right-0 items-center pr-3">
+                <fa icon="times" class="text-red-500 cursor-pointer" @click="cancel"/>
+              </button>
+            </div>
+            <div v-else
                 class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
               <div class="flex-shrink-0">
                 <fa icon="coins"  class="text-yellow-500 h-8"/>
@@ -191,6 +203,26 @@
               <div class="inline-flex items-center text-base font-semibold text-green-500">
                 {{formatCurrency(transaction.total?.toFixed(2))}}
               </div>
+              <!-- Menú 3 puntos -->
+              <div class="relative" @click.stop>
+                <button @click="toggleMenu(transaction.id)"
+                        class="flex items-center text-gray-500 hover:text-gray-700 p-1 rounded hover:bg-gray-100">
+                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 8a2 2 0 100-4 2 2 0 000 4zm0 2a2 2 0 100 4 2 2 0 000-4zm0 6a2 2 0 100 4 2 2 0 000-4z"/>
+                  </svg>
+                </button>
+                <div v-if="openMenuId === transaction.id"
+                     class="absolute right-0 top-8 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                  <div @click="showEditTransaction(transaction)"
+                       class="px-4 py-2 text-sm text-sky-500 hover:bg-gray-100 cursor-pointer rounded-t-lg">
+                    <fa icon="pencil"/> Editar
+                  </div>
+                  <div @click="deleteTransaction(transaction)"
+                       class="px-4 py-2 text-sm text-red-500 hover:bg-red-50 cursor-pointer rounded-b-lg">
+                    <fa icon="trash-can"/> Eliminar
+                  </div>
+                </div>
+              </div>
             </div>
           </li>
         </ul>
@@ -205,6 +237,7 @@ import moment from 'moment'
 import CategoryService from "../services/category.service";
 import TransactionService from "../services/transaction.service";
 import { formatCurrency, formatCryptoHoldings, formatDateTime } from '@/utils/formats';
+import Swal from 'sweetalert2'
 
 export default {
     name: 'Transactions',
@@ -224,7 +257,10 @@ export default {
         const options = ref(['Select option', 'a', 'b']);
         const value = ref("");
         const datepickerFormat = "dd/MM/yyyy";
-        return {
+        const openMenuId = ref(null);
+        const showEditTransactionSection = ref(false);
+        const transactionSelected = ref();
+      return {
             transactionFilter,
             showIconNewTransaction,
             newTransaction,
@@ -234,6 +270,9 @@ export default {
             options,
             value,
             datepickerFormat,
+            openMenuId,
+            showEditTransactionSection,
+            transactionSelected,
         }
     },
     methods: {
@@ -297,6 +336,79 @@ export default {
                 })
             //}
         },
+        toggleMenu(id) {
+          this.openMenuId = this.openMenuId === id ? null : id;
+        },
+        hideEditTransactionMenu(){
+          this.openMenuId = null;
+        },
+        showEditTransaction(transaction) {
+          this.hideEditTransactionMenu();
+          this.transactionSelected = Object.assign({}, transaction);
+          console.log("Edit transaction", transaction)
+          this.showEditTransactionSection = true;
+        },
+        updateTransaction(transaction) {
+          if(this.selectedWallet.type === 'crypto') {
+            TransactionService.updateCryptoTransaction(transaction).then(() => {
+              this.cancel();
+              this.resetNewTransaction();
+              this.$emit('update-crypto-transaction');
+            }).catch((error) => {
+              this.errorMessage = (error.response &&
+                      error.response.data &&
+                      error.response.data.body?.message) ||
+                  error.message ||
+                  error.toString()
+            })
+          }
+        },
+        deleteTransaction(transaction) {
+          Swal.fire({
+            title: 'Eliminar transacción',
+            text: '¿Seguro que deseas eliminar esta transacción?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Eliminar',
+            cancelButtonText: 'Cancelar',
+          }).then((result) => {
+            if (result.isConfirmed) {
+              if(this.selectedWallet.type === 'crypto') {
+                TransactionService.deleteCryptoTransaction(transaction.id).then(() => {
+                  this.cancel();
+                  this.resetNewTransaction();
+                  this.hideEditTransactionMenu();
+                  this.$emit('delete-crypto-transaction', transaction);
+                }).catch((error) => {
+                  this.errorMessage = (error.response &&
+                          error.response.data &&
+                          error.response.data.body?.message) ||
+                      error.message ||
+                      error.toString()
+                })
+              }
+            }
+          })
+        },
+        cancel() {
+          this.transactionSelected = null;
+          this.showEditTransactionSection = false;
+        },
+        blockInvalidChars(input) {
+           if (['e', 'E', '+', '-'].includes(input.key)) {
+             input.preventDefault();
+          }
+          // bloquea si ya tiene 9 dígitos
+          if (input.target.value.length >= 9 && input.key !== 'Backspace' && input.key !== 'Delete') {
+            input.preventDefault();
+          }
+        }
+    },
+    mounted() {
+      document.addEventListener('click', this.hideEditTransactionMenu);
+    },
+    unmounted() {
+      document.removeEventListener('click', this.hideEditTransactionMenu);
     },
     watch: {
         transactionFilter() {

@@ -3,3 +3,14 @@
 @tailwind components;
 
 @tailwind utilities;
+
+/* Fix específico para SweetAlert2 */
+button.swal2-confirm {
+    background-color: #3085d6 !important;
+    color: white !important;
+}
+
+button.swal2-cancel {
+    background-color: #d74343 !important;
+    color: white !important;
+}
