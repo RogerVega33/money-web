@@ -17,6 +17,11 @@ class AuthService {
         return response.data.body
     }
 
+    async createUser(user){
+        const response = await axios.post(`/api/auth/user`, user, options)
+        return response.data.body
+    }
+
     logout() {
         localStorage.removeItem('user')
     }

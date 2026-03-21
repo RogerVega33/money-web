@@ -26,12 +26,24 @@
           </label>
         </div>
         <div class="mt-6">
-          <button type="button" @click="login" :disabled="!state.user.username || !state.user.username"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
-                  disabled:opacity-75 disabled:hover:bg-blue-500">
+          <button type="button" @click="login" :disabled="!state.user.username || !state.user.password"
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-500
+                  disabled:opacity-75 disabled:hover:bg-blue-300">
             Iniciar sesión
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
+        </div>
+        <div class="mt-6">
+          <button type="button" @click="$router.push('/newUser')"
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-500">
+            Registrarse
+          </button>
+        </div>
+        <div class="mt-2">
+          <button type="button" @click="$router.push('/newUser')"
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-500">
+            Recuperar usuario
+          </button>
         </div>
       </form>
 
@@ -58,8 +70,8 @@ export default {
     const rules = computed(() => {
       return{
         user: {
-          username: { required: helpers.withMessage('WTF!', required) },
-          password: { required: helpers.withMessage('WTF!', required) }
+          username: { required: helpers.withMessage('Ingrese un usuario', required) },
+          password: { required: helpers.withMessage('Ingrese la contraseña', required) }
         }
       }
     })
