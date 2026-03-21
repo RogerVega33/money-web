@@ -21,7 +21,7 @@
             <input id="detail" type="text" v-model="state.newWallet.detail" placeholder="Opcional" max="50"
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
           </div>
-          <div class="mt-4">
+          <div class="mt-4" v-if="state.newWallet.type !== 'crypto'">
             <label class="block text-grey-darker text-sm font-medium mb-2" for="startingAmount">
               Monto inicial
             </label>
