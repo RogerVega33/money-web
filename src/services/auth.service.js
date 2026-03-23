@@ -22,6 +22,11 @@ class AuthService {
         return response.data.body
     }
 
+    async recoverUser(user){
+        const response = await axios.post(`/api/auth/user/recoverUser`, user, options)
+        return response.data.body
+    }
+
     logout() {
         localStorage.removeItem('user')
     }

@@ -1,6 +1,9 @@
 <template>
   <div class="flex flex-row login">
     <div class="container mx-auto bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 flex flex-col self-center w-4/5 max-w-xl">
+      <label class="block text-grey-darker text-2xl font-bold mb-4">
+        Iniciar sesión
+      </label>
       <form>
         <div class="form-group">
           <label class="block text-grey-darker text-sm font-medium mb-2" for="username">
@@ -40,7 +43,7 @@
           </button>
         </div>
         <div class="mt-2">
-          <button type="button" @click="$router.push('/newUser')"
+          <button type="button" @click="$router.push('/recoverUser')"
                   class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-500">
             Recuperar usuario
           </button>
