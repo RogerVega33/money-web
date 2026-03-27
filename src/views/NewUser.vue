@@ -10,23 +10,50 @@
             Usuario
           </label>
           <input id="username" type="text" v-model="state.user.username" :class="{ 'border-red-500': v$.user.username.$error }"
-                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
+                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" minlength="3" maxlength="25" required>
           <p v-if="v$.user.username.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.username.$errors[0].$message}}</p>
         </div>
         <div class="mt-4">
           <label class="block text-grey-darker text-sm font-medium mb-2" for="password">
             Contraseña
           </label>
-          <input id="password" type="password" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
-                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
+          <div class="input-wrapper">
+            <input id="password" :type="showPassword ? 'text' : 'password'" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
+                   class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" minlength="8" maxlength="64" required>
+            <!-- Ojo para mostrar contraseña -->
+            <button type="button" class="eye-btn" @click="showPassword = !showPassword">
+              <fa icon="eye" v-if="showPassword"/>
+              <fa icon="eye-slash" v-else/>
+            </button>
+          </div>
           <p v-if="v$.user.password.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.password.$errors[0].$message}}</p>
+          <!-- Barra de fortaleza de contraseña -->
+          <div v-if="state.user.password" class="strength-indicator">
+            <div class="strength-bar">
+              <div
+                  class="strength-fill"
+                  :style="{
+                    width: (passwordStrength.level / 5 * 100) + '%',
+                    backgroundColor: strengthColor
+                  }"
+              />
+            </div>
+            <span :style="{ color: strengthColor }">{{ passwordStrength.label }}</span>
+          </div>
         </div>
         <div class="mt-4">
-          <label class="block text-grey-darker text-sm font-medium mb-2" for="password">
+          <label class="block text-grey-darker text-sm font-medium mb-2" for="confirmPassword">
             Confirmar contraseña
           </label>
-          <input id="confirmPassword" type="password" v-model="state.user.confirmPassword" :class="{ 'border-red-500': v$.user.confirmPassword.$error }"
-                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
+          <div class="input-wrapper">
+            <input id="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" v-model="state.user.confirmPassword" :class="{ 'border-red-500': v$.user.confirmPassword.$error }"
+                   class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
+            <!-- Ojo para mostrar contraseña -->
+            <button type="button" class="eye-btn" @click="showConfirmPassword = !showConfirmPassword">
+              <fa icon="eye" v-if="showConfirmPassword"/>
+              <fa icon="eye-slash" v-else/>
+            </button>
+          </div>
           <p v-if="v$.user.confirmPassword.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.confirmPassword.$errors[0].$message}}</p>
         </div>
         <div class="mt-6">
@@ -51,10 +78,14 @@
 
 <script>
 import useVuelidate from '@vuelidate/core'
-import {required, helpers, sameAs} from '@vuelidate/validators'
-import {reactive, computed} from 'vue'
+import {required, helpers, sameAs, minLength, maxLength} from '@vuelidate/validators'
+import {reactive, computed, ref} from 'vue'
 import AuthService from '../services/auth.service';
 import Swal from 'sweetalert2'
+import {strongPassword, getPasswordStrength, strengthColors} from '@/utils/passwordValidator'
+
+// Para validar el usuario
+const onlyAlphanumeric = helpers.regex(/^[a-zA-Z0-9]+$/)
 
 export default {
   name: 'NewUser',
@@ -67,20 +98,39 @@ export default {
       },
       errorMessage: '',
     })
-    const rules = computed(() => {
-      return{
-        user: {
-          username: { required: helpers.withMessage('El usuario es requerido', required) },
-          password: { required: helpers.withMessage('La contraseña es requerida', required) },
-          confirmPassword: {
-            required: helpers.withMessage('Ingresa una contraseña', required),
-            sameAs: helpers.withMessage('Las contraseñas deben coincidir', sameAs(state.user.password))
-          },
-        }
-      }
-    })
+    const rules = computed(() => ({
+      user: {
+        username: {
+          required: helpers.withMessage('El nombre de usuario es requerido', required),
+          minLength: helpers.withMessage('El nombre de usuario debe tener mínimo 3 caracteres', minLength(3)),
+          maxLength: helpers.withMessage('El nombre de usuario debe tener máximo 25 caracteres', maxLength(25)),
+          onlyAlphanumeric: helpers.withMessage('El nombre de usuario solo puede tener letras y números', onlyAlphanumeric),
+        },
+        password: {
+          required: helpers.withMessage('La contraseña es requerida', required),
+          minLength: helpers.withMessage('La contraseña debe tener mínimo 8 caracteres', minLength(8)),
+          maxLength: helpers.withMessage('La contraseña debe tener máximo 64 caracteres', maxLength(64)),
+          strongPassword: helpers.withMessage(
+              'La contraseña debe tener +8 caracteres con mayúsculas, minúsculas y números — o bien +12 caracteres libres',
+              strongPassword
+          ),
+        },
+        confirmPassword: {
+          required: helpers.withMessage('Ingresa una contraseña', required),
+          sameAs: helpers.withMessage('Las contraseñas deben coincidir', sameAs(state.user.password)),
+        },
+      },
+    }))
+
+    // Fortaleza de contraseña
+    const passwordStrength = computed(() => getPasswordStrength(state.user.password))
+    const strengthColor = computed(() => strengthColors[passwordStrength.value.level])
+
+    const showPassword = ref(false)
+    const showConfirmPassword = ref(false)
+
     const v$ = useVuelidate(rules, state)
-    return { state, v$ }
+    return { state, v$, passwordStrength, strengthColor, showPassword, showConfirmPassword }
   },
   methods: {
     async signIn() {
@@ -128,3 +178,58 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.eye-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+}
+
+.eye-btn:hover {
+  color: #374151;
+}
+
+.eye-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.strength-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 6px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease, background-color 0.3s ease;
+}
+</style>
