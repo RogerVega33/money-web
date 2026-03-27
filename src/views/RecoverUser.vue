@@ -30,8 +30,8 @@
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" minlength="8" maxlength="64" required>
             <!-- Ojo para mostrar contraseña -->
             <button type="button" class="eye-btn" @click="showPassword = !showPassword">
-              <fa icon="eye" v-if="showPassword"/>
-              <fa icon="eye-slash" v-else/>
+              <fa icon="eye" v-if="showPassword" class="text-sm"/>
+              <fa icon="eye-slash" v-else class="text-sm"/>
             </button>
           </div>
           <p v-if="v$.user.password.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.password.$errors[0].$message}}</p>
@@ -58,8 +58,8 @@
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
             <!-- Ojo para mostrar contraseña -->
             <button type="button" class="eye-btn" @click="showConfirmPassword = !showConfirmPassword">
-              <fa icon="eye" v-if="showConfirmPassword"/>
-              <fa icon="eye-slash" v-else/>
+              <fa icon="eye" v-if="showConfirmPassword" class="text-sm"/>
+              <fa icon="eye-slash" v-else class="text-sm"/>
             </button>
           </div>
           <p v-if="v$.user.confirmPassword.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.confirmPassword.$errors[0].$message}}</p>
@@ -195,11 +195,6 @@ export default {
 
 .eye-btn:hover {
   color: #374151;
-}
-
-.eye-btn svg {
-  width: 20px;
-  height: 20px;
 }
 
 .strength-indicator {

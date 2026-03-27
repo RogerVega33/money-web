@@ -17,9 +17,15 @@
           <label class="block text-grey-darker text-sm font-medium mb-2" for="password">
             Contraseña
           </label>
-          <input id="password" type="password" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
-                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
-          <p v-if="v$.user.password.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.password.$errors[0].$message}}</p>
+          <div class="input-wrapper">
+            <input id="password" :type="showPassword ? 'text' : 'password'" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
+                   class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
+            <!-- Ojo para mostrar contraseña -->
+            <button type="button" class="eye-btn" @click="showPassword = !showPassword">
+              <fa icon="eye" v-if="showPassword" class="text-sm"/>
+              <fa icon="eye-slash" v-else class="text-sm"/>
+            </button>
+          </div>
         </div>
         <div class="mt-4">
           <label for="checked-toggle" class="relative inline-flex items-center mb-4 cursor-pointer">
@@ -57,7 +63,7 @@
 <script>
 import useVuelidate from '@vuelidate/core'
 import {required, helpers} from '@vuelidate/validators'
-import {reactive, computed} from 'vue'
+import {reactive, computed, ref} from 'vue'
 
 export default {
   name: 'Login',
@@ -78,8 +84,9 @@ export default {
         }
       }
     })
+    const showPassword = ref(false)
     const v$ = useVuelidate(rules, state)
-    return { state, v$ }
+    return { state, v$, showPassword }
   },
   methods: {
     async login() {
@@ -107,3 +114,32 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-wrapper input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.eye-btn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+}
+
+.eye-btn:hover {
+  color: #374151;
+}
+</style>
