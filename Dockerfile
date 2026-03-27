@@ -1,5 +1,5 @@
 # compilación
-FROM node:16 AS build-stage
+FROM node:24.14-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
