@@ -209,6 +209,10 @@
                       </button>
                       <div v-if="openMenuId === transaction.id"
                            class="absolute right-0 top-8 w-36 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                        <div @click="addTransaction(transaction)"
+                             class="px-4 py-2 text-sm text-blue-500 hover:bg-gray-100 cursor-pointer rounded-t-lg">
+                          <fa icon="plus"/> Nueva
+                        </div>
                         <div @click="showEditTransaction(transaction)"
                              class="px-4 py-2 text-sm text-sky-500 hover:bg-gray-100 cursor-pointer rounded-t-lg">
                           <fa icon="pencil"/> Editar
@@ -355,18 +359,28 @@ export default {
     },
     methods: {
         getTransactionDate(transactionDate) {
-            return moment(String(transactionDate)).add({M:1}).format('MM/YY')
+          return moment.utc(String(transactionDate)).format('MM/yy')
         },
         showDetail(category) {
             category.showDetail = !category.showDetail;
         },
-        addTransaction() {
+        addTransaction(transaction) {
           this.resetNewTransaction();
+          if(transaction && transaction.id) {
+            this.hideEditTransactionMenu();
+            this.newTransaction.categoryId = transaction.categoryId;
+            this.newTransaction.amount = transaction.amount;
+            this.newTransaction.detail = transaction.detail;
+            this.newTransaction.date = null;
+            this.showIconNewTransaction = false;
+            return;
+          }
           this.showIconNewTransaction = !this.showIconNewTransaction;
         },
         saveTransaction() {
             this.errorMessage = '';
             if(this.selectedWallet.type !== 'crypto') {
+              this.newTransaction.date = moment(this.newTransaction.date).format('YYYY-MM-DD');
               TransactionService.saveTransaction(this.newTransaction).then(() => {
                 this.resetNewTransaction();
                 this.$emit('new-transaction');
@@ -393,7 +407,7 @@ export default {
         },
         resetNewTransaction() {
             this.errorMessage = '';
-            this.newTransaction = {categoryId: null, date: new Date()};
+            this.newTransaction = {categoryId: null, date: new Date(), detail: null, amount: null};
             this.newCryptoTransaction = {};
         },
         cancelNewTransaction(){
@@ -418,11 +432,11 @@ export default {
         showEditTransaction(transaction) {
           this.hideEditTransactionMenu();
           this.transactionSelected = Object.assign({}, transaction);
-          console.log("Edit transaction", transaction)
           this.showEditTransactionSection = true;
         },
         updateTransaction(transaction) {
           if(this.selectedWallet.type !== 'crypto') {
+            transaction.date = moment(transaction.date).format('YYYY-MM-DD');
             TransactionService.updateTransaction(transaction).then(() => {
               this.cancel();
               this.resetNewTransaction();
