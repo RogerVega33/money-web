@@ -34,6 +34,7 @@
             <label for="transactionDetail">Detalle:</label>
             <br>
             <input id="transactionDetail" type="text" v-model="newTransaction.detail"
+                   @keydown.enter="$refs.saveBtn.click()"
                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    required>
           </div>
@@ -41,6 +42,8 @@
             <label for="transactionAmount">Monto:</label>
             <br>
             <input id="transactionAmount" type="number" v-model="newTransaction.amount" placeholder="$ 0.00"
+                   @keydown="blockInvalidChars"
+                   @keydown.enter="$refs.saveBtn.click()"
                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    required>
           </div>
@@ -51,7 +54,7 @@
           </div>
           <div class="mt-4">
             <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
-            <button type="button" @click="saveTransaction"
+            <button ref="saveBtn" type="button" @click="saveTransaction"
                     :disabled="!newTransaction.date || !newTransaction.amount || !newTransaction.categoryId"
                     class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
                     disabled:opacity-75 disabled:hover:bg-blue-500">
@@ -76,12 +79,13 @@
             <br>
             <input id="transactionAmount" type="number" v-model="newCryptoTransaction.amount" placeholder="0"
                    @keydown="blockInvalidChars"
+                   @keydown.enter="$refs.saveCryptoBtn.click()"
                    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                    required>
           </div>
           <div class="mt-4">
             <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
-            <button type="button" @click="saveTransaction"
+            <button ref="saveCryptoBtn" type="button" @click="saveTransaction"
                     :disabled="!newCryptoTransaction.symbol || !newCryptoTransaction.amount"
                     class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
                     disabled:opacity-75 disabled:hover:bg-blue-500">
@@ -159,6 +163,7 @@
                       <label for="transactionDetail">Detalle:</label>
                       <br>
                       <input id="transactionDetail" type="text" v-model="transactionSelected.detail"
+                             @keydown.enter="$refs.editBtn[0].click()"
                              placeholder="Detalle"
                              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                              required>
@@ -168,6 +173,7 @@
                       <br>
                       <input id="transactionAmount" type="number" v-model="transactionSelected.amount" placeholder="$ 0.00"
                              @keydown="blockInvalidChars"
+                             @keydown.enter="$refs.editBtn[0].click()"
                              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                              required>
                     </div>
@@ -178,7 +184,7 @@
                     </div>
                     <div class="mt-4">
                       <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
-                      <button type="button" @click="updateTransaction(transactionSelected)"
+                      <button ref="editBtn" type="button" @click="updateTransaction(transactionSelected)"
                               :disabled="!transactionSelected.date || !transactionSelected.amount || !transactionSelected.categoryId"
                               class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:hover:bg-blue-500">
                         Guardar
@@ -380,9 +386,13 @@ export default {
         saveTransaction() {
             this.errorMessage = '';
             if(this.selectedWallet.type !== 'crypto') {
-              this.newTransaction.date = moment(this.newTransaction.date).format('YYYY-MM-DD');
-              TransactionService.saveTransaction(this.newTransaction).then(() => {
-                this.resetNewTransaction();
+              if (!this.newTransaction.date || !this.newTransaction.amount || !this.newTransaction.categoryId) return;
+              const payload = {
+                ...this.newTransaction,
+                date: moment(this.newTransaction.date).format('YYYY-MM-DD')
+              };
+              TransactionService.saveTransaction(payload).then(() => {
+                this.cancelNewTransaction();
                 this.$emit('new-transaction');
               }).catch((error) => {
                 this.errorMessage = (error.response &&
@@ -392,9 +402,10 @@ export default {
                     error.toString()
               })
             } else {
+              if (!this.newCryptoTransaction.symbol || !this.newCryptoTransaction.amount) return;
               this.newCryptoTransaction.walletId = this.selectedWallet.id;
               TransactionService.saveCryptoTransaction(this.newCryptoTransaction).then(() => {
-                this.resetNewTransaction();
+                this.cancelNewTransaction();
                 this.$emit('new-crypto-transaction');
               }).catch((error) => {
                 this.errorMessage = (error.response &&
@@ -443,7 +454,7 @@ export default {
               this.$emit('update-transaction');
             }).catch((error) => {
               console.error(error)
-              Swal.fire("No se pudo eliminar la transacción", "", "error");
+              Swal.fire("No se pudo editar la transacción", "", "error");
             })
           } else {
             TransactionService.updateCryptoTransaction(transaction).then(() => {
@@ -452,7 +463,7 @@ export default {
               this.$emit('update-crypto-transaction');
             }).catch((error) => {
               console.error(error)
-              Swal.fire("No se pudo eliminar la transacción", "", "error");
+              Swal.fire("No se pudo editar la transacción", "", "error");
             })
           }
         },
@@ -494,11 +505,13 @@ export default {
           this.showEditTransactionSection = false;
         },
         blockInvalidChars(input) {
-           if (['e', 'E', '+', '-'].includes(input.key)) {
+          // Bloquea caracteres inválidos incluyendo notación científica
+          if (['e', 'E', '+', '-'].includes(input.key)) {
              input.preventDefault();
           }
-          // bloquea si ya tiene 9 dígitos
-          if (input.target.value.length >= 9 && input.key !== 'Backspace' && input.key !== 'Delete') {
+          const navigationKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
+          // Bloquea si ya tiene 9 dígitos
+          if (input.target.value.length >= 9 && !navigationKeys.includes(input.key)) {
             input.preventDefault();
           }
         }
