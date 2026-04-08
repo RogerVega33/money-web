@@ -285,6 +285,7 @@ export default {
       });
     },
     groupBy(key){
+      if(!this.transactions?.transactions) return [];
       let result = [];
       this.transactions.transactions.forEach(t => {
         let element = result.find(element => element[key] === t[key] && element.type === t.type);

@@ -13,6 +13,7 @@ import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import 'flowbite';
 import Multiselect from '@vueform/multiselect'
+import './services/interceptor.service'
 
 library.add(fas, fab, far);
 
