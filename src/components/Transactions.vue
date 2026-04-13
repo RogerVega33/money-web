@@ -6,8 +6,13 @@
           {{searchSettings.showTransactionsByCategory? 'x categoría' : ''}}</h5>
         <h5 v-else class="text-xl font-bold leading-none text-gray-900">Holdings</h5>
         <div>
+          <fa icon="download" v-if="transactions?.transactions?.length > 0"
+              class="cursor-pointer text-blue-500 mr-3"
+              title="Descargar CSV"
+              @click="downloadTransactions"/>
           <fa :icon="showIconNewTransaction? 'plus':'xmark'"
               class="cursor-pointer"
+              title="Nueva transacción"
               :class="showIconNewTransaction? 'text-green-600':'text-red-600'" @click="addTransaction"/>
         </div>
       </div>
@@ -197,7 +202,7 @@
                   <div v-else class="flex items-center space-x-4 text-gray-900 hover:text-blue-600">
                     <div class="flex-1 min-w-0">
                       <p class="text-sm truncate" :title="transaction.detail || 'Sin detalle'">
-                        <span class="font-bold">{{getTransactionDate(transaction.date)}}</span> | {{transaction.detail
+                        <span class="font-bold text-xs">{{getTransactionDate(transaction.date)}}</span> | {{transaction.detail
                         || 'Sin detalle'}}
                       </p>
                     </div>
@@ -250,7 +255,7 @@
                   {{transaction.categoryName}}
                 </p>
                 <p class="text-sm truncate" :title="transaction.detail || 'Sin detalle'">
-                  <span class="font-bold">{{getTransactionDate(transaction.date)}}</span>  | {{transaction.detail || 'Sin detalle'}}
+                  <span class="font-bold text-xs">{{getTransactionDate(transaction.date)}}</span>  | {{transaction.detail || 'Sin detalle'}}
                 </p>
               </div>
               <div class="inline-flex items-center text-base font-semibold"
@@ -325,6 +330,7 @@ import moment from 'moment'
 import CategoryService from "../services/category.service";
 import TransactionService from "../services/transaction.service";
 import { formatCurrency, formatCryptoHoldings, formatDateTime } from '@/utils/formats';
+import { exportToCSV } from '@/utils/exportCSV';
 import Swal from 'sweetalert2'
 
 export default {
@@ -365,7 +371,7 @@ export default {
     },
     methods: {
         getTransactionDate(transactionDate) {
-          return moment.utc(String(transactionDate)).format('MM/yy')
+          return moment.utc(String(transactionDate)).format('DD/MM/yy')
         },
         showDetail(category) {
             category.showDetail = !category.showDetail;
@@ -514,7 +520,10 @@ export default {
           if (input.target.value.length >= 9 && !navigationKeys.includes(input.key)) {
             input.preventDefault();
           }
-        }
+        },
+        downloadTransactions(){
+          exportToCSV(this.transactions?.transactions)
+        },
     },
     mounted() {
       this.getCategories();
