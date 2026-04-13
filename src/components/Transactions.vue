@@ -1,7 +1,7 @@
 <template>
   <div class="transactions">
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center mb-4" ref="transactionList">
         <h5 v-if="selectedWallet.type !== 'crypto'" class="text-xl font-bold leading-none text-gray-900">Transacciones
           {{searchSettings.showTransactionsByCategory? 'x categoría' : ''}}</h5>
         <h5 v-else class="text-xl font-bold leading-none text-gray-900">Holdings</h5>
@@ -120,7 +120,7 @@
       <!-- Lista de transacciones por categoría -->
       <div v-if="searchSettings.showTransactionsByCategory && selectedWallet.type !== 'crypto'" class="flow-root">
         <ul role="list" class="divide-y divide-gray-200">
-          <li class="py-3 sm:py-4" v-for="category in transactionsByCategory"
+          <li class="py-3 sm:py-4" v-for="category in paginatedCategories"
               :key="category.categoryName+category.total">
             <!-- Resumen de la categoría -->
             <div @click="showDetail(category)" class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 text-left w-full">
@@ -146,7 +146,7 @@
                 <span class="font-medium text-gray-900">Detalle</span>
               </div>
               <ul role="list" class="divide-y divide-gray-200">
-                <li class="py-3 sm:py-4" v-for="transaction in category.transactions" :key="transaction.id">
+                <li class="py-3 sm:py-4" v-for="transaction in paginatedCategoryTransactions(category)" :key="transaction.id">
                   <!-- Edición de transacciones -->
                   <div v-if="transactionSelected && transaction.id === transactionSelected.id && showEditTransactionSection" class="relative w-full" >
                     <h6 class="font-semibold">Editar transacción</h6>
@@ -237,6 +237,24 @@
                   </div>
                 </li>
               </ul>
+              <!-- Paginación del detalle -->
+              <div v-if="categoryTotalPages(category) > 1" class="flex justify-center items-center gap-2 mt-3">
+                <button
+                    @click="category.currentPage--"
+                    :disabled="category.currentPage <= 1"
+                    class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-40">
+                  ‹
+                </button>
+                <span class="text-sm text-gray-600">
+                  {{ category.currentPage }} / {{ categoryTotalPages(category) }}
+                </span>
+                <button
+                    @click="category.currentPage++"
+                    :disabled="category.currentPage >= categoryTotalPages(category)"
+                    class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-40">
+                  ›
+                </button>
+              </div>
             </div>
           </li>
         </ul>
@@ -244,7 +262,7 @@
       <!-- Lista de transacciones sin agrupar -->
       <div v-else class="flow-root">
         <ul v-if="selectedWallet.type !== 'crypto'" role="list" class="divide-y divide-gray-200">
-          <li class="py-3 sm:py-4" v-for="transaction in transactions.transactions" :key="transaction.id">
+          <li class="py-3 sm:py-4" v-for="transaction in paginatedTransactions" :key="transaction.id">
             <div
               class="flex items-center space-x-4 text-gray-900 hover:text-blue-600 cursor-pointer">
               <div class="flex-shrink-0">
@@ -320,6 +338,24 @@
           </li>
         </ul>
       </div>
+      <!-- Paginación -->
+      <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 mt-4">
+        <button
+            @click="currentPage--"
+            :disabled="currentPage === 1"
+            class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-40">
+          ‹
+        </button>
+        <span class="text-sm text-gray-600">
+          {{ currentPage }} / {{ totalPages }}
+        </span>
+        <button
+            @click="currentPage++"
+            :disabled="currentPage === totalPages"
+            class="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-40">
+          ›
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -354,6 +390,8 @@ export default {
         const openMenuId = ref(null);
         const showEditTransactionSection = ref(false);
         const transactionSelected = ref();
+        const currentPage = ref(1)
+        const pageSize = 10
       return {
             transactionFilter,
             showIconNewTransaction,
@@ -367,6 +405,8 @@ export default {
             openMenuId,
             showEditTransactionSection,
             transactionSelected,
+            currentPage,
+            pageSize,
         }
     },
     methods: {
@@ -375,6 +415,7 @@ export default {
         },
         showDetail(category) {
             category.showDetail = !category.showDetail;
+            if (!category.currentPage) category.currentPage = 1;
         },
         addTransaction(transaction) {
           this.resetNewTransaction();
@@ -524,6 +565,14 @@ export default {
         downloadTransactions(){
           exportToCSV(this.transactions?.transactions)
         },
+        paginatedCategoryTransactions(category) {
+          const pageSize = 10
+          const start = ((category.currentPage || 1) - 1) * pageSize
+          return category.transactions.slice(start, start + pageSize)
+        },
+        categoryTotalPages(category) {
+          return Math.ceil(category.transactions.length / 10)
+        },
     },
     mounted() {
       this.getCategories();
@@ -534,16 +583,29 @@ export default {
     },
     watch: {
         transactionFilter() {
+            this.currentPage = 1;
             this.$emit('update-transaction-filter', this.transactionFilter);
         },
         searchSettings: {
             handler() {
                 this.transactionFilter = "";
+                this.currentPage = 1;
             },
             deep: true
         },
         selectedWallet() {
           this.getCategories();
+        },
+        currentPage() {
+          // Cierra el detalle de las categorías abiertas y reinicia su paginación
+          this.transactionsByCategory?.forEach(category => {
+            category.showDetail = false
+            category.currentPage = 1
+          })
+          // Hace un desplazamiento al inicio de las transacciones
+          this.$nextTick(() => {
+            this.$refs.transactionList?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          })
         },
     },
     computed: {
@@ -555,6 +617,22 @@ export default {
       },
       formatDateTime() {
         return formatDateTime;
+      },
+      paginatedTransactions() {
+        if (!this.transactions?.transactions) return []
+        const start = (this.currentPage - 1) * this.pageSize
+        return this.transactions.transactions.slice(start, start + this.pageSize)
+      },
+      paginatedCategories() {
+        if (!this.transactionsByCategory) return []
+        const start = (this.currentPage - 1) * this.pageSize
+        return this.transactionsByCategory.slice(start, start + this.pageSize)
+      },
+      totalPages() {
+        const total = this.searchSettings.showTransactionsByCategory
+            ? this.transactionsByCategory?.length
+            : this.transactions?.transactions?.length
+        return Math.ceil((total || 0) / this.pageSize)
       },
     },
 }
