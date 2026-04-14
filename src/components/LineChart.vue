@@ -47,7 +47,8 @@ export default defineComponent({
         y: {
           ticks: {
               display: !props.hideMoney,
-          }
+          },
+          beginAtZero: true
         }
       },
     });

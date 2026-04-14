@@ -20,21 +20,23 @@
           <Summary :selected-wallet="selectedWallet"
                    :transactions="transactions"
                    :show-starting-amount="searchSettings.dateRangePicked === 'all'"/>
-          <div ref="expenseChartContainer" id="expenseChartContainer">
-            <BarChart :labels="chartLabelsExpense"
-                      :data="chartDataExpense"
-                      :fullScreen="fullScreenExpense"
-                      :hideMoney="hideMoney"
-                      @requestFullScreen="fullScreenChart('expenseChartContainer')"
-                      title="Gastos"/>
-          </div>
           <div ref="incomeChartContainer" id="incomeChartContainer">
             <BarChart :labels="chartLabelsIncome"
-                      :data="chartDataIncome"
+                      :values="chartDataIncome"
                       :fullScreen="fullScreenIncome"
                       :hideMoney="hideMoney"
+                      color="#1D9E75"
                       @requestFullScreen="fullScreenChart('incomeChartContainer')"
                       title="Ingresos"/>
+          </div>
+          <div ref="expenseChartContainer" id="expenseChartContainer">
+            <BarChart :labels="chartLabelsExpense"
+                      :values="chartDataExpense"
+                      :fullScreen="fullScreenExpense"
+                      :hideMoney="hideMoney"
+                      color="#D85A30"
+                      @requestFullScreen="fullScreenChart('expenseChartContainer')"
+                      title="Gastos"/>
           </div>
           <div ref="profitLossContainer" id="profitLossContainer">
             <LineChart :labels="chartLabelsProfitLoss"
