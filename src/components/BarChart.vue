@@ -139,6 +139,7 @@ export default defineComponent({
       this.chartKey++;
     },
     hideMoney(newVal) {
+      this.options.scales.x.ticks.display = !newVal;
       this.options.plugins.tooltip.enabled = !newVal;
     }
   }

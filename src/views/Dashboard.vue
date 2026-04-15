@@ -46,14 +46,6 @@
                        @requestFullScreen="fullScreenChart('profitLossContainer')"
                        title="Histórico"/>
           </div>
-          <div ref="totalByCategoryContainer" id="totalByCategoryContainer" v-if="chartLabelsTotalByCategory.length > 1">
-            <LineChart :labels="chartLabelsTotalByCategory"
-                       :datasets="chartDataTotalByCategory"
-                       :fullScreen="fullScreenTotalByCategory"
-                       :hideMoney="hideMoney"
-                       @requestFullScreen="fullScreenChart('totalByCategoryContainer')"
-                       title="Total por categoría"/>
-          </div>
         </div>
       </div>
 
@@ -77,6 +69,15 @@
                       @update-crypto-transaction="getAllCrypto"
                       @delete-crypto-transaction="getAllCrypto"
                       @update-transaction-filter="updateTransactionFilter"/>
+        <div ref="totalByCategoryContainer" id="totalByCategoryContainer" v-if="transactionFilter && chartLabelsTotalByCategory.length > 1">
+          <LineChart :labels="chartLabelsTotalByCategory"
+                     :datasets="chartDataTotalByCategory"
+                     :fullScreen="fullScreenTotalByCategory"
+                     :hideMoney="hideMoney"
+                     :showAverage="true"
+                     @requestFullScreen="fullScreenChart('totalByCategoryContainer')"
+                     title="Total por categoría"/>
+        </div>
       </div>
     </div>
   </div>
@@ -397,13 +398,6 @@ export default {
         borderColor: '#109618',
       };
 
-      let avg = {
-        label: 'Promedio',
-        data: [],
-        fill: false,
-        borderColor: '#3366cc',
-      };
-
       let labels = [];
       let total = [];
 
@@ -414,13 +408,7 @@ export default {
       this.chartLabelsTotalByCategory.push(...labels);
       cat1.data.push(...total);
 
-      const totalAmount = cat1.data.reduce((total, amount) => total + amount, 0);
-      const average = totalAmount / cat1.data.length;
-      const averageArray = new Array(cat1.data.length);
-      averageArray.fill(+average.toFixed(2));
-      avg.data = averageArray;
-
-      this.chartDataTotalByCategory.push(cat1, avg);
+      this.chartDataTotalByCategory.push(cat1);
     },
     fullScreenChart(refs){
         const elem = this.$refs[refs];
