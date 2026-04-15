@@ -29,13 +29,12 @@
         </div>
       </li>
     </ul>
-
   </div>
 </template>
 
 <script>
 import CategoryService from "../services/category.service";
-import {ref} from 'vue';
+import { ref } from 'vue';
 
 export default {
   name: 'Category',
@@ -45,31 +44,36 @@ export default {
     icon: String,
     iconStyle: String,
   },
-  setup() {
-    const categorySelected = ref();
-    return{
-      categorySelected,
-    }
-  },
-  methods: {
-    editCategory(){
-      if(!this.categorySelected.name){
-          this.cancel();
-          return;
+  setup(props, { emit }) {
+    const categorySelected = ref(null);
+
+    const editCategory = () => {
+      if (!categorySelected.value?.name) {
+        cancel();
+        return;
       }
-      CategoryService.saveCategory(this.categorySelected).then(() => {
-        this.categorySelected = null;
-        this.$emit('success');
+      CategoryService.saveCategory(categorySelected.value).then(() => {
+        categorySelected.value = null;
+        emit('success');
       }).catch((error) => {
         console.log(error)
       })
-    },
-    selectCategory(category){
-      this.categorySelected = Object.assign({}, category);
-    },
-    cancel(){
-      this.categorySelected = null;
-    },
+    };
+
+    const selectCategory = (category) => {
+      categorySelected.value = Object.assign({}, category);
+    };
+
+    const cancel = () => {
+      categorySelected.value = null;
+    };
+
+    return {
+      categorySelected,
+      editCategory,
+      selectCategory,
+      cancel,
+    }
   },
 }
 </script>

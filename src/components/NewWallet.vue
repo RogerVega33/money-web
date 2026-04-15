@@ -58,69 +58,73 @@
 </template>
 
 <script>
-import {reactive, computed, ref} from 'vue'
-import {required, helpers, minValue, maxValue} from '@vuelidate/validators'
+import { reactive, computed, ref } from 'vue'
+import { required, helpers, minValue, maxValue } from '@vuelidate/validators'
 import useVuelidate from '@vuelidate/core'
 import WalletService from "../services/wallet.service";
 
 export default {
   name: 'NewWallet',
-  setup() {
+  setup(props, { emit }) {
     const state = reactive({
       newWallet: {
         type: 'fiat'
       },
       errorMessage: '',
     });
-    const walletTypes = ref([{
-        name: "Fiat",
-        value: "fiat"
-      }, {
-        name: "Cripto",
-        value: "crypto"
-    }]);
-    const rules = computed(() => {
-      return{
-        newWallet: {
-          name: { required: helpers.withMessage('Ingrese un nombre para la billetera', required) },
-          startingAmount: {
-            minValueValue: helpers.withMessage('Valor mínimo 0.00', minValue(0)),
-            maxValueValue: helpers.withMessage('Valor máximo 1 000 000.00', maxValue(1000000)),
-          },
-          type: { required: helpers.withMessage('Seleccione una categoría', required) },
+
+    const walletTypes = ref([
+      { name: "Fiat", value: "fiat" },
+      { name: "Cripto", value: "crypto" }
+    ]);
+
+    const rules = computed(() => ({
+      newWallet: {
+        name: { required: helpers.withMessage('Ingrese un nombre para la billetera', required) },
+        startingAmount: {
+          minValueValue: helpers.withMessage('Valor mínimo 0.00', minValue(0)),
+          maxValueValue: helpers.withMessage('Valor máximo 1 000 000.00', maxValue(1000000)),
         },
+        type: { required: helpers.withMessage('Seleccione una categoría', required) },
+      },
+    }));
+
+    const v$ = useVuelidate(rules, state);
+
+    const saveWallet = async () => {
+      if (state.newWallet.startingAmount) {
+        state.newWallet.startingAmount = +(state.newWallet.startingAmount.toFixed(2));
       }
-    });
-    const v$ = useVuelidate(rules, state)
+
+      v$.value.$validate();
+
+      if (v$.value.$error) {
+        console.log("Error")
+      } else {
+        WalletService.saveWallet(state.newWallet).then(() => {
+          emit('success', true);
+        }).catch((error) => {
+          state.errorMessage = (error.response &&
+                  error.response.data &&
+                  error.response.data.body?.message) ||
+              error.message ||
+              error.toString()
+        })
+      }
+    };
+
+    const cancel = () => {
+      state.newWallet = {};
+      v$.value.$reset();
+      emit('success', false);
+    };
+
     return {
       state,
       walletTypes,
       v$,
-    }
-  },
-  methods: {
-    async saveWallet(){
-      if(this.state.newWallet.startingAmount) this.state.newWallet.startingAmount = +(this.state.newWallet.startingAmount.toFixed(2));
-      this.v$.$validate()
-      if(this.v$.$error){
-        console.log("Error")
-      }else{
-        WalletService.saveWallet(this.state.newWallet).then(() => {
-            this.$emit('success', true);
-          }
-        ).catch((error) => {
-          this.state.errorMessage = (error.response &&
-            error.response.data &&
-            error.response.data.body?.message) ||
-            error.message ||
-            error.toString()
-        })
-      }
-    },
-    cancel(){
-      this.state.newWallet = {};
-      this.v$.$reset();
-      this.$emit('success', false);
+      saveWallet,
+      cancel,
     }
   },
 }

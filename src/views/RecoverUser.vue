@@ -13,6 +13,7 @@
                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" minlength="3" maxlength="25" required>
           <p v-if="v$.user.username.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.username.$errors[0].$message}}</p>
         </div>
+
         <div class="mt-4">
           <label class="block text-grey-darker text-sm font-medium mb-2" for="recoveryPhrase">
             Frase de recuperación
@@ -21,6 +22,7 @@
                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
           <p v-if="v$.user.recoveryPhrase.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.recoveryPhrase.$errors[0].$message}}</p>
         </div>
+
         <div class="mt-4">
           <label class="block text-grey-darker text-sm font-medium mb-2" for="password">
             Nueva contraseña
@@ -35,6 +37,7 @@
             </button>
           </div>
           <p v-if="v$.user.password.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.password.$errors[0].$message}}</p>
+
           <!-- Barra de fortaleza de contraseña -->
           <div v-if="state.user.password" class="strength-indicator">
             <div class="strength-bar">
@@ -49,6 +52,7 @@
             <span :style="{ color: strengthColor }">{{ passwordStrength.label }}</span>
           </div>
         </div>
+
         <div class="mt-4">
           <label class="block text-grey-darker text-sm font-medium mb-2" for="confirmPassword">
             Confirmar contraseña
@@ -64,30 +68,32 @@
           </div>
           <p v-if="v$.user.confirmPassword.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.confirmPassword.$errors[0].$message}}</p>
         </div>
+
         <div class="mt-6">
-          <button type="button" @click="signIn" :disabled="!state.user.username || !state.user.password || !state.user.confirmPassword"
+          <button type="button" @click="signIn" :disabled="!state.user.username || !state.user.password || !state.user.confirmPassword || !state.user.recoveryPhrase"
                   class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
                   disabled:opacity-75 disabled:hover:bg-blue-500">
             Recuperar
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
         </div>
+
         <div class="mt-2">
-          <button type="button" @click="$router.push('/login')"
+          <button type="button" @click="router.push('/login')"
                   class="text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600">
             Cancelar
           </button>
         </div>
       </form>
-
     </div>
   </div>
 </template>
 
 <script>
 import useVuelidate from '@vuelidate/core'
-import {required, helpers, sameAs, minLength, maxLength} from '@vuelidate/validators'
+import {required, helpers, minLength, maxLength} from '@vuelidate/validators'
 import {reactive, computed, ref} from 'vue'
+import { useRouter } from 'vue-router'
 import AuthService from '../services/auth.service';
 import Swal from 'sweetalert2'
 import {strongPassword, getPasswordStrength, strengthColors} from '@/utils/passwordValidator'
@@ -95,6 +101,8 @@ import {strongPassword, getPasswordStrength, strengthColors} from '@/utils/passw
 export default {
   name: 'RecoverUser',
   setup () {
+    const router = useRouter()
+
     const state = reactive({
       user: {
         username: '',
@@ -104,6 +112,7 @@ export default {
       },
       errorMessage: '',
     })
+
     const rules = computed(() => {
       return{
         user: {
@@ -119,7 +128,10 @@ export default {
           },
           confirmPassword: {
             required: helpers.withMessage('Ingresa una contraseña', required),
-            sameAs: helpers.withMessage('Las contraseñas deben coincidir', sameAs(state.user.password)),
+            sameAs: helpers.withMessage(
+                'Las contraseñas deben coincidir',
+                (value) => value === state.user.password
+            ),
           },
           recoveryPhrase: { required: helpers.withMessage('La frase de recuperación es requerida', required) },
         }
@@ -134,17 +146,17 @@ export default {
     const showConfirmPassword = ref(false)
 
     const v$ = useVuelidate(rules, state)
-    return { state, v$, passwordStrength, strengthColor, showPassword, showConfirmPassword }
-  },
-  methods: {
-    async signIn() {
-      this.v$.$validate()
-      if (this.v$.$error) return
+
+    const signIn = async () => {
+      v$.value.$validate()
+      if (v$.value.$error) return
+
       const user = {
-        username: this.state.user.username,
-        recoveryPhrase: this.state.user.recoveryPhrase,
-        newPassword: this.state.user.password,
+        username: state.user.username,
+        recoveryPhrase: state.user.recoveryPhrase,
+        newPassword: state.user.password,
       }
+
       try {
         await AuthService.recoverUser(user)
         await Swal.fire({
@@ -157,13 +169,24 @@ export default {
           icon: 'success',
           confirmButtonText: 'Aceptar',
         })
-        this.$router.push("/login")
+        router.push("/login")
       } catch (error) {
-        this.state.errorMessage =
+        state.errorMessage =
             (error.response?.data?.body?.message) ||
             error.message ||
             error.toString()
       }
+    }
+
+    return {
+      state,
+      v$,
+      passwordStrength,
+      strengthColor,
+      showPassword,
+      showConfirmPassword,
+      signIn,
+      router,
     }
   },
 }

@@ -78,11 +78,12 @@
 
 <script>
 import useVuelidate from '@vuelidate/core'
-import {required, helpers, sameAs, minLength, maxLength} from '@vuelidate/validators'
-import {reactive, computed, ref} from 'vue'
+import { required, helpers, minLength, maxLength } from '@vuelidate/validators'
+import { reactive, computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import AuthService from '../services/auth.service';
 import Swal from 'sweetalert2'
-import {strongPassword, getPasswordStrength, strengthColors} from '@/utils/passwordValidator'
+import { strongPassword, getPasswordStrength, strengthColors } from '@/utils/passwordValidator'
 
 // Para validar el usuario
 const onlyAlphanumeric = helpers.regex(/^[a-zA-Z0-9]+$/)
@@ -90,6 +91,8 @@ const onlyAlphanumeric = helpers.regex(/^[a-zA-Z0-9]+$/)
 export default {
   name: 'NewUser',
   setup () {
+    const router = useRouter()
+
     const state = reactive({
       user: {
         username: '',
@@ -98,6 +101,7 @@ export default {
       },
       errorMessage: '',
     })
+
     const rules = computed(() => ({
       user: {
         username: {
@@ -117,7 +121,10 @@ export default {
         },
         confirmPassword: {
           required: helpers.withMessage('Ingresa una contraseña', required),
-          sameAs: helpers.withMessage('Las contraseñas deben coincidir', sameAs(state.user.password)),
+          sameAs: helpers.withMessage(
+              'Las contraseñas deben coincidir',
+              (value) => value === state.user.password
+          ),
         },
       },
     }))
@@ -130,16 +137,16 @@ export default {
     const showConfirmPassword = ref(false)
 
     const v$ = useVuelidate(rules, state)
-    return { state, v$, passwordStrength, strengthColor, showPassword, showConfirmPassword }
-  },
-  methods: {
-    async signIn() {
-      this.v$.$validate()
-      if (this.v$.$error) return
+
+    const signIn = async () => {
+      v$.value.$validate()
+      if (v$.value.$error) return
+
       const newUser = {
-        username: this.state.user.username,
-        password: this.state.user.password,
+        username: state.user.username,
+        password: state.user.password,
       }
+
       try {
         const response = await AuthService.createUser(newUser)
         const recoveryPhrase = response.recoveryPhrase;
@@ -167,13 +174,25 @@ export default {
           allowOutsideClick: false,  // obliga al usuario a hacer clic en el botón
           allowEscapeKey: false,     // no puede cerrar con ESC
         })
-        this.$router.push("/login")  // redirige solo después de que el usuario confirme
+
+        router.push("/login")  // redirige solo después de que el usuario confirme
       } catch (error) {
-        this.state.errorMessage =
+        state.errorMessage =
             (error.response?.data?.body?.message) ||
             error.message ||
             error.toString()
       }
+    }
+
+    return {
+      state,
+      v$,
+      passwordStrength,
+      strengthColor,
+      showPassword,
+      showConfirmPassword,
+      signIn,
+      router
     }
   },
 }

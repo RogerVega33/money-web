@@ -62,12 +62,17 @@
 
 <script>
 import useVuelidate from '@vuelidate/core'
-import {required, helpers} from '@vuelidate/validators'
-import {reactive, computed, ref} from 'vue'
+import { required, helpers } from '@vuelidate/validators'
+import { reactive, computed, ref } from 'vue'
+import { useStore } from 'vuex'
+import { useRouter } from 'vue-router'
 
 export default {
   name: 'Login',
   setup () {
+    const store = useStore()
+    const router = useRouter()
+
     const state = reactive({
       user: {
         username: '',
@@ -76,6 +81,7 @@ export default {
       errorMessage: '',
       hideMoney: false,
     })
+
     const rules = computed(() => {
       return{
         user: {
@@ -84,33 +90,35 @@ export default {
         }
       }
     })
-    const showPassword = ref(false)
-    const v$ = useVuelidate(rules, state)
-    return { state, v$, showPassword }
-  },
-  methods: {
-    async login() {
-      this.v$.$validate()
-      if(this.v$.$error){
-        console.log("Error")
-      }else{
-        this.$store.dispatch("auth/login", this.state.user).then(
-          () => {
-            this.$store.commit('app/SET_HIDE_MONEY', this.state.hideMoney)
-            this.$router.push("/dashboard")
-          },
-          (error) => {
-            this.state.errorMessage =
-                    (error.response &&
-                            error.response.data &&
-                            error.response.data.body?.message) ||
-                    error.message ||
-                    error.toString()
-          }
-        );
 
+    const showPassword = ref(false)
+
+    const v$ = useVuelidate(rules, state)
+
+    const login = async () => {
+      v$.value.$validate()
+
+      if (v$.value.$error) {
+        console.log("Error")
+      } else {
+        store.dispatch("auth/login", state.user).then(
+            () => {
+              store.commit('app/SET_HIDE_MONEY', state.hideMoney)
+              router.push("/dashboard")
+            },
+            (error) => {
+              state.errorMessage =
+                  (error.response &&
+                      error.response.data &&
+                      error.response.data.body?.message) ||
+                  error.message ||
+                  error.toString()
+            }
+        )
       }
     }
+
+    return { state, v$, showPassword, login, router }
   },
 }
 </script>

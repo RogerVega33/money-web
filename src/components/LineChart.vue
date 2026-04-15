@@ -9,7 +9,7 @@
 </template>
 
 <script>
-import { defineComponent, ref } from 'vue';
+import { defineComponent, ref, watch } from 'vue';
 import { LineChart } from 'vue-chart-3';
 import { Chart, registerables } from "chart.js";
 import annotationPlugin from 'chartjs-plugin-annotation';
@@ -28,7 +28,7 @@ export default defineComponent({
     showAverage: Boolean,
   },
 
-  setup(props) {
+  setup(props, { emit }) {
     const avgColor = '#3366cc';
     const avgLabel = 'Promedio';
 
@@ -44,34 +44,34 @@ export default defineComponent({
           text: props.title,
         },
         tooltip: {
-            enabled: !props.hideMoney,
-            callbacks: {
-              title: (tooltipItems) => {
-                // si el hover es sobre el dataset fantasma, no muestra título
-                const isPromedio = tooltipItems.some(item => item.dataset.label === avgLabel);
-                return isPromedio ? '' : tooltipItems[0].label;
-              },
-              label: (tooltipItem) => {
-                if (tooltipItem.dataset.label === avgLabel) {
-                  return `Promedio: $${tooltipItem.raw}`;
-                }
-                return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
-              },
-              labelColor: (tooltipItem) => {
-                if (tooltipItem.dataset.label === avgLabel) {
-                  return {
-                    backgroundColor: 'rgba(0,0,0,0.1)',
-                    borderColor: avgColor,
-                  };
-                }
-                // devuelve los valores originales del dataset
+          enabled: !props.hideMoney,
+          callbacks: {
+            title: (tooltipItems) => {
+              // si el hover es sobre el dataset fantasma, no muestra título
+              const isPromedio = tooltipItems.some(item => item.dataset.label === avgLabel);
+              return isPromedio ? '' : tooltipItems[0].label;
+            },
+            label: (tooltipItem) => {
+              if (tooltipItem.dataset.label === avgLabel) {
+                return `Promedio: $${tooltipItem.raw}`;
+              }
+              return `${tooltipItem.dataset.label}: ${tooltipItem.raw}`;
+            },
+            labelColor: (tooltipItem) => {
+              if (tooltipItem.dataset.label === avgLabel) {
                 return {
-                  backgroundColor: tooltipItem.element.options.backgroundColor,
-                  borderColor: tooltipItem.element.options.borderColor,
-                  borderWidth: tooltipItem.element.options.borderWidth,
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                  borderColor: avgColor,
                 };
               }
+              // devuelve los valores originales del dataset
+              return {
+                backgroundColor: tooltipItem.element.options.backgroundColor,
+                borderColor: tooltipItem.element.options.borderColor,
+                borderWidth: tooltipItem.element.options.borderWidth,
+              };
             }
+          }
         },
         annotation: {
           annotations: {
@@ -91,7 +91,7 @@ export default defineComponent({
         },
         y: {
           ticks: {
-              display: !props.hideMoney,
+            display: !props.hideMoney,
           },
           beginAtZero: true
         }
@@ -103,79 +103,77 @@ export default defineComponent({
       datasets: props.datasets,
     });
 
-    return { avgColor, avgLabel, chartData, options };
-  },
-  methods: {
-    requestFullScreen(){
-      this.$emit('requestFullScreen');
-    },
-  },
-  watch: {
-    labels: function (newData) {
-      this.chartData.labels = newData;
-    },
-    datasets: {
-      immediate: true,
-      handler: function(newData) {
-        if (this.showAverage && newData[0]?.data.length > 0) {
-          // calcula el promedio
-          let avgDataset = newData[0]?.data.reduce((acum, num) => acum + num, 0) / newData[0]?.data.length;
-          avgDataset = avgDataset.toFixed(2)
+    function requestFullScreen(){
+      emit('requestFullScreen');
+    }
 
-          this.chartData.datasets = [
-            ...newData,
-            {
-              label: this.avgLabel,
-              data: new Array(newData[0].data.length).fill(avgDataset), // línea invisible
-              borderColor: 'transparent',
-              backgroundColor: 'transparent',
-              pointRadius: 0, // puntos invisibles
-              pointHoverRadius: 0, // círculo al hacer hover
-              pointHitRadius: 10, // área de detección
-            }
-          ];
+    watch(() => props.labels, (newData) => {
+      chartData.value.labels = newData;
+    });
 
-          this.options = {
-            ...this.options,
-            plugins: {
-              ...this.options.plugins,
-              legend: {
-                position: 'top',
-                labels: {
-                  filter: (legendItem) => {
-                    // oculta de la leyenda cualquier dataset llamado con avgLabel
-                    return legendItem.text !== this.avgLabel;
-                  }
+    watch(() => props.datasets, (newData) => {
+      if (props.showAverage && newData[0]?.data.length > 0) {
+        // calcula el promedio
+        let avgDataset = newData[0]?.data.reduce((acum, num) => acum + num, 0) / newData[0]?.data.length;
+        avgDataset = avgDataset.toFixed(2)
+
+        chartData.value.datasets = [
+          ...newData,
+          {
+            label: avgLabel,
+            data: new Array(newData[0].data.length).fill(avgDataset), // línea invisible
+            borderColor: 'transparent',
+            backgroundColor: 'transparent',
+            pointRadius: 0, // puntos invisibles
+            pointHoverRadius: 0, // círculo al hacer hover
+            pointHitRadius: 10, // área de detección
+          }
+        ];
+
+        options.value = {
+          ...options.value,
+          plugins: {
+            ...options.value.plugins,
+            legend: {
+              position: 'top',
+              labels: {
+                filter: (legendItem) => {
+                  // oculta de la leyenda cualquier dataset llamado con avgLabel
+                  return legendItem.text !== avgLabel;
                 }
-              },
-              annotation: {
-                annotations: {
-                  promedio: {
-                    type: 'line',
-                    yMin: avgDataset,
-                    yMax: avgDataset,
-                    borderColor: this.avgColor,
-                    borderWidth: 2,
-                    borderDash: [6, 4], // línea punteada
-                  }
+              }
+            },
+            annotation: {
+              annotations: {
+                promedio: {
+                  type: 'line',
+                  yMin: avgDataset,
+                  yMax: avgDataset,
+                  borderColor: avgColor,
+                  borderWidth: 2,
+                  borderDash: [6, 4], // línea punteada
                 }
               }
             }
           }
-        } else {
-          this.chartData.datasets = newData;
-          this.options.plugins.annotation.annotations = {};
         }
+      } else {
+        chartData.value.datasets = newData;
+        options.value.plugins.annotation.annotations = {};
       }
-    },
-    fullScreen: function (newData) {
-      this.options.maintainAspectRatio = !newData || undefined;
-      this.options.aspectRatio = newData? '1:2':'1';
-    },
-    hideMoney: function (newData) {
-      this.options.scales.y.ticks.display = !newData;
-      this.options.plugins.tooltip.enabled = !newData;
-    }
+    }, { immediate: true });
+
+    watch(() => props.fullScreen, (newData) => {
+      options.value.maintainAspectRatio = !newData || undefined;
+      options.value.aspectRatio = newData ? '1:2' : '1';
+    });
+
+    watch(() => props.hideMoney, (newData) => {
+      options.value.scales.y.ticks.display = !newData;
+      options.value.plugins.tooltip.enabled = !newData;
+    });
+
+    return { avgColor, avgLabel, chartData, options, requestFullScreen };
   }
 });
 </script>

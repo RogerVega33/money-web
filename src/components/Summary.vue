@@ -56,7 +56,8 @@
 </template>
 
 <script>
-import { formatCurrency } from '../utils/formats';
+import { computed } from 'vue'
+import { formatCurrency } from '../utils/formats'
 
 export default {
   name: 'Summary',
@@ -65,20 +66,26 @@ export default {
     transactions: Object,
     showStartingAmount: Boolean,
   },
-  computed: {
-    totalSavings(){
-      if(this.transactions.savings && this.selectedWallet.startingAmount){
-        if(this.showStartingAmount)
-          return (+this.transactions.savings + +this.selectedWallet.startingAmount).toFixed(2);
-        return (+this.transactions.savings).toFixed(2);
+  setup(props) {
+
+    const totalSavings = computed(() => {
+      if (props.transactions.savings && props.selectedWallet.startingAmount) {
+        if (props.showStartingAmount)
+          return (+props.transactions.savings + +props.selectedWallet.startingAmount).toFixed(2)
+
+        return (+props.transactions.savings).toFixed(2)
       }
-      return (0).toFixed(2);
-    },
-    savingsPercentage(){
-      return ((+this.transactions.savings * 100)/+this.transactions.totalIncome).toFixed(2);
-    },
-    formatCurrency() {
-        return formatCurrency;
+      return (0).toFixed(2)
+    })
+
+    const savingsPercentage = computed(() => {
+      return ((+props.transactions.savings * 100) / +props.transactions.totalIncome).toFixed(2)
+    })
+
+    return {
+      totalSavings,
+      savingsPercentage,
+      formatCurrency
     }
   },
 }

@@ -361,7 +361,7 @@
 </template>
 
 <script>
-import {ref} from 'vue';
+import {ref, watch, computed, onMounted, onUnmounted, nextTick} from 'vue';
 import moment from 'moment'
 import CategoryService from "../services/category.service";
 import TransactionService from "../services/transaction.service";
@@ -370,270 +370,304 @@ import { exportToCSV } from '@/utils/exportCSV';
 import Swal from 'sweetalert2'
 
 export default {
-    name: 'Transactions',
-    props: {
-        searchSettings: Object,
-        transactionsByCategory: Array,
-        transactions: Object,
-        selectedWallet: Object,
-    },
-    setup() {
-        const categories = ref([]);
-        const transactionFilter = ref("");
-        const showIconNewTransaction = ref(true);
-        const newTransaction = ref({date: new Date()});
-        const newCryptoTransaction = ref({});
-        const errorMessage = ref("");
-        const options = ref(['Select option', 'a', 'b']);
-        const value = ref("");
-        const datepickerFormat = "dd/MM/yyyy";
-        const openMenuId = ref(null);
-        const showEditTransactionSection = ref(false);
-        const transactionSelected = ref();
-        const currentPage = ref(1)
-        const pageSize = 10
-      return {
-            transactionFilter,
-            showIconNewTransaction,
-            newTransaction,
-            newCryptoTransaction,
-            categories,
-            errorMessage,
-            options,
-            value,
-            datepickerFormat,
-            openMenuId,
-            showEditTransactionSection,
-            transactionSelected,
-            currentPage,
-            pageSize,
-        }
-    },
-    methods: {
-        getTransactionDate(transactionDate) {
-          return moment.utc(String(transactionDate)).format('DD/MM/yy')
-        },
-        showDetail(category) {
-            category.showDetail = !category.showDetail;
-            if (!category.currentPage) category.currentPage = 1;
-        },
-        addTransaction(transaction) {
-          this.resetNewTransaction();
-          if(transaction && transaction.id) {
-            this.hideEditTransactionMenu();
-            this.newTransaction.categoryId = transaction.categoryId;
-            this.newTransaction.amount = transaction.amount;
-            this.newTransaction.detail = transaction.detail;
-            this.newTransaction.date = null;
-            this.showIconNewTransaction = false;
-            return;
-          }
-          this.showIconNewTransaction = !this.showIconNewTransaction;
-        },
-        saveTransaction() {
-            this.errorMessage = '';
-            if(this.selectedWallet.type !== 'crypto') {
-              if (!this.newTransaction.date || !this.newTransaction.amount || !this.newTransaction.categoryId) return;
-              const payload = {
-                ...this.newTransaction,
-                date: moment(this.newTransaction.date).format('YYYY-MM-DD')
-              };
-              TransactionService.saveTransaction(payload).then(() => {
-                this.cancelNewTransaction();
-                this.$emit('new-transaction');
-              }).catch((error) => {
-                this.errorMessage = (error.response &&
-                        error.response.data &&
-                        error.response.data.body?.message) ||
-                    error.message ||
-                    error.toString()
-              })
-            } else {
-              if (!this.newCryptoTransaction.symbol || !this.newCryptoTransaction.amount) return;
-              this.newCryptoTransaction.walletId = this.selectedWallet.id;
-              TransactionService.saveCryptoTransaction(this.newCryptoTransaction).then(() => {
-                this.cancelNewTransaction();
-                this.$emit('new-crypto-transaction');
-              }).catch((error) => {
-                this.errorMessage = (error.response &&
-                        error.response.data &&
-                        error.response.data.body?.message) ||
-                    error.message ||
-                    error.toString()
-              })
-            }
-        },
-        resetNewTransaction() {
-            this.errorMessage = '';
-            this.newTransaction = {categoryId: null, date: new Date(), detail: null, amount: null};
-            this.newCryptoTransaction = {};
-        },
-        cancelNewTransaction(){
-            this.resetNewTransaction();
-            this.showIconNewTransaction = true;
-        },
-        getCategories() {
-          CategoryService.getCategories(this.selectedWallet.id).then((response) => {
-              const incomes = response.data.body.filter(c => c.type === 'income');
-              const expenses = response.data.body.filter(c => c.type === 'expense');
-              this.categories = [{category: 'Ingresos', categoryList: incomes}, {category: 'Gastos', categoryList: expenses}];
-          }).catch((error) => {
-              console.log(error)
-          })
-        },
-        toggleMenu(id) {
-          this.openMenuId = this.openMenuId === id ? null : id;
-        },
-        hideEditTransactionMenu(){
-          this.openMenuId = null;
-        },
-        showEditTransaction(transaction) {
-          this.hideEditTransactionMenu();
-          this.transactionSelected = Object.assign({}, transaction);
-          this.showEditTransactionSection = true;
-        },
-        updateTransaction(transaction) {
-          if(this.selectedWallet.type !== 'crypto') {
-            transaction.date = moment(transaction.date).format('YYYY-MM-DD');
-            TransactionService.updateTransaction(transaction).then(() => {
-              this.cancel();
-              this.resetNewTransaction();
-              this.$emit('update-transaction');
+  name: 'Transactions',
+  props: {
+    searchSettings: Object,
+    transactionsByCategory: Array,
+    transactions: Object,
+    selectedWallet: Object,
+  },
+  setup(props, { emit }) {
+
+    const categories = ref([]);
+    const transactionFilter = ref("");
+    const showIconNewTransaction = ref(true);
+    const newTransaction = ref({date: new Date()});
+    const newCryptoTransaction = ref({});
+    const errorMessage = ref("");
+    const options = ref(['Select option', 'a', 'b']);
+    const value = ref("");
+    const datepickerFormat = "dd/MM/yyyy";
+    const openMenuId = ref(null);
+    const showEditTransactionSection = ref(false);
+    const transactionSelected = ref();
+    const currentPage = ref(1)
+    const pageSize = 10
+    const transactionList = ref(null)
+
+    function getTransactionDate(transactionDate) {
+      return moment.utc(String(transactionDate)).format('DD/MM/yy')
+    }
+
+    function showDetail(category) {
+      category.showDetail = !category.showDetail;
+      if (!category.currentPage) category.currentPage = 1;
+    }
+
+    function addTransaction(transaction) {
+      resetNewTransaction();
+      if(transaction && transaction.id) {
+        hideEditTransactionMenu();
+        newTransaction.value.categoryId = transaction.categoryId;
+        newTransaction.value.amount = transaction.amount;
+        newTransaction.value.detail = transaction.detail;
+        newTransaction.value.date = null;
+        showIconNewTransaction.value = false;
+        return;
+      }
+      showIconNewTransaction.value = !showIconNewTransaction.value;
+    }
+
+    function saveTransaction() {
+      errorMessage.value = '';
+      if(props.selectedWallet.type !== 'crypto') {
+        if (!newTransaction.value.date || !newTransaction.value.amount || !newTransaction.value.categoryId) return;
+        const payload = {
+          ...newTransaction.value,
+          date: moment(newTransaction.value.date).format('YYYY-MM-DD')
+        };
+        TransactionService.saveTransaction(payload).then(() => {
+          cancelNewTransaction();
+          emit('new-transaction');
+        }).catch((error) => {
+          errorMessage.value = (error.response &&
+                  error.response.data &&
+                  error.response.data.body?.message) ||
+              error.message ||
+              error.toString()
+        })
+      } else {
+        if (!newCryptoTransaction.value.symbol || !newCryptoTransaction.value.amount) return;
+        newCryptoTransaction.value.walletId = props.selectedWallet.id;
+        TransactionService.saveCryptoTransaction(newCryptoTransaction.value).then(() => {
+          cancelNewTransaction();
+          emit('new-crypto-transaction');
+        }).catch((error) => {
+          errorMessage.value = (error.response &&
+                  error.response.data &&
+                  error.response.data.body?.message) ||
+              error.message ||
+              error.toString()
+        })
+      }
+    }
+
+    function resetNewTransaction() {
+      errorMessage.value = '';
+      newTransaction.value = {categoryId: null, date: new Date(), detail: null, amount: null};
+      newCryptoTransaction.value = {};
+    }
+
+    function cancelNewTransaction(){
+      resetNewTransaction();
+      showIconNewTransaction.value = true;
+    }
+
+    function getCategories() {
+      CategoryService.getCategories(props.selectedWallet.id).then((response) => {
+        const incomes = response.data.body.filter(c => c.type === 'income');
+        const expenses = response.data.body.filter(c => c.type === 'expense');
+        categories.value = [{category: 'Ingresos', categoryList: incomes}, {category: 'Gastos', categoryList: expenses}];
+      }).catch((error) => {
+        console.log(error)
+      })
+    }
+
+    function toggleMenu(id) {
+      openMenuId.value = openMenuId.value === id ? null : id;
+    }
+
+    function hideEditTransactionMenu(){
+      openMenuId.value = null;
+    }
+
+    function showEditTransaction(transaction) {
+      hideEditTransactionMenu();
+      transactionSelected.value = Object.assign({}, transaction);
+      showEditTransactionSection.value = true;
+    }
+
+    function updateTransaction(transaction) {
+      if(props.selectedWallet.type !== 'crypto') {
+        transaction.date = moment(transaction.date).format('YYYY-MM-DD');
+        TransactionService.updateTransaction(transaction).then(() => {
+          cancel();
+          resetNewTransaction();
+          emit('update-transaction');
+        }).catch((error) => {
+          console.error(error)
+          Swal.fire("No se pudo editar la transacción", "", "error");
+        })
+      } else {
+        TransactionService.updateCryptoTransaction(transaction).then(() => {
+          cancel();
+          resetNewTransaction();
+          emit('update-crypto-transaction');
+        }).catch((error) => {
+          console.error(error)
+          Swal.fire("No se pudo editar la transacción", "", "error");
+        })
+      }
+    }
+
+    function deleteTransaction(transaction) {
+      Swal.fire({
+        title: 'Eliminar transacción',
+        text: '¿Seguro que deseas eliminar esta transacción?',
+        showCancelButton: true,
+        confirmButtonText: 'Eliminar',
+        cancelButtonText: 'Cancelar',
+      }).then((result) => {
+        if (result.isConfirmed) {
+          if(props.selectedWallet.type !== 'crypto') {
+            TransactionService.deleteTransaction(transaction.id).then(() => {
+              cancel();
+              resetNewTransaction();
+              hideEditTransactionMenu();
+              emit('delete-transaction', transaction);
             }).catch((error) => {
-              console.error(error)
-              Swal.fire("No se pudo editar la transacción", "", "error");
+              console.error("error", error)
+              Swal.fire("No se pudo eliminar la transacción", "", "error");
             })
           } else {
-            TransactionService.updateCryptoTransaction(transaction).then(() => {
-              this.cancel();
-              this.resetNewTransaction();
-              this.$emit('update-crypto-transaction');
+            TransactionService.deleteCryptoTransaction(transaction.id).then(() => {
+              cancel();
+              resetNewTransaction();
+              hideEditTransactionMenu();
+              emit('delete-crypto-transaction', transaction);
             }).catch((error) => {
-              console.error(error)
-              Swal.fire("No se pudo editar la transacción", "", "error");
+              console.error("error", error)
+              Swal.fire("No se pudo eliminar la transacción", "", "error");
             })
           }
-        },
-        deleteTransaction(transaction) {
-          Swal.fire({
-            title: 'Eliminar transacción',
-            text: '¿Seguro que deseas eliminar esta transacción?',
-            showCancelButton: true,
-            confirmButtonText: 'Eliminar',
-            cancelButtonText: 'Cancelar',
-          }).then((result) => {
-            if (result.isConfirmed) {
-              if(this.selectedWallet.type !== 'crypto') {
-                TransactionService.deleteTransaction(transaction.id).then(() => {
-                  this.cancel();
-                  this.resetNewTransaction();
-                  this.hideEditTransactionMenu();
-                  this.$emit('delete-transaction', transaction);
-                }).catch((error) => {
-                  console.error("error", error)
-                  Swal.fire("No se pudo eliminar la transacción", "", "error");
-                })
-              } else {
-                TransactionService.deleteCryptoTransaction(transaction.id).then(() => {
-                  this.cancel();
-                  this.resetNewTransaction();
-                  this.hideEditTransactionMenu();
-                  this.$emit('delete-crypto-transaction', transaction);
-                }).catch((error) => {
-                  console.error("error", error)
-                  Swal.fire("No se pudo eliminar la transacción", "", "error");
-                })
-              }
-            }
-          })
-        },
-        cancel() {
-          this.transactionSelected = null;
-          this.showEditTransactionSection = false;
-        },
-        blockInvalidChars(input) {
-          // Bloquea caracteres inválidos incluyendo notación científica
-          if (['e', 'E', '+', '-'].includes(input.key)) {
-             input.preventDefault();
-          }
-          const navigationKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
-          // Bloquea si ya tiene 9 dígitos
-          if (input.target.value.length >= 9 && !navigationKeys.includes(input.key)) {
-            input.preventDefault();
-          }
-        },
-        downloadTransactions(){
-          exportToCSV(this.transactions?.transactions)
-        },
-        paginatedCategoryTransactions(category) {
-          const pageSize = 10
-          const start = ((category.currentPage || 1) - 1) * pageSize
-          return category.transactions.slice(start, start + pageSize)
-        },
-        categoryTotalPages(category) {
-          return Math.ceil(category.transactions.length / 10)
-        },
-    },
-    mounted() {
-      this.getCategories();
-      document.addEventListener('click', this.hideEditTransactionMenu);
-    },
-    unmounted() {
-      document.removeEventListener('click', this.hideEditTransactionMenu);
-    },
-    watch: {
-        transactionFilter() {
-            this.currentPage = 1;
-            this.$emit('update-transaction-filter', this.transactionFilter);
-        },
-        searchSettings: {
-            handler() {
-                this.transactionFilter = "";
-                this.currentPage = 1;
-            },
-            deep: true
-        },
-        selectedWallet() {
-          this.getCategories();
-        },
-        currentPage() {
-          // Cierra el detalle de las categorías abiertas y reinicia su paginación
-          this.transactionsByCategory?.forEach(category => {
-            category.showDetail = false
-            category.currentPage = 1
-          })
-          // Hace un desplazamiento al inicio de las transacciones
-          this.$nextTick(() => {
-            this.$refs.transactionList?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-          })
-        },
-    },
-    computed: {
-      formatCurrency() {
-          return formatCurrency;
-      },
-      formatCryptoHoldings() {
-        return formatCryptoHoldings;
-      },
-      formatDateTime() {
-        return formatDateTime;
-      },
-      paginatedTransactions() {
-        if (!this.transactions?.transactions) return []
-        const start = (this.currentPage - 1) * this.pageSize
-        return this.transactions.transactions.slice(start, start + this.pageSize)
-      },
-      paginatedCategories() {
-        if (!this.transactionsByCategory) return []
-        const start = (this.currentPage - 1) * this.pageSize
-        return this.transactionsByCategory.slice(start, start + this.pageSize)
-      },
-      totalPages() {
-        const total = this.searchSettings.showTransactionsByCategory
-            ? this.transactionsByCategory?.length
-            : this.transactions?.transactions?.length
-        return Math.ceil((total || 0) / this.pageSize)
-      },
-    },
+        }
+      })
+    }
+
+    function cancel() {
+      transactionSelected.value = null;
+      showEditTransactionSection.value = false;
+    }
+
+    function blockInvalidChars(input) {
+      // Bloquea caracteres inválidos incluyendo notación científica
+      if (['e', 'E', '+', '-'].includes(input.key)) {
+        input.preventDefault();
+      }
+      const navigationKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
+      // Bloquea si ya tiene 9 dígitos
+      if (input.target.value.length >= 9 && !navigationKeys.includes(input.key)) {
+        input.preventDefault();
+      }
+    }
+
+    function downloadTransactions(){
+      exportToCSV(props.transactions?.transactions)
+    }
+
+    function paginatedCategoryTransactions(category) {
+      const pageSize = 10
+      const start = ((category.currentPage || 1) - 1) * pageSize
+      return category.transactions.slice(start, start + pageSize)
+    }
+
+    function categoryTotalPages(category) {
+      return Math.ceil(category.transactions.length / 10)
+    }
+
+    onMounted(() => {
+      getCategories();
+      document.addEventListener('click', hideEditTransactionMenu);
+    });
+
+    onUnmounted(() => {
+      document.removeEventListener('click', hideEditTransactionMenu);
+    });
+
+    watch(transactionFilter, () => {
+      currentPage.value = 1;
+      emit('update-transaction-filter', transactionFilter.value);
+    });
+
+    watch(() => props.searchSettings, () => {
+      transactionFilter.value = "";
+      currentPage.value = 1;
+    }, { deep: true });
+
+    watch(() => props.selectedWallet, () => {
+      getCategories();
+    });
+
+    watch(currentPage, async () => {
+      // Cierra el detalle de las categorías abiertas y reinicia su paginación
+      props.transactionsByCategory?.forEach(category => {
+        category.showDetail = false
+        category.currentPage = 1
+      })
+      // Hace un desplazamiento al inicio de las transacciones
+      await nextTick()
+      transactionList.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    });
+
+    const paginatedTransactions = computed(() => {
+      if (!props.transactions?.transactions) return []
+      const start = (currentPage.value - 1) * pageSize
+      return props.transactions.transactions.slice(start, start + pageSize)
+    });
+
+    const paginatedCategories = computed(() => {
+      if (!props.transactionsByCategory) return []
+      const start = (currentPage.value - 1) * pageSize
+      return props.transactionsByCategory.slice(start, start + pageSize)
+    });
+
+    const totalPages = computed(() => {
+      const total = props.searchSettings.showTransactionsByCategory
+          ? props.transactionsByCategory?.length
+          : props.transactions?.transactions?.length
+      return Math.ceil((total || 0) / pageSize)
+    });
+
+    return {
+      transactionFilter,
+      showIconNewTransaction,
+      newTransaction,
+      newCryptoTransaction,
+      categories,
+      errorMessage,
+      options,
+      value,
+      datepickerFormat,
+      openMenuId,
+      showEditTransactionSection,
+      transactionSelected,
+      currentPage,
+      pageSize,
+      transactionList,
+
+      getTransactionDate,
+      showDetail,
+      addTransaction,
+      saveTransaction,
+      cancelNewTransaction,
+      toggleMenu,
+      showEditTransaction,
+      updateTransaction,
+      deleteTransaction,
+      cancel,
+      blockInvalidChars,
+      downloadTransactions,
+      paginatedCategoryTransactions,
+      categoryTotalPages,
+
+      formatCurrency,
+      formatCryptoHoldings,
+      formatDateTime,
+
+      paginatedTransactions,
+      paginatedCategories,
+      totalPages
+    }
+  }
 }
 </script>

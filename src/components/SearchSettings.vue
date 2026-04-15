@@ -30,6 +30,7 @@
             </label>
           </div>
         </template>
+
         <div class="mt-2">
           <label for="checked-toggle-2" class="relative inline-flex items-center mb-4 cursor-pointer">
             <input type="checkbox" value="" id="checked-toggle-2" class="sr-only peer" v-model="hideMoney">
@@ -43,7 +44,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, watch } from 'vue'
 import store from '../store'
 
 export default {
@@ -51,7 +52,7 @@ export default {
   props: {
     selectedWallet: Object,
   },
-  setup() {
+  setup(props, { emit }) {
     const searchSettings = ref({
       dateSelected: {
         month: new Date().getMonth(),
@@ -60,27 +61,25 @@ export default {
       dateRangePicked: "month",
       showTransactionsByCategory: true
     });
+
     const hideMoney = ref(store.state.app.hideMoney)
+
+    const changeSearchSettings = () => {
+      emit('change-search-settings', searchSettings.value)
+    }
+
+    watch(searchSettings, () => {
+      changeSearchSettings()
+    }, { deep: true })
+
+    watch(hideMoney, (newData) => {
+      store.commit('app/SET_HIDE_MONEY', newData)
+    })
+
     return {
       searchSettings,
-      hideMoney
+      hideMoney,
     }
-  },
-  methods: {
-    changeSearchSettings(){
-      this.$emit('change-search-settings', this.searchSettings);
-    }
-  },
-  watch: {
-    searchSettings: {
-      handler() {
-        this.changeSearchSettings();
-      },
-      deep: true
-    },
-    hideMoney: function (newData) {
-        this.$store.commit('app/SET_HIDE_MONEY', newData)
-    },
   },
 }
 </script>

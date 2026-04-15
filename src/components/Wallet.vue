@@ -53,8 +53,8 @@
 </template>
 
 <script>
-import { ref } from 'vue';
-import { formatCurrency } from '../utils/formats';
+import { ref, computed } from 'vue'
+import { formatCurrency } from '../utils/formats'
 
 export default {
   name: 'Wallet',
@@ -63,38 +63,46 @@ export default {
     showFormNewWallet: Boolean,
     showFormEditWallet: Boolean,
   },
-  setup() {
-    const selectedWallet = ref({});
+  setup(props, { emit }) {
+
+    const selectedWallet = ref({})
+
+    const selectWallet = (wallet) => {
+      selectedWallet.value = wallet
+      emit('select-wallet', wallet)
+    }
+
+    const addWallet = () => {
+      emit('add-wallet')
+    }
+
+    const editWallet = () => {
+      emit('edit-wallet')
+    }
+
+    const hideForms = () => {
+      emit('hide-forms')
+    }
+
+    const showForm = computed(() => {
+      return props.showFormNewWallet || props.showFormEditWallet
+    })
+
+    const getTotalWallets = computed(() => {
+      return props.wallets.reduce((acum, item) => {
+        return acum + Number(item.total)
+      }, 0)
+    })
+
     return {
       selectedWallet,
-    }
-  },
-  methods: {
-    selectWallet(wallet){
-      this.selectedWallet = wallet;
-      this.$emit('select-wallet', wallet);
-    },
-    addWallet(){
-      this.$emit('add-wallet');
-    },
-    editWallet(){
-      this.$emit('edit-wallet');
-    },
-    hideForms(){
-      this.$emit('hide-forms');
-    }
-  },
-  computed: {
-    showForm(){
-        return this.showFormNewWallet || this.showFormEditWallet;
-    },
-    formatCurrency() {
-        return formatCurrency;
-    },
-    getTotalWallets(){
-      return this.wallets.reduce((acum, item) => {
-        return acum + Number(item.total);
-      }, 0);
+      selectWallet,
+      addWallet,
+      editWallet,
+      hideForms,
+      showForm,
+      getTotalWallets,
+      formatCurrency
     }
   },
 }
