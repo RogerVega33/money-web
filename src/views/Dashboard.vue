@@ -91,7 +91,7 @@ import LineChart from '../components/LineChart'
 import Wallet from '../components/Wallet'
 import SearchSettings from '../components/SearchSettings'
 import Summary from '../components/Summary'
-import Transactions from "../components/Transactions";
+import Transactions from "../components/transactions/Transactions";
 import NewWallet from "../components/NewWallet";
 import EditWallet from "../components/EditWallet";
 import store from '../store'
