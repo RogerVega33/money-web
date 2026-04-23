@@ -18,8 +18,18 @@
           <label class="block text-grey-darker text-sm font-medium mb-2" for="recoveryPhrase">
             Frase de recuperación
           </label>
-          <input id="recoveryPhrase" type="password" v-model="state.user.recoveryPhrase" :class="{ 'border-red-500': v$.user.recoveryPhrase.$error }"
-                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
+          <div class="input-wrapper">
+            <input id="recoveryPhrase"
+                   :type="showRecoveryPhrase ? 'text' : 'password'"
+                   v-model="state.user.recoveryPhrase"
+                   :class="{ 'border-red-500': v$.user.recoveryPhrase.$error }"
+                   class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker"
+                   required>
+            <button type="button" class="eye-btn" @click="showRecoveryPhrase = !showRecoveryPhrase">
+              <fa icon="eye" v-if="showRecoveryPhrase" class="text-sm"/>
+              <fa icon="eye-slash" v-else class="text-sm"/>
+            </button>
+          </div>
           <p v-if="v$.user.recoveryPhrase.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.recoveryPhrase.$errors[0].$message}}</p>
         </div>
 
@@ -89,106 +99,88 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import useVuelidate from '@vuelidate/core'
-import {required, helpers, minLength, maxLength} from '@vuelidate/validators'
-import {reactive, computed, ref} from 'vue'
+import { required, helpers, minLength, maxLength } from '@vuelidate/validators'
+import { reactive, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import AuthService from '../services/auth.service';
+import AuthService from '@/services/auth.service'
 import Swal from 'sweetalert2'
-import {strongPassword, getPasswordStrength, strengthColors} from '@/utils/passwordValidator'
+import { strongPassword, getPasswordStrength, strengthColors } from '@/utils/passwordValidator'
 
-export default {
-  name: 'RecoverUser',
-  setup () {
-    const router = useRouter()
+const router = useRouter()
 
-    const state = reactive({
-      user: {
-        username: '',
-        password: '',
-        confirmPassword: '',
-        recoveryPhrase: '',
-      },
-      errorMessage: '',
+const state = reactive({
+  user: {
+    username: '',
+    password: '',
+    confirmPassword: '',
+    recoveryPhrase: '',
+  },
+  errorMessage: '',
+})
+
+const rules = computed(() => ({
+  user: {
+    username: { required: helpers.withMessage('El nombre de usuario es requerido', required) },
+    password: {
+      required: helpers.withMessage('La contraseña es requerida', required),
+      minLength: helpers.withMessage('La contraseña debe tener mínimo 8 caracteres', minLength(8)),
+      maxLength: helpers.withMessage('La contraseña debe tener máximo 64 caracteres', maxLength(64)),
+      strongPassword: helpers.withMessage(
+          'La contraseña debe tener +8 caracteres con mayúsculas, minúsculas y números — o bien +12 caracteres libres',
+          strongPassword
+      ),
+    },
+    confirmPassword: {
+      required: helpers.withMessage('Ingresa una contraseña', required),
+      sameAs: helpers.withMessage(
+          'Las contraseñas deben coincidir',
+          (value) => value === state.user.password
+      ),
+    },
+    recoveryPhrase: { required: helpers.withMessage('La frase de recuperación es requerida', required) },
+  },
+}))
+
+const showRecoveryPhrase = ref(false)
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
+const v$ = useVuelidate(rules, state)
+
+// Fortaleza de contraseña
+const passwordStrength = computed(() => getPasswordStrength(state.user.password))
+const strengthColor = computed(() => strengthColors[passwordStrength.value.level])
+
+async function signIn() {
+  await v$.value.$validate()
+  if (v$.value.$error) return
+
+  try {
+    await AuthService.recoverUser({
+      username: state.user.username,
+      recoveryPhrase: state.user.recoveryPhrase,
+      newPassword: state.user.password,
     })
 
-    const rules = computed(() => {
-      return{
-        user: {
-          username: { required: helpers.withMessage('El nombre de usuario es requerido', required) },
-          password: {
-            required: helpers.withMessage('La contraseña es requerida', required),
-            minLength: helpers.withMessage('La contraseña debe tener mínimo 8 caracteres', minLength(8)),
-            maxLength: helpers.withMessage('La contraseña debe tener máximo 64 caracteres', maxLength(64)),
-            strongPassword: helpers.withMessage(
-                'La contraseña debe tener +8 caracteres con mayúsculas, minúsculas y números — o bien +12 caracteres libres',
-                strongPassword
-            ),
-          },
-          confirmPassword: {
-            required: helpers.withMessage('Ingresa una contraseña', required),
-            sameAs: helpers.withMessage(
-                'Las contraseñas deben coincidir',
-                (value) => value === state.user.password
-            ),
-          },
-          recoveryPhrase: { required: helpers.withMessage('La frase de recuperación es requerida', required) },
-        }
-      }
-    })
-
-    // Fortaleza de contraseña
-    const passwordStrength = computed(() => getPasswordStrength(state.user.password))
-    const strengthColor = computed(() => strengthColors[passwordStrength.value.level])
-
-    const showPassword = ref(false)
-    const showConfirmPassword = ref(false)
-
-    const v$ = useVuelidate(rules, state)
-
-    const signIn = async () => {
-      v$.value.$validate()
-      if (v$.value.$error) return
-
-      const user = {
-        username: state.user.username,
-        recoveryPhrase: state.user.recoveryPhrase,
-        newPassword: state.user.password,
-      }
-
-      try {
-        await AuthService.recoverUser(user)
-        await Swal.fire({
-          title: '¡Recuperación exitosa!',
-          html: `
+    await Swal.fire({
+      title: '¡Recuperación exitosa!',
+      html: `
             <p style="color:#6b7280; margin-bottom:16px;">
               Ahora puedes volver a iniciar sesión con tu nueva contraseña
             </p>
           `,
-          icon: 'success',
-          confirmButtonText: 'Aceptar',
-        })
-        router.push("/login")
-      } catch (error) {
-        state.errorMessage =
-            (error.response?.data?.body?.message) ||
-            error.message ||
-            error.toString()
-      }
-    }
+      icon: 'success',
+      confirmButtonText: 'Aceptar',
+    })
 
-    return {
-      state,
-      v$,
-      passwordStrength,
-      strengthColor,
-      showPassword,
-      showConfirmPassword,
-      signIn,
-      router,
-    }
-  },
+    router.push('/login')
+  } catch (error) {
+    state.errorMessage =
+        error.response?.data?.body?.message ||
+        error.message ||
+        error.toString()
+  }
 }
 </script>
 

@@ -76,84 +76,72 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import useVuelidate from '@vuelidate/core'
 import { required, helpers, minLength, maxLength } from '@vuelidate/validators'
 import { reactive, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import AuthService from '../services/auth.service';
+import AuthService from '@/services/auth.service'
 import Swal from 'sweetalert2'
 import { strongPassword, getPasswordStrength, strengthColors } from '@/utils/passwordValidator'
 
-// Para validar el usuario
+const router = useRouter()
+
 const onlyAlphanumeric = helpers.regex(/^[a-zA-Z0-9]+$/)
 
-export default {
-  name: 'NewUser',
-  setup () {
-    const router = useRouter()
+const state = reactive({
+  user: { username: '', password: '', confirmPassword: '' },
+  errorMessage: '',
+})
 
-    const state = reactive({
-      user: {
-        username: '',
-        password: '',
-        confirmPassword: '',
-      },
-      errorMessage: '',
+const rules = computed(() => ({
+  user: {
+    username: {
+      required: helpers.withMessage('El nombre de usuario es requerido', required),
+      minLength: helpers.withMessage('El nombre de usuario debe tener mínimo 3 caracteres', minLength(3)),
+      maxLength: helpers.withMessage('El nombre de usuario debe tener máximo 25 caracteres', maxLength(25)),
+      onlyAlphanumeric: helpers.withMessage('El nombre de usuario solo puede tener letras y números', onlyAlphanumeric),
+    },
+    password: {
+      required: helpers.withMessage('La contraseña es requerida', required),
+      minLength: helpers.withMessage('La contraseña debe tener mínimo 8 caracteres', minLength(8)),
+      maxLength: helpers.withMessage('La contraseña debe tener máximo 64 caracteres', maxLength(64)),
+      strongPassword: helpers.withMessage(
+          'La contraseña debe tener +8 caracteres con mayúsculas, minúsculas y números — o bien +12 caracteres libres',
+          strongPassword
+      ),
+    },
+    confirmPassword: {
+      required: helpers.withMessage('Ingresa una contraseña', required),
+      sameAs: helpers.withMessage(
+          'Las contraseñas deben coincidir',
+          (value) => value === state.user.password
+      ),
+    },
+  },
+}))
+
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
+const v$ = useVuelidate(rules, state)
+
+const passwordStrength = computed(() => getPasswordStrength(state.user.password))
+const strengthColor = computed(() => strengthColors[passwordStrength.value.level])
+
+async function signIn() {
+  await v$.value.$validate()
+  if (v$.value.$error) return
+
+  try {
+    const response = await AuthService.createUser({
+      username: state.user.username,
+      password: state.user.password,
     })
+    const recoveryPhrase = response.recoveryPhrase;
 
-    const rules = computed(() => ({
-      user: {
-        username: {
-          required: helpers.withMessage('El nombre de usuario es requerido', required),
-          minLength: helpers.withMessage('El nombre de usuario debe tener mínimo 3 caracteres', minLength(3)),
-          maxLength: helpers.withMessage('El nombre de usuario debe tener máximo 25 caracteres', maxLength(25)),
-          onlyAlphanumeric: helpers.withMessage('El nombre de usuario solo puede tener letras y números', onlyAlphanumeric),
-        },
-        password: {
-          required: helpers.withMessage('La contraseña es requerida', required),
-          minLength: helpers.withMessage('La contraseña debe tener mínimo 8 caracteres', minLength(8)),
-          maxLength: helpers.withMessage('La contraseña debe tener máximo 64 caracteres', maxLength(64)),
-          strongPassword: helpers.withMessage(
-              'La contraseña debe tener +8 caracteres con mayúsculas, minúsculas y números — o bien +12 caracteres libres',
-              strongPassword
-          ),
-        },
-        confirmPassword: {
-          required: helpers.withMessage('Ingresa una contraseña', required),
-          sameAs: helpers.withMessage(
-              'Las contraseñas deben coincidir',
-              (value) => value === state.user.password
-          ),
-        },
-      },
-    }))
-
-    // Fortaleza de contraseña
-    const passwordStrength = computed(() => getPasswordStrength(state.user.password))
-    const strengthColor = computed(() => strengthColors[passwordStrength.value.level])
-
-    const showPassword = ref(false)
-    const showConfirmPassword = ref(false)
-
-    const v$ = useVuelidate(rules, state)
-
-    const signIn = async () => {
-      v$.value.$validate()
-      if (v$.value.$error) return
-
-      const newUser = {
-        username: state.user.username,
-        password: state.user.password,
-      }
-
-      try {
-        const response = await AuthService.createUser(newUser)
-        const recoveryPhrase = response.recoveryPhrase;
-
-        await Swal.fire({
-          title: '¡Usuario creado exitosamente!',
-          html: `
+    await Swal.fire({
+      title: '¡Usuario creado exitosamente!',
+      html: `
             <p style="color:#6b7280; margin-bottom:16px;">
               Antes de continuar, guarda tu frase de recuperación. La necesitarás para recuperar tu cuenta en caso de que olvides tu contraseña
             </p>
@@ -169,32 +157,19 @@ export default {
               Asegúrate de anotar las palabras en orden
             </p>
           `,
-          icon: 'success',
-          confirmButtonText: 'Ya la guardé',
-          allowOutsideClick: false,  // obliga al usuario a hacer clic en el botón
-          allowEscapeKey: false,     // no puede cerrar con ESC
-        })
+      icon: 'success',
+      confirmButtonText: 'Ya la guardé',
+      allowOutsideClick: false, // obliga al usuario a hacer clic en el botón
+      allowEscapeKey: false, // no puede cerrar con ESC
+    })
 
-        router.push("/login")  // redirige solo después de que el usuario confirme
-      } catch (error) {
-        state.errorMessage =
-            (error.response?.data?.body?.message) ||
-            error.message ||
-            error.toString()
-      }
-    }
-
-    return {
-      state,
-      v$,
-      passwordStrength,
-      strengthColor,
-      showPassword,
-      showConfirmPassword,
-      signIn,
-      router
-    }
-  },
+    router.push('/login')  // redirige solo después de que el usuario confirme
+  } catch (error) {
+    state.errorMessage =
+        error.response?.data?.body?.message ||
+        error.message ||
+        error.toString()
+  }
 }
 </script>
 

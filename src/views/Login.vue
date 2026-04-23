@@ -60,66 +60,49 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import useVuelidate from '@vuelidate/core'
 import { required, helpers } from '@vuelidate/validators'
 import { reactive, computed, ref } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 
-export default {
-  name: 'Login',
-  setup () {
-    const store = useStore()
-    const router = useRouter()
+const store = useStore()
+const router = useRouter()
 
-    const state = reactive({
-      user: {
-        username: '',
-        password: ''
+const state = reactive({
+  user: { username: '', password: '' },
+  errorMessage: '',
+  hideMoney: false,
+})
+
+const rules = computed(() => ({
+  user: {
+    username: { required: helpers.withMessage('Ingrese un usuario', required) },
+    password: { required: helpers.withMessage('Ingrese la contraseña', required) }
+  }
+}))
+
+const showPassword = ref(false)
+const v$ = useVuelidate(rules, state)
+
+async function login() {
+  await v$.value.$validate()
+
+  if (v$.value.$error) return
+
+  store.dispatch('auth/login', state.user).then(
+      () => {
+        store.commit('app/SET_HIDE_MONEY', state.hideMoney)
+        router.push('/dashboard')
       },
-      errorMessage: '',
-      hideMoney: false,
-    })
-
-    const rules = computed(() => {
-      return{
-        user: {
-          username: { required: helpers.withMessage('Ingrese un usuario', required) },
-          password: { required: helpers.withMessage('Ingrese la contraseña', required) }
-        }
+      (error) => {
+        state.errorMessage =
+            error?.response?.data?.body?.message ||
+            error.message ||
+            error.toString()
       }
-    })
-
-    const showPassword = ref(false)
-
-    const v$ = useVuelidate(rules, state)
-
-    const login = async () => {
-      v$.value.$validate()
-
-      if (v$.value.$error) {
-        console.log("Error")
-      } else {
-        store.dispatch("auth/login", state.user).then(
-            () => {
-              store.commit('app/SET_HIDE_MONEY', state.hideMoney)
-              router.push("/dashboard")
-            },
-            (error) => {
-              state.errorMessage =
-                  (error.response &&
-                      error.response.data &&
-                      error.response.data.body?.message) ||
-                  error.message ||
-                  error.toString()
-            }
-        )
-      }
-    }
-
-    return { state, v$, showPassword, login, router }
-  },
+  )
 }
 </script>
 
