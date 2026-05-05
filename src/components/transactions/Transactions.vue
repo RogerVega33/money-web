@@ -252,7 +252,12 @@ function saveTransaction(form) {
    EDITAR
 ======================= */
 function showEditTransaction(transaction) {
-  transactionSelected.value = { ...transaction }
+  transactionSelected.value = {
+    ...transaction,
+    date: transaction.date
+        ? moment(transaction.date, 'YYYY-MM-DD').toDate() // fix fecha
+        : null
+  }
   showEditTransactionSection.value = true
 }
 
