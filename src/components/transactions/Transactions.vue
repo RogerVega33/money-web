@@ -230,6 +230,7 @@ function saveTransaction(form) {
     TransactionService.saveTransaction(payload)
         .then(() => {
           cancelNewTransaction()
+          transactionFilter.value = ""
           emit('new-transaction')
         })
         .catch(handleError)
@@ -242,6 +243,7 @@ function saveTransaction(form) {
     TransactionService.saveCryptoTransaction(payload)
         .then(() => {
           cancelNewTransaction()
+          transactionFilter.value = ""
           emit('new-crypto-transaction')
         })
         .catch(handleError)
@@ -268,6 +270,7 @@ function updateTransaction(transaction) {
     TransactionService.updateTransaction(transaction)
         .then(() => {
           cancel()
+          transactionFilter.value = ""
           emit('update-transaction')
         })
         .catch(() => Swal.fire("No se pudo editar la transacción", "", "error"))
@@ -276,6 +279,7 @@ function updateTransaction(transaction) {
     TransactionService.updateCryptoTransaction(transaction)
         .then(() => {
           cancel()
+          transactionFilter.value = ""
           emit('update-crypto-transaction')
         })
         .catch(() => Swal.fire("No se pudo editar la transacción", "", "error"))
@@ -298,10 +302,12 @@ function deleteTransaction(transaction) {
 
     if (props.selectedWallet.type !== 'crypto') {
       TransactionService.deleteTransaction(transaction.id).then(() => {
+        transactionFilter.value = ""
         emit('delete-transaction', transaction)
       })
     } else {
       TransactionService.deleteCryptoTransaction(transaction.id).then(() => {
+        transactionFilter.value = ""
         emit('delete-crypto-transaction', transaction)
       })
     }
@@ -336,7 +342,10 @@ function handleError(error) {
 /* =======================
    WATCHERS
 ======================= */
-watch(() => props.selectedWallet, getCategories, { immediate: true })
+watch(() => props.selectedWallet, () => {
+  transactionFilter.value = ""
+  getCategories()
+}, { immediate: true })
 
 watch(transactionFilter, () => {
   currentPage.value = 1

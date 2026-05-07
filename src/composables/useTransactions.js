@@ -67,7 +67,8 @@ export function useTransactions(selectedWallet, searchSettings) {
         transactions.value.transactions = transactionsTemp.value.filter((t) => {
             const detail = t.detail?.toLowerCase() ?? ''
             const category = t.categoryName?.toLowerCase() ?? ''
-            return !val || detail.includes(val) || category.includes(val)
+            const symbol = t.symbol?.toLowerCase() ?? ''
+            return !val || detail.includes(val) || category.includes(val) || symbol.includes(val)
         })
     }
 

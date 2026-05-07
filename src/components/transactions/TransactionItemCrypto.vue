@@ -35,7 +35,7 @@
         <p class="text-sm font-medium truncate">
           {{ formatCryptoHoldings(transaction.amount) }} {{ transaction.symbol }}
         </p>
-        <p class="text-sm truncate">
+        <p class="text-sm truncate" :title="'Última actualización: ' + formatDateTime(transaction.date)">
           1 {{ transaction.symbol }} =
           {{ formatCurrency(transaction.price?.toFixed(2)) }}
         </p>
@@ -82,6 +82,7 @@
 import { ref, computed, watch } from 'vue'
 import { formatCurrency } from '@/utils/formats'
 import Dropdown from '@/components/common/Dropdown.vue'
+import { formatDateTime } from '@/utils/formats'
 
 const props = defineProps({
   transaction: Object,

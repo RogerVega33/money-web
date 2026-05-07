@@ -170,8 +170,15 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
     /* =======================
        WATCHERS
     ======================= */
-    watch(transactionsByCategory, buildIncomeExpenseCharts, { deep: true })
-    watch(transactions, buildTotalByCategoryChart, { deep: true })
+    watch(transactionsByCategory, () => {
+        if (selectedWallet.value.type === 'crypto') return
+        buildIncomeExpenseCharts()
+    }, { deep: true })
+
+    watch(transactions, () => {
+        if (selectedWallet.value.type === 'crypto') return
+        buildTotalByCategoryChart()
+    }, { deep: true })
 
     return {
         profitLoss,
