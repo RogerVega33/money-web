@@ -35,6 +35,7 @@
           class="input"
           @keydown="blockInvalidChars"
           @keydown.enter.prevent="emitSave"
+          @paste="handleAmountPaste"
       />
     </div>
 
@@ -107,6 +108,15 @@ const canSave = computed(() =>
 watch(() => props.transaction, (val) => {
   if (val) localEdit.value = { ...val }
 })
+
+function handleAmountPaste(event) {
+  event.preventDefault()
+  const text = (event.clipboardData || window.clipboardData)
+      .getData('text')
+      .replace(',', '.')
+  const num = parseFloat(text)
+  if (!isNaN(num)) localEdit.value.amount = num
+}
 
 function emitSave() {
   if (!canSave.value) return
