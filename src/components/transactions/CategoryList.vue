@@ -12,6 +12,7 @@
             :transactions-by-category="transactionsByCategory"
             :transaction-selected="transactionSelected"
             :show-edit="showEdit"
+            :saving="saving"
             @new="$emit('new', $event)"
             @edit="$emit('edit', $event)"
             @delete="$emit('delete', $event)"
@@ -32,7 +33,8 @@ defineProps({
   categories: Array,
   transactionsByCategory: Array,
   transactionSelected: Object,
-  showEdit: Boolean
+  showEdit: Boolean,
+  saving: Boolean,
 })
 
 </script>

@@ -59,11 +59,12 @@
           :disabled="!canSave"
           @click="emitSave"
       >
-        Guardar
+        {{ isSaving ? 'Guardando...' : 'Guardar' }}
       </button>
 
       <button
           class="btn-secondary mt-2"
+          :disabled="isSaving || props.saving"
           @click="emit('cancel')"
       >
         Cancelar
@@ -85,6 +86,10 @@ const props = defineProps({
     type: Array,
     default: () => []
   },
+  saving: {
+    type: Boolean,
+    default: false
+  },
   error: {
     type: String,
     default: ''
@@ -99,7 +104,10 @@ const emit = defineEmits(['save', 'cancel'])
 
 const localEdit = ref({ ...props.transaction })
 
+const isSaving = ref(false)
+
 const canSave = computed(() =>
+    !isSaving.value && !props.saving &&
     !!localEdit.value?.amount &&
     !!localEdit.value?.categoryId &&
     !!localEdit.value?.date
@@ -107,6 +115,10 @@ const canSave = computed(() =>
 
 watch(() => props.transaction, (val) => {
   if (val) localEdit.value = { ...val }
+})
+
+watch(() => props.error, () => {
+  isSaving.value = false
 })
 
 function handleAmountPaste(event) {
@@ -120,6 +132,7 @@ function handleAmountPaste(event) {
 
 function emitSave() {
   if (!canSave.value) return
+  isSaving.value = true
   emit('save', { ...localEdit.value })
 }
 </script>

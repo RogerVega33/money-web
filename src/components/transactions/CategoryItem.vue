@@ -47,6 +47,7 @@
               v-if="isEditing(transaction)"
               :transaction="props.transactionSelected"
               :categories="categories"
+              :saving="saving"
               title="Editar transacción"
               @save="emit('update', $event)"
               @cancel="emit('cancel-edit')"
@@ -144,7 +145,11 @@ const props = defineProps({
   categories: {
     type: Array,
     default: () => []
-  }
+  },
+  saving: {
+    type: Boolean,
+    default: false
+  },
 })
 
 const emit = defineEmits(['new', 'edit', 'delete', 'update', 'cancel-edit'])

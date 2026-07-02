@@ -23,6 +23,7 @@
             :transaction="newTransactionTemplate || {}"
             :categories="categories"
             :error="errorMessage"
+            :saving="isSavingTransaction"
             title="Nueva transacción"
             @save="saveTransaction"
             @cancel="cancelNewTransaction"
@@ -58,14 +59,15 @@
             <button
                 type="button"
                 class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:hover:bg-blue-500"
-                :disabled="!newCryptoTransaction.symbol || !newCryptoTransaction.amount"
+                :disabled="!newCryptoTransaction.symbol || !newCryptoTransaction.amount || isSavingTransaction"
                 @click="saveTransaction(newCryptoTransaction)"
             >
-              Guardar
+              {{ isSavingTransaction ? 'Guardando...' : 'Guardar' }}
             </button>
             <button
                 type="button"
                 class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600"
+                :disabled="isSavingTransaction"
                 @click="cancelNewTransaction"
             >
               Cancelar
@@ -106,6 +108,7 @@
           :categories="categories"
           :transaction-selected="transactionSelected"
           :show-edit="showEditTransactionSection"
+          :saving="isUpdatingTransaction"
           @new="addTransaction"
           @edit="showEditTransaction"
           @delete="deleteTransaction"
@@ -159,6 +162,9 @@ const emit = defineEmits([
 const categories = ref([])
 const errorMessage = ref("")
 const showIconNewTransaction = ref(true)
+
+const isSavingTransaction = ref(false)
+const isUpdatingTransaction = ref(false)
 
 const transactionSelected = ref(null)
 const showEditTransactionSection = ref(false)
@@ -219,6 +225,8 @@ function cancelNewTransaction() {
    GUARDAR
 ======================= */
 function saveTransaction(form) {
+  if (isSavingTransaction.value) return
+  isSavingTransaction.value = true
   errorMessage.value = ''
 
   if (props.selectedWallet.type !== 'crypto') {
@@ -234,6 +242,7 @@ function saveTransaction(form) {
           emit('new-transaction')
         })
         .catch(handleError)
+        .finally(() => { isSavingTransaction.value = false })
 
   } else {
     const payload = {
@@ -247,6 +256,7 @@ function saveTransaction(form) {
           emit('new-crypto-transaction')
         })
         .catch(handleError)
+        .finally(() => { isSavingTransaction.value = false })
   }
 }
 
@@ -264,6 +274,9 @@ function showEditTransaction(transaction) {
 }
 
 function updateTransaction(transaction) {
+  if (isUpdatingTransaction.value) return
+  isUpdatingTransaction.value = true
+
   if (props.selectedWallet.type !== 'crypto') {
     transaction.date = moment(transaction.date).format('YYYY-MM-DD')
 
@@ -274,6 +287,7 @@ function updateTransaction(transaction) {
           emit('update-transaction')
         })
         .catch(() => Swal.fire("No se pudo editar la transacción", "", "error"))
+        .finally(() => { isUpdatingTransaction.value = false })
 
   } else {
     TransactionService.updateCryptoTransaction(transaction)
@@ -283,6 +297,7 @@ function updateTransaction(transaction) {
           emit('update-crypto-transaction')
         })
         .catch(() => Swal.fire("No se pudo editar la transacción", "", "error"))
+        .finally(() => { isUpdatingTransaction.value = false })
   }
 }
 

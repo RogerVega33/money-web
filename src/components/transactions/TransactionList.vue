@@ -8,6 +8,7 @@
           :transactions-by-category="transactionsByCategory"
           :transaction-selected="transactionSelected"
           :show-edit="showEdit"
+          :saving="saving"
           @new="$emit('new', $event)"
           @edit="$emit('edit', $event)"
           @update="$emit('update', $event)"
@@ -33,6 +34,7 @@
               :transaction-selected="transactionSelected"
               :show-edit="showEdit"
               :categories="categories"
+              :saving="saving"
               @new="$emit('new', $event)"
               @edit="$emit('edit', $event)"
               @delete="$emit('delete', $event)"
@@ -46,6 +48,7 @@
               :transaction="transaction"
               :transaction-selected="transactionSelected"
               :show-edit="showEdit"
+              :saving="saving"
               @edit="$emit('edit', $event)"
               @delete="$emit('delete', $event)"
               @update="$emit('update', $event)"
@@ -73,6 +76,7 @@ defineProps([
   'transactionSelected',
   'showEdit',
   'openMenuId',
-  'categories'
+  'categories',
+  'saving',
 ])
 </script>

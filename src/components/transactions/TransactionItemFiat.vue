@@ -7,6 +7,7 @@
         :transaction="transactionSelected"
         :categories="categories"
         title="Editar transacción"
+        :saving="saving"
         @save="emit('update', $event)"
         @cancel="emit('cancel-edit')"
     />
@@ -87,7 +88,11 @@ const props = defineProps({
   categories: {
     type: Array,
     default: () => []
-  }
+  },
+  saving: {
+    type: Boolean,
+    default: false
+  },
 })
 
 const emit = defineEmits(['new', 'edit', 'delete', 'update', 'cancel-edit'])

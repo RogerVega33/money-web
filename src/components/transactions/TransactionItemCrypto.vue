@@ -8,15 +8,16 @@
             v-model="localEdit.amount"
             type="number"
             class="bg-transparent flex-1 text-sm text-gray-900 outline-none border-none ring-0 focus:ring-0"
+            :disabled="saving"
             @keyup.enter="emitUpdate"
         />
         <span class="text-sm font-medium text-gray-700 mx-2">
           {{ transaction.symbol }}
         </span>
         <button @click="emitUpdate" class="text-green-600 hover:text-green-700 mx-1">
-          <fa icon="check" />
+          <fa :icon="saving ? 'spinner' : 'check'" :class="{ 'animate-spin': saving }" />
         </button>
-        <button @click="$emit('cancel-edit')" class="text-red-500 hover:text-red-600 mx-1">
+        <button @click="$emit('cancel-edit')" :disabled="saving" class="text-red-500 hover:text-red-600 mx-1 disabled:opacity-40 disabled:cursor-not-allowed">
           <fa icon="times" />
         </button>
       </div>
@@ -87,7 +88,11 @@ import { formatDateTime } from '@/utils/formats'
 const props = defineProps({
   transaction: Object,
   transactionSelected: Object,
-  showEdit: Boolean
+  showEdit: Boolean,
+  saving: {
+    type: Boolean,
+    default: false
+  },
 })
 
 const emit = defineEmits(['edit', 'delete', 'update', 'cancel-edit'])
@@ -110,6 +115,8 @@ watch(
 )
 
 function emitUpdate() {
+  if (props.saving) return
+
   emit('update', {
     ...localEdit.value,
     amount: Number(localEdit.value.amount)
