@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full" :aria-busy="isSaving || props.saving">
+  <div class="relative w-full" :aria-busy="props.saving">
     <h6 class="font-semibold">{{ title }}</h6>
 
     <div class="mt-2">
@@ -59,12 +59,12 @@
           :disabled="!canSave"
           @click="emitSave"
       >
-        {{ isSaving ? 'Guardando...' : 'Guardar' }}
+        {{ props.saving ? 'Guardando...' : 'Guardar' }}
       </button>
 
       <button
           class="btn-secondary mt-2"
-          :disabled="isSaving || props.saving"
+          :disabled="props.saving"
           @click="emit('cancel')"
       >
         Cancelar
@@ -104,10 +104,8 @@ const emit = defineEmits(['save', 'cancel'])
 
 const localEdit = ref({ ...props.transaction })
 
-const isSaving = ref(false)
-
 const canSave = computed(() =>
-    !isSaving.value && !props.saving &&
+    !props.saving &&
     !!localEdit.value?.amount &&
     !!localEdit.value?.categoryId &&
     !!localEdit.value?.date
@@ -115,10 +113,6 @@ const canSave = computed(() =>
 
 watch(() => props.transaction, (val) => {
   if (val) localEdit.value = { ...val }
-})
-
-watch(() => props.error, () => {
-  isSaving.value = false
 })
 
 function handleAmountPaste(event) {
@@ -132,7 +126,6 @@ function handleAmountPaste(event) {
 
 function emitSave() {
   if (!canSave.value) return
-  isSaving.value = true
   emit('save', { ...localEdit.value })
 }
 </script>
