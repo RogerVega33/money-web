@@ -242,7 +242,10 @@ function onTransactionChanged() {
   getWallets()
   // La selección pudo cambiar mientras se guardaba o eliminaba el movimiento.
   if (selectedWallet.value?.type === 'crypto') getAllCryptoTransactions()
-  else if (selectedWallet.value?.id) getAllFiatTransactions()
+  else if (selectedWallet.value?.id) {
+    getAllFiatTransactions()
+    getProfitLoss(selectedWallet.value.id)
+  }
 }
 function onCryptoTransactionChanged() { onTransactionChanged() }
 
