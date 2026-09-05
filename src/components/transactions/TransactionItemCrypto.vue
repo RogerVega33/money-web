@@ -3,7 +3,7 @@
 
     <!-- ================= EDICIÓN ================= -->
     <template v-if="isEditing">
-      <div class="flex items-center w-full bg-gray-50 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 px-3 py-1.5">
+      <div :aria-busy="saving" class="flex items-center w-full bg-gray-50 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 px-3 py-1.5">
         <input
             v-model="localEdit.amount"
             type="number"

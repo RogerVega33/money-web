@@ -30,7 +30,7 @@
         />
 
         <!-- CRYPTO -->
-        <div v-else>
+        <div v-else :aria-busy="isSavingTransaction">
           <h6 class="font-semibold">Nueva transacción</h6>
 
           <div class="mt-2">

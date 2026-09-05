@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full">
+  <div class="relative w-full" :aria-busy="isSaving || props.saving">
     <h6 class="font-semibold">{{ title }}</h6>
 
     <div class="mt-2">

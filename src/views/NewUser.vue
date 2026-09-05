@@ -4,12 +4,12 @@
       <label class="block text-grey-darker text-2xl font-bold mb-4">
         Nuevo usuario
       </label>
-      <form>
+      <form :aria-busy="isSubmitting" @submit.prevent>
         <div class="form-group">
           <label class="block text-grey-darker text-sm font-medium mb-2" for="username">
             Usuario
           </label>
-          <input id="username" type="text" v-model="state.user.username" :class="{ 'border-red-500': v$.user.username.$error }"
+          <input :disabled="isSubmitting" id="username" type="text" v-model="state.user.username" :class="{ 'border-red-500': v$.user.username.$error }"
                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" minlength="3" maxlength="25" required>
           <p v-if="v$.user.username.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.username.$errors[0].$message}}</p>
         </div>
@@ -18,10 +18,10 @@
             Contraseña
           </label>
           <div class="input-wrapper">
-            <input id="password" :type="showPassword ? 'text' : 'password'" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
+            <input :disabled="isSubmitting" id="password" :type="showPassword ? 'text' : 'password'" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" minlength="8" maxlength="64" required>
             <!-- Ojo para mostrar contraseña -->
-            <button type="button" class="eye-btn" @click="showPassword = !showPassword">
+            <button :disabled="isSubmitting" type="button" class="eye-btn" @click="showPassword = !showPassword">
               <fa icon="eye" v-if="showPassword" class="text-sm"/>
               <fa icon="eye-slash" v-else class="text-sm"/>
             </button>
@@ -46,10 +46,10 @@
             Confirmar contraseña
           </label>
           <div class="input-wrapper">
-            <input id="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" v-model="state.user.confirmPassword" :class="{ 'border-red-500': v$.user.confirmPassword.$error }"
+            <input :disabled="isSubmitting" id="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" v-model="state.user.confirmPassword" :class="{ 'border-red-500': v$.user.confirmPassword.$error }"
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
             <!-- Ojo para mostrar contraseña -->
-            <button type="button" class="eye-btn" @click="showConfirmPassword = !showConfirmPassword">
+            <button :disabled="isSubmitting" type="button" class="eye-btn" @click="showConfirmPassword = !showConfirmPassword">
               <fa icon="eye" v-if="showConfirmPassword" class="text-sm"/>
               <fa icon="eye-slash" v-else class="text-sm"/>
             </button>
@@ -57,15 +57,15 @@
           <p v-if="v$.user.confirmPassword.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.confirmPassword.$errors[0].$message}}</p>
         </div>
         <div class="mt-6">
-          <button type="button" @click="signIn" :disabled="!state.user.username || !state.user.password || !state.user.confirmPassword"
+          <button type="button" @click="signIn" :disabled="isSubmitting || !state.user.username || !state.user.password || !state.user.confirmPassword"
                   class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
                   disabled:opacity-75 disabled:hover:bg-blue-500">
-            Registrarse
+            {{ isSubmitting ? 'Registrando...' : 'Registrarse' }}
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
         </div>
         <div class="mt-2">
-          <button type="button" @click="$router.push('/login')"
+          <button :disabled="isSubmitting" type="button" @click="$router.push('/login')"
                   class="text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600">
             Cancelar
           </button>
@@ -121,6 +121,7 @@ const rules = computed(() => ({
   },
 }))
 
+const isSubmitting = ref(false)
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const v$ = useVuelidate(rules, state)
@@ -129,10 +130,14 @@ const passwordStrength = computed(() => getPasswordStrength(state.user.password)
 const strengthColor = computed(() => strengthColors[passwordStrength.value.level])
 
 async function signIn() {
-  await v$.value.$validate()
-  if (v$.value.$error) return
+  if (isSubmitting.value) return
+  isSubmitting.value = true
+  state.errorMessage = ''
 
   try {
+    await v$.value.$validate()
+    if (v$.value.$error) return
+
     const response = await AuthService.createUser({
       username: state.user.username,
       password: state.user.password,
@@ -163,17 +168,24 @@ async function signIn() {
       allowEscapeKey: false, // no puede cerrar con ESC
     })
 
-    router.push('/login')  // redirige solo después de que el usuario confirme
+    await router.push('/login')  // redirige solo después de que el usuario confirme
   } catch (error) {
     state.errorMessage =
         error.response?.data?.body?.message ||
         error.message ||
         error.toString()
+  } finally {
+    isSubmitting.value = false
   }
 }
 </script>
 
 <style scoped>
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
 .input-wrapper {
   position: relative;
   display: flex;
