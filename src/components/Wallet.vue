@@ -14,8 +14,10 @@
           />
         </div>
       </div>
-      <div class="flow-root">
-        <ul role="list" class="divide-y divide-gray-200" v-if="wallets.length > 0">
+      <div class="flow-root" :aria-busy="loading">
+        <p v-if="loading" role="status" class="text-gray-600">Cargando billeteras<LoadingDots /></p>
+        <p v-else-if="loadError" role="alert" class="text-red-500">No se pudieron cargar las billeteras.</p>
+        <ul role="list" class="divide-y divide-gray-200" v-else-if="wallets.length > 0">
           <li class="py-3 sm:py-4" v-for="wallet in wallets" :key="wallet.id">
             <div @click="selectWallet(wallet)"
                  :class="{ 'text-blue-700': selectedWallet.id === wallet.id }"
@@ -53,13 +55,17 @@
 </template>
 
 <script>
+import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, computed } from 'vue'
 import { formatCurrency } from '../utils/formats'
 
 export default {
   name: 'Wallet',
+  components: { LoadingDots },
   props: {
     wallets: Array,
+    loading: Boolean,
+    loadError: Object,
     showFormNewWallet: Boolean,
     showFormEditWallet: Boolean,
   },

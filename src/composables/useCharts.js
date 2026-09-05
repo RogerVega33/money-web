@@ -1,9 +1,11 @@
 import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { useLatestRequest } from './useLatestRequest'
 import TransactionService from '@/services/transaction.service'
 
 export function useCharts(selectedWallet, transactions, transactionsByCategory) {
 
     const profitLoss = ref([])
+    const historyRequest = useLatestRequest()
     const totalByCategory = ref([])
 
     const chartLabelsExpense = ref([])
@@ -46,8 +48,13 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
        PROFIT / LOSS CHART
     ======================= */
     function getProfitLoss(walletId) {
-        TransactionService.getProfitLoss(walletId)
-            .then((response) => {
+        historyRequest.invalidate()
+        profitLoss.value = []
+        chartLabelsProfitLoss.value = []
+        chartDataProfitLoss.value = []
+        if (!walletId) return
+
+        return historyRequest.run(() => TransactionService.getProfitLoss(walletId), (response) => {
                 profitLoss.value = response.data.body.profitLoss
 
                 chartLabelsProfitLoss.value = []
@@ -67,9 +74,6 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
                 })
 
                 chartDataProfitLoss.value.push(income, expense, savings, total)
-            })
-            .catch(() => {
-                profitLoss.value = []
             })
     }
 
@@ -181,6 +185,8 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
     }, { deep: true })
 
     return {
+        loadingHistory: historyRequest.loading,
+        historyError: historyRequest.error,
         profitLoss,
         totalByCategory,
 

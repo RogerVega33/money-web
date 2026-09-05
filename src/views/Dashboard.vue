@@ -7,6 +7,8 @@
         <div class="flex flex-col w-full">
           <Wallet
               :wallets="wallets"
+              :loading="loadingWallets"
+              :load-error="walletsError"
               :show-form-new-wallet="showFormNewWallet"
               :show-form-edit-wallet="showFormEditWallet"
               @select-wallet="selectWallet"
@@ -28,12 +30,15 @@
           class="lg:basis-1/3 p-1 lg:p-2"
       >
         <div class="flex flex-col w-full">
+          <p v-if="loadingTransactions" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="status">Cargando movimientos<LoadingDots /></p>
+          <p v-else-if="transactionsError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert">No se pudieron cargar los movimientos.</p>
           <Summary
+              v-else
               :selected-wallet="selectedWallet"
               :transactions="transactions"
               :show-starting-amount="searchSettings.dateRangePicked === 'all'"
           />
-          <div ref="incomeChartContainer" id="incomeChartContainer">
+          <div v-show="!loadingTransactions && !transactionsError" ref="incomeChartContainer" id="incomeChartContainer">
             <BarChart
                 :labels="chartLabelsIncome"
                 :values="chartDataIncome"
@@ -44,7 +49,7 @@
                 @requestFullScreen="fullScreenChart('incomeChartContainer')"
             />
           </div>
-          <div ref="expenseChartContainer" id="expenseChartContainer">
+          <div v-show="!loadingTransactions && !transactionsError" ref="expenseChartContainer" id="expenseChartContainer">
             <BarChart
                 :labels="chartLabelsExpense"
                 :values="chartDataExpense"
@@ -56,7 +61,10 @@
             />
           </div>
           <div ref="profitLossContainer" id="profitLossContainer">
+            <p v-if="loadingHistory" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="status">Cargando histórico<LoadingDots /></p>
+            <p v-else-if="historyError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert">No se pudo cargar el histórico.</p>
             <LineChart
+                v-else
                 :labels="chartLabelsProfitLoss"
                 :datasets="chartDataProfitLoss"
                 :fullScreen="fullScreenProfitLoss"
@@ -80,6 +88,8 @@
       <div class="lg:basis-1/3 p-1 lg:p-2">
         <Transactions
             v-if="selectedWallet && !showForm"
+            :loading="loadingTransactions"
+            :load-error="transactionsError"
             :search-settings="searchSettings"
             :transactions-by-category="transactionsByCategory"
             :transactions="transactions"
@@ -117,6 +127,7 @@
 </template>
 
 <script setup>
+import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, computed, watch, onMounted } from 'vue'
 import store from '@/store'
 
@@ -131,6 +142,7 @@ import Transactions from '@/components/transactions/Transactions.vue'
 import NewWallet from '@/components/NewWallet.vue'
 import EditWallet from '@/components/EditWallet.vue'
 
+import { useLatestRequest } from '@/composables/useLatestRequest'
 import { useTransactions } from '@/composables/useTransactions'
 import { useCharts } from '@/composables/useCharts'
 
@@ -138,6 +150,9 @@ import { useCharts } from '@/composables/useCharts'
    WALLETS
 ======================= */
 const wallets = ref([])
+const walletsRequest = useLatestRequest()
+const loadingWallets = walletsRequest.loading
+const walletsError = walletsRequest.error
 const selectedWallet = ref(null)
 const showFormNewWallet = ref(false)
 const showFormEditWallet = ref(false)
@@ -155,10 +170,10 @@ const searchSettings = ref({
   showTransactionsByCategory: true
 })
 
-async function getWallets() {
-  await WalletService.getWallets()
-      .then((response) => { wallets.value = response.data.body })
-      .catch(() => { wallets.value = [] })
+function getWallets() {
+  return walletsRequest.run(() => WalletService.getWallets(), (response) => {
+    wallets.value = response.data.body
+  })
 }
 
 function selectWallet(wallet) {
@@ -167,6 +182,7 @@ function selectWallet(wallet) {
   const { year, month } = searchSettings.value.dateSelected
 
   if (wallet.type === 'crypto') {
+    getProfitLoss(null)
     getCryptoWalletTransactions(id)
   } else {
     getTransactions(id, year, month + 1)
@@ -188,6 +204,8 @@ function walletSaved(value) {
    COMPOSABLES
 ======================= */
 const {
+  loadingTransactions,
+  transactionsError,
   transactions,
   transactionsByCategory,
   transactionFilter,
@@ -199,6 +217,8 @@ const {
 } = useTransactions(selectedWallet, searchSettings)
 
 const {
+  loadingHistory,
+  historyError,
   chartLabelsExpense,
   chartLabelsIncome,
   chartLabelsProfitLoss,
@@ -218,14 +238,19 @@ const {
 /* =======================
    EVENTOS DE TRANSACCIONES
 ======================= */
-function onTransactionChanged() { getWallets(); getAllFiatTransactions() }
-function onCryptoTransactionChanged() { getWallets(); getAllCryptoTransactions() }
+function onTransactionChanged() {
+  getWallets()
+  // La selección pudo cambiar mientras se guardaba o eliminaba el movimiento.
+  if (selectedWallet.value?.type === 'crypto') getAllCryptoTransactions()
+  else if (selectedWallet.value?.id) getAllFiatTransactions()
+}
+function onCryptoTransactionChanged() { onTransactionChanged() }
 
 /* =======================
    WATCHERS
 ======================= */
 watch(searchSettings, () => {
-  if (!selectedWallet.value?.id) return
+  if (!selectedWallet.value?.id || selectedWallet.value.type === 'crypto') return
   const { year, month } = searchSettings.value.dateSelected
   getTransactions(selectedWallet.value.id, year, month + 1)
 }, { deep: true })

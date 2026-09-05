@@ -1,5 +1,5 @@
 <template>
-  <div class="transactions">
+  <div class="transactions" :aria-busy="loading || loadingCategories">
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
 
       <!-- HEADER -->
@@ -18,8 +18,10 @@
         <hr class="mb-5">
 
         <!-- FIAT -->
+        <p v-if="loadingCategories" role="status">Cargando categorías<LoadingDots /></p>
+        <p v-else-if="categoriesError" role="alert">No se pudieron cargar las categorías.</p>
         <TransactionEditForm
-            v-if="selectedWallet.type !== 'crypto'"
+            v-else-if="selectedWallet.type !== 'crypto'"
             :transaction="newTransactionTemplate || {}"
             :categories="categories"
             :error="errorMessage"
@@ -100,7 +102,11 @@
       </div>
 
       <!-- LISTA -->
+      <p v-if="loading || loadingCategories" class="text-gray-600" role="status">Cargando transacciones<LoadingDots /></p>
+      <p v-else-if="loadError || categoriesError" class="text-gray-600" role="alert">No se pudieron cargar las transacciones o sus categorías.</p>
+
       <TransactionList
+          v-else
           :transactions="searchSettings.showTransactionsByCategory ? transactions : paginatedTransactions"
           :transactions-by-category="searchSettings.showTransactionsByCategory ? paginatedCategories : transactionsByCategory"
           :search-settings="searchSettings"
@@ -118,6 +124,7 @@
 
       <!-- PAGINACIÓN -->
       <Pagination
+          v-if="!loading && !loadError && !loadingCategories && !categoriesError"
           :current-page="currentPage"
           :total-pages="totalPages"
           @change="currentPage = $event"
@@ -128,7 +135,9 @@
 </template>
 
 <script setup>
+import LoadingDots from '@/components/common/LoadingDots.vue'
 import {ref, computed, watch, nextTick} from 'vue'
+import { useLatestRequest } from '@/composables/useLatestRequest'
 import moment from 'moment'
 import Swal from 'sweetalert2'
 
@@ -143,6 +152,8 @@ import { exportToCSV } from '@/utils/exportCSV'
 import { blockInvalidChars } from '@/utils/inputValidation'
 
 const props = defineProps([
+  'loading',
+  'loadError',
   'transactions',
   'transactionsByCategory',
   'selectedWallet',
@@ -160,6 +171,9 @@ const emit = defineEmits([
 ])
 
 const categories = ref([])
+const categoriesRequest = useLatestRequest()
+const loadingCategories = categoriesRequest.loading
+const categoriesError = categoriesRequest.error
 const errorMessage = ref("")
 const showIconNewTransaction = ref(true)
 
@@ -183,7 +197,11 @@ const transactionFilter = ref("")
    CATEGORÍAS
 ======================= */
 function getCategories() {
-  CategoryService.getCategories(props.selectedWallet.id).then((response) => {
+  categories.value = []
+  categoriesRequest.invalidate()
+  if (props.selectedWallet.type === 'crypto') return
+  const walletId = props.selectedWallet.id
+  return categoriesRequest.run(() => CategoryService.getCategories(walletId), (response) => {
     const incomes = response.data.body.filter(c => c.type === 'income')
     const expenses = response.data.body.filter(c => c.type === 'expense')
     // Las ordena en categoría Ingresos y Gastos para mostrar la lista
@@ -357,8 +375,11 @@ function handleError(error) {
 /* =======================
    WATCHERS
 ======================= */
-watch(() => props.selectedWallet, () => {
+watch(() => props.selectedWallet.id, () => {
   transactionFilter.value = ""
+  currentPage.value = 1
+  cancel()
+  cancelNewTransaction()
   getCategories()
 }, { immediate: true })
 

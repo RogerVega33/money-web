@@ -49,7 +49,9 @@
           </div>
         </div>
       </div>
-      <div class="flow-root" v-else>
+      <div class="flow-root" v-else :aria-busy="loadingCategories">
+        <p v-if="loadingCategories" role="status">Cargando categorías<LoadingDots /></p>
+        <p v-else-if="categoriesError" role="alert">No se pudieron cargar las categorías.</p>
         <Category icon="arrow-up" icon-style="text-green-600" title="Ingresos" :categories="categories.income" @success="getCategories"/>
         <Category icon="arrow-down" icon-style="text-red-600" title="Gastos" :categories="categories.expense" @success="getCategories"/>
       </div>
@@ -58,31 +60,34 @@
 </template>
 
 <script>
-import { ref, onMounted, watch } from 'vue';
+import LoadingDots from '@/components/common/LoadingDots.vue'
+import { ref, watch } from 'vue';
+import { useLatestRequest } from '@/composables/useLatestRequest';
 import CategoryService from "../services/category.service";
 import Category from "../components/Category";
 import { formatCurrency } from '../utils/formats';
 
 export default {
   name: 'EditWallet',
-  components: { Category },
+  components: { Category, LoadingDots },
   props: {
     selectedWallet: Object,
   },
   setup(props) {
     const categories = ref({ income: [], expense: [] });
+    const categoriesRequest = useLatestRequest();
     const showIconNewCategory = ref(true);
     const newCategory = ref({ type: 'income' });
     const errorMessage = ref("");
 
     const getCategories = () => {
-      if (!props.selectedWallet?.id) return;
-
-      CategoryService.getCategories(props.selectedWallet.id).then((response) => {
+      categories.value = { income: [], expense: [] };
+      categoriesRequest.invalidate();
+      if (!props.selectedWallet?.id || props.selectedWallet.type === 'crypto') return;
+      const walletId = props.selectedWallet.id;
+      return categoriesRequest.run(() => CategoryService.getCategories(walletId), (response) => {
         categories.value.income = response.data.body.filter(c => c.type === 'income');
         categories.value.expense = response.data.body.filter(c => c.type === 'expense');
-      }).catch((error) => {
-        console.log(error)
       })
     };
 
@@ -115,15 +120,14 @@ export default {
       errorMessage.value = "";
     };
 
-    onMounted(() => {
+    watch(() => props.selectedWallet?.id, () => {
+      cancelNewCategory();
       getCategories();
-    });
-
-    watch(() => props.selectedWallet, () => {
-      getCategories();
-    });
+    }, { immediate: true });
 
     return {
+      loadingCategories: categoriesRequest.loading,
+      categoriesError: categoriesRequest.error,
       categories,
       showIconNewCategory,
       newCategory,

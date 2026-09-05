@@ -1,12 +1,25 @@
 import { ref, watch } from 'vue'
+import { useLatestRequest } from './useLatestRequest'
 import TransactionService from '@/services/transaction.service'
 
 export function useTransactions(selectedWallet, searchSettings) {
 
-    const transactions = ref([])
+    const transactions = ref({ transactions: [] })
     const transactionsTemp = ref([])
     const transactionsByCategory = ref([])
     const transactionFilter = ref('')
+    const request = useLatestRequest()
+
+    function loadTransactions(load) {
+        transactions.value = { transactions: [] }
+        transactionsTemp.value = []
+        transactionFilter.value = ''
+        return request.run(load, (response) => {
+            transactions.value = response.data.body
+            transactionsTemp.value = [...response.data.body.transactions]
+            filterTransactions()
+        })
+    }
 
     /* =======================
        OBTENER TRANSACCIONES
@@ -21,27 +34,11 @@ export function useTransactions(selectedWallet, searchSettings) {
             searchSettings.value.dateRangePicked === 'all') monthSelected = null
         if (searchSettings.value.dateRangePicked === 'all') yearSelected = null
 
-        TransactionService.getTransactions(walletId, yearSelected, monthSelected)
-            .then((response) => {
-                transactions.value = response.data.body
-                transactionsTemp.value = [...response.data.body.transactions]
-            })
-            .catch(() => {
-                transactions.value = []
-                transactionsTemp.value = []
-            })
+        return loadTransactions(() => TransactionService.getTransactions(walletId, yearSelected, monthSelected))
     }
 
     function getCryptoWalletTransactions(walletId) {
-        TransactionService.getCryptoWalletTransactions(walletId)
-            .then((response) => {
-                transactions.value = response.data.body
-                transactionsTemp.value = [...response.data.body.transactions]
-            })
-            .catch(() => {
-                transactions.value = []
-                transactionsTemp.value = []
-            })
+        return loadTransactions(() => TransactionService.getCryptoWalletTransactions(walletId))
     }
 
     function getAllFiatTransactions() {
@@ -116,6 +113,8 @@ export function useTransactions(selectedWallet, searchSettings) {
     watch(transactionFilter, filterTransactions)
 
     return {
+        loadingTransactions: request.loading,
+        transactionsError: request.error,
         transactions,
         transactionsTemp,
         transactionsByCategory,
