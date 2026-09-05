@@ -14,10 +14,10 @@
         <span class="text-sm font-medium text-gray-700 mx-2">
           {{ transaction.symbol }}
         </span>
-        <button @click="emitUpdate" class="text-green-600 hover:text-green-700 mx-1">
+        <button @click="emitUpdate" :disabled="saving" class="text-green-600 hover:text-green-700 mx-1 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:text-green-600">
           <fa :icon="saving ? 'spinner' : 'check'" :class="{ 'animate-spin': saving }" />
         </button>
-        <button @click="$emit('cancel-edit')" :disabled="saving" class="text-red-500 hover:text-red-600 mx-1 disabled:opacity-40 disabled:cursor-not-allowed">
+        <button @click="$emit('cancel-edit')" :disabled="saving" class="text-red-500 hover:text-red-600 mx-1 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:text-red-500">
           <fa icon="times" />
         </button>
       </div>

@@ -18,8 +18,9 @@
         <hr class="mb-5">
 
         <!-- FIAT -->
-        <p v-if="loadingCategories" role="status">Cargando categorías<LoadingDots /></p>
-        <p v-else-if="categoriesError" role="alert">No se pudieron cargar las categorías.</p>
+        <p v-if="loadingCategories" class="text-gray-600" role="status">Cargando categorías<LoadingDots /></p>
+        <div v-else-if="categoriesError" role="alert"><p>No se pudieron cargar las categorías.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="getCategories">Reintentar</button></div>
+        <p v-else-if="selectedWallet.type !== 'crypto' && !categories.some(group => group.categoryList.length)" class="text-gray-600">Todavía no tienes categorías en esta billetera. Usa el botón ⚙️ para agregar una.</p>
         <TransactionEditForm
             v-else-if="selectedWallet.type !== 'crypto'"
             :transaction="newTransactionTemplate || {}"
@@ -60,15 +61,16 @@
             </p>
             <button
                 type="button"
-                class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:hover:bg-blue-500"
+                class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
                 :disabled="!newCryptoTransaction.symbol || !newCryptoTransaction.amount || isSavingTransaction"
                 @click="saveTransaction(newCryptoTransaction)"
             >
-              {{ isSavingTransaction ? 'Guardando...' : 'Guardar' }}
+              <template v-if="isSavingTransaction">Guardando<LoadingDots /></template>
+        <template v-else>Guardar</template>
             </button>
             <button
                 type="button"
-                class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600"
+                class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-500"
                 :disabled="isSavingTransaction"
                 @click="cancelNewTransaction"
             >
@@ -103,7 +105,13 @@
 
       <!-- LISTA -->
       <p v-if="loading || loadingCategories" class="text-gray-600" role="status">Cargando transacciones<LoadingDots /></p>
-      <p v-else-if="loadError || categoriesError" class="text-gray-600" role="alert">No se pudieron cargar las transacciones o sus categorías.</p>
+      <div v-else-if="loadError || categoriesError" class="text-gray-600" role="alert">
+        <p>{{ loadError ? 'No se pudieron cargar las transacciones.' : 'No se pudieron cargar las categorías.' }}</p>
+        <button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="retryFailedLoads">Reintentar</button>
+      </div>
+      <p v-else-if="!transactions?.transactions?.length" class="text-gray-600">
+        {{ transactionFilter ? 'No hay transacciones que coincidan con tu búsqueda.' : 'No hay transacciones en este período.' }}
+      </p>
 
       <TransactionList
           v-else
@@ -124,7 +132,7 @@
 
       <!-- PAGINACIÓN -->
       <Pagination
-          v-if="!loading && !loadError && !loadingCategories && !categoriesError"
+          v-if="!loading && !loadError && !loadingCategories && !categoriesError && totalPages > 1"
           :current-page="currentPage"
           :total-pages="totalPages"
           @change="currentPage = $event"
@@ -161,6 +169,7 @@ const props = defineProps([
 ])
 
 const emit = defineEmits([
+    'retry',
   'new-transaction',
   'new-crypto-transaction',
   'update-transaction',
@@ -196,6 +205,11 @@ const transactionFilter = ref("")
 /* =======================
    CATEGORÍAS
 ======================= */
+function retryFailedLoads() {
+  if (props.loadError) emit('retry')
+  if (categoriesError.value) getCategories()
+}
+
 function getCategories() {
   categories.value = []
   categoriesRequest.invalidate()
@@ -323,27 +337,34 @@ function updateTransaction(transaction) {
    ELIMINAR
 ======================= */
 function deleteTransaction(transaction) {
+  const isCrypto = props.selectedWallet.type === 'crypto'
 
-  Swal.fire({
+  return Swal.fire({
     title: 'Eliminar transacción',
     text: '¿Seguro que deseas eliminar esta transacción?',
     showCancelButton: true,
     confirmButtonText: 'Eliminar',
     cancelButtonText: 'Cancelar',
+    showLoaderOnConfirm: true,
+    allowOutsideClick: () => !Swal.isLoading(),
+    allowEscapeKey: () => !Swal.isLoading(),
+    preConfirm: async () => {
+      try {
+        if (isCrypto) {
+          await TransactionService.deleteCryptoTransaction(transaction.id)
+        } else {
+          await TransactionService.deleteTransaction(transaction.id)
+        }
+        return true
+      } catch {
+        Swal.showValidationMessage('No se pudo eliminar la transacción. Inténtalo de nuevo.')
+        return false
+      }
+    },
   }).then((result) => {
     if (!result.isConfirmed) return
-
-    if (props.selectedWallet.type !== 'crypto') {
-      TransactionService.deleteTransaction(transaction.id).then(() => {
-        transactionFilter.value = ""
-        emit('delete-transaction', transaction)
-      })
-    } else {
-      TransactionService.deleteCryptoTransaction(transaction.id).then(() => {
-        transactionFilter.value = ""
-        emit('delete-crypto-transaction', transaction)
-      })
-    }
+    transactionFilter.value = ""
+    emit(isCrypto ? 'delete-crypto-transaction' : 'delete-transaction', transaction)
   })
 }
 

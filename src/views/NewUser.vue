@@ -60,7 +60,8 @@
           <button type="button" @click="signIn" :disabled="isSubmitting || !state.user.username || !state.user.password || !state.user.confirmPassword"
                   class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
                   disabled:opacity-75 disabled:hover:bg-blue-500">
-            {{ isSubmitting ? 'Registrando...' : 'Registrarse' }}
+            <template v-if="isSubmitting">Guardando<LoadingDots /></template>
+            <template v-else>Registrarse</template>
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
         </div>
@@ -77,6 +78,7 @@
 </template>
 
 <script setup>
+import LoadingDots from '@/components/common/LoadingDots.vue'
 import useVuelidate from '@vuelidate/core'
 import { required, helpers, minLength, maxLength } from '@vuelidate/validators'
 import { reactive, computed, ref } from 'vue'

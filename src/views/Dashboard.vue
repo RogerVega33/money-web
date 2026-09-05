@@ -11,6 +11,7 @@
               :load-error="walletsError"
               :show-form-new-wallet="showFormNewWallet"
               :show-form-edit-wallet="showFormEditWallet"
+              @retry="getWallets"
               @select-wallet="selectWallet"
               @add-wallet="addWallet"
               @hide-forms="hideForms"
@@ -31,14 +32,15 @@
       >
         <div class="flex flex-col w-full">
           <p v-if="loadingTransactions" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="status">Cargando movimientos<LoadingDots /></p>
-          <p v-else-if="transactionsError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert">No se pudieron cargar los movimientos.</p>
+          <div v-else-if="transactionsError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert"><p>No se pudieron cargar los movimientos.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="retryTransactions">Reintentar</button></div>
+          <p v-else-if="!transactionsTemp.length" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600">No hay movimientos en este período.</p>
           <Summary
               v-else
               :selected-wallet="selectedWallet"
               :transactions="transactions"
               :show-starting-amount="searchSettings.dateRangePicked === 'all'"
           />
-          <div v-show="!loadingTransactions && !transactionsError" ref="incomeChartContainer" id="incomeChartContainer">
+          <div v-show="!loadingTransactions && !transactionsError && transactionsTemp.length > 0" ref="incomeChartContainer" id="incomeChartContainer">
             <BarChart
                 :labels="chartLabelsIncome"
                 :values="chartDataIncome"
@@ -49,7 +51,7 @@
                 @requestFullScreen="fullScreenChart('incomeChartContainer')"
             />
           </div>
-          <div v-show="!loadingTransactions && !transactionsError" ref="expenseChartContainer" id="expenseChartContainer">
+          <div v-show="!loadingTransactions && !transactionsError && transactionsTemp.length > 0" ref="expenseChartContainer" id="expenseChartContainer">
             <BarChart
                 :labels="chartLabelsExpense"
                 :values="chartDataExpense"
@@ -62,7 +64,8 @@
           </div>
           <div ref="profitLossContainer" id="profitLossContainer">
             <p v-if="loadingHistory" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="status">Cargando histórico<LoadingDots /></p>
-            <p v-else-if="historyError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert">No se pudo cargar el histórico.</p>
+            <div v-else-if="historyError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert"><p>No se pudo cargar el histórico.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="getProfitLoss(selectedWallet.id)">Reintentar</button></div>
+            <p v-else-if="!chartLabelsProfitLoss.length" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600">Todavía no hay movimientos en el histórico de esta billetera.</p>
             <LineChart
                 v-else
                 :labels="chartLabelsProfitLoss"
@@ -88,6 +91,7 @@
       <div class="lg:basis-1/3 p-1 lg:p-2">
         <Transactions
             v-if="selectedWallet && !showForm"
+            @retry="retryTransactions"
             :loading="loadingTransactions"
             :load-error="transactionsError"
             :search-settings="searchSettings"
@@ -207,6 +211,7 @@ const {
   loadingTransactions,
   transactionsError,
   transactions,
+  transactionsTemp,
   transactionsByCategory,
   transactionFilter,
   getTransactions,
@@ -238,12 +243,16 @@ const {
 /* =======================
    EVENTOS DE TRANSACCIONES
 ======================= */
+function retryTransactions() {
+  if (selectedWallet.value?.type === 'crypto') getAllCryptoTransactions()
+  else if (selectedWallet.value?.id) getAllFiatTransactions()
+}
+
 function onTransactionChanged() {
   getWallets()
   // La selección pudo cambiar mientras se guardaba o eliminaba el movimiento.
-  if (selectedWallet.value?.type === 'crypto') getAllCryptoTransactions()
-  else if (selectedWallet.value?.id) {
-    getAllFiatTransactions()
+  retryTransactions()
+  if (selectedWallet.value?.id && selectedWallet.value.type !== 'crypto') {
     getProfitLoss(selectedWallet.value.id)
   }
 }

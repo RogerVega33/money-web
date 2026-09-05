@@ -38,7 +38,8 @@
           <button type="button" @click="login" :disabled="isSubmitting || !state.user.username || !state.user.password"
                   class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-500
                   disabled:opacity-75 disabled:hover:bg-blue-300">
-            {{ isSubmitting ? 'Iniciando sesión...' : 'Iniciar sesión' }}
+            <template v-if="isSubmitting">Iniciando sesión<LoadingDots /></template>
+            <template v-else>Iniciar sesión</template>
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
         </div>
@@ -61,6 +62,7 @@
 </template>
 
 <script setup>
+import LoadingDots from '@/components/common/LoadingDots.vue'
 import useVuelidate from '@vuelidate/core'
 import { required, helpers } from '@vuelidate/validators'
 import { reactive, computed, ref } from 'vue'

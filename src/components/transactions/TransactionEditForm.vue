@@ -55,15 +55,16 @@
       </p>
 
       <button
-          class="btn-primary"
+          class="btn-primary disabled:opacity-75 disabled:cursor-not-allowed"
           :disabled="!canSave"
           @click="emitSave"
       >
-        {{ props.saving ? 'Guardando...' : 'Guardar' }}
+        <template v-if="props.saving">Guardando<LoadingDots /></template>
+        <template v-else>Guardar</template>
       </button>
 
       <button
-          class="btn-secondary mt-2"
+          class="btn-secondary mt-2 disabled:opacity-75 disabled:cursor-not-allowed"
           :disabled="props.saving"
           @click="emit('cancel')"
       >
@@ -74,6 +75,7 @@
 </template>
 
 <script setup>
+import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, computed, watch } from 'vue'
 import { blockInvalidChars } from '@/utils/inputValidation'
 
