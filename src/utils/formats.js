@@ -19,7 +19,7 @@ export function formatCryptoHoldings(value){
     if (store.state.app.hideMoney) {
         return "****";
     }
-    return value;
+    return Number(value || 0).toFixed(6);
 }
 
 export function formatDateTime(dateTime) {

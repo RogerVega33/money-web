@@ -89,7 +89,7 @@
 import { blockInvalidChars, blockInvalidAmountInput, handleAmountPaste } from '@/utils/inputValidation'
 import { ref, computed, watch } from 'vue'
 import { amountError } from '@/utils/dataValidation'
-import { formatCurrency } from '@/utils/formats'
+import { formatCurrency, formatCryptoHoldings } from '@/utils/formats'
 import Dropdown from '@/components/common/Dropdown.vue'
 import { formatDateTime } from '@/utils/formats'
 
@@ -145,7 +145,4 @@ function handleDelete(close) {
   emit('delete', props.transaction)
 }
 
-function formatCryptoHoldings(amount) {
-  return Number(amount || 0).toFixed(6)
-}
 </script>

@@ -40,7 +40,7 @@
                 {{formatCurrency(totalSavings)}}
               </div>
             </div>
-            <div class="flex flex-row" v-if="!Number.isNaN(+savingsPercentage)">
+            <div class="flex flex-row" v-if="savingsPercentage !== null">
               <div class="basis-1/2">
                 Porcentaje de ahorro
               </div>
@@ -69,17 +69,17 @@ export default {
   setup(props) {
 
     const totalSavings = computed(() => {
-      if (props.transactions.savings && props.selectedWallet.startingAmount) {
-        if (props.showStartingAmount)
-          return (+props.transactions.savings + +props.selectedWallet.startingAmount).toFixed(2)
-
-        return (+props.transactions.savings).toFixed(2)
-      }
-      return (0).toFixed(2)
+      const savings = Number(props.transactions.savings ?? 0)
+      const startingAmount = props.showStartingAmount ? Number(props.selectedWallet.startingAmount ?? 0) : 0
+      return (savings + startingAmount).toFixed(2)
     })
 
     const savingsPercentage = computed(() => {
-      return ((+props.transactions.savings * 100) / +props.transactions.totalIncome).toFixed(2)
+      const income = Number(props.transactions.totalIncome)
+      const savings = Number(props.transactions.savings)
+      if (!Number.isFinite(income) || income <= 0 || !Number.isFinite(savings)) return null
+      const percentage = (savings / income) * 100
+      return Number.isFinite(percentage) ? percentage.toFixed(2) : null
     })
 
     return {

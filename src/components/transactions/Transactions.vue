@@ -396,7 +396,7 @@ function cancel() {
    EXPORT CSV
 ======================= */
 function downloadTransactions() {
-  exportToCSV(props.transactions?.transactions)
+  exportToCSV(props.transactions?.transactions || [], 'transacciones.csv', props.selectedWallet)
 }
 
 /* =======================
