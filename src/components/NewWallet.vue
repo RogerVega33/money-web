@@ -10,7 +10,7 @@
             <label class="block text-grey-darker text-sm font-medium mb-2" for="name">
               Nombre
             </label>
-            <input :disabled="isSaving" id="name" type="text" v-model="state.newWallet.name" maxlength="25"
+            <input :disabled="isSaving" id="name" type="text" v-model="state.newWallet.name" maxlength="50"
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
             <p v-if="v$.newWallet.name.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.newWallet.name.$errors[0].$message}}</p>
           </div>
@@ -18,14 +18,19 @@
             <label class="block text-grey-darker text-sm font-medium mb-2" for="detail">
               Descripción
             </label>
-            <input :disabled="isSaving" id="detail" type="text" v-model="state.newWallet.detail" placeholder="Opcional" max="50"
-                   class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
+            <input :disabled="isSaving" id="detail" type="text" v-model="state.newWallet.detail" placeholder="Opcional" maxlength="150"
+                   class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker">
+            <p v-if="v$.newWallet.detail.$error" class="text-red-500 text-xs mt-2">{{v$.newWallet.detail.$errors[0].$message}}</p>
           </div>
           <div class="mt-4" v-if="state.newWallet.type !== 'crypto'">
             <label class="block text-grey-darker text-sm font-medium mb-2" for="startingAmount">
               Monto inicial
             </label>
-            <input :disabled="isSaving" id="startingAmount" type="number" min="0.00" max="1000000.00" step="0.01" v-model="state.newWallet.startingAmount" placeholder="$ 0.00"
+            <input :disabled="isSaving" id="startingAmount" type="text" inputmode="decimal" maxlength="13"
+                @keydown="blockInvalidChars"
+                @beforeinput="blockInvalidAmountInput"
+                @paste="handleAmountPaste"
+                @drop.prevent v-model="state.newWallet.startingAmount" placeholder="$ 0.00"
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker">
             <p v-if="v$.newWallet.startingAmount.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.newWallet.startingAmount.$errors[0].$message}}</p>
           </div>
@@ -59,9 +64,11 @@
 </template>
 
 <script>
+import { blockInvalidChars, blockInvalidAmountInput, handleAmountPaste } from '@/utils/inputValidation'
+import { amountError, textError } from '@/utils/dataValidation'
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import { reactive, computed, ref } from 'vue'
-import { required, helpers, minValue, maxValue } from '@vuelidate/validators'
+import { required, helpers } from '@vuelidate/validators'
 import useVuelidate from '@vuelidate/core'
 import WalletService from "../services/wallet.service";
 
@@ -85,12 +92,12 @@ export default {
 
     const rules = computed(() => ({
       newWallet: {
-        name: { required: helpers.withMessage('Ingrese un nombre para la billetera', required) },
+        name: { valid: helpers.withMessage(() => textError(state.newWallet.name), value => !textError(value)) },
+        detail: { valid: helpers.withMessage(() => textError(state.newWallet.detail, 'El detalle', 150, true), value => !textError(value, 'El detalle', 150, true)) },
         startingAmount: {
-          minValueValue: helpers.withMessage('Valor mínimo 0.00', minValue(0)),
-          maxValueValue: helpers.withMessage('Valor máximo 1 000 000.00', maxValue(1000000)),
+          valid: helpers.withMessage(() => amountError(state.newWallet.startingAmount || '0', false, true), value => state.newWallet.type === 'crypto' || !amountError(value || '0', false, true)),
         },
-        type: { required: helpers.withMessage('Seleccione una categoría', required) },
+        type: { required: helpers.withMessage('Seleccione un tipo de billetera', required), valid: helpers.withMessage('Tipo de billetera no válido', value => ['fiat', 'crypto'].includes(value)) },
       },
     }));
 
@@ -106,9 +113,8 @@ export default {
         if (!valid) return;
 
         const payload = { ...state.newWallet };
-        if (payload.startingAmount) {
-          payload.startingAmount = +Number(payload.startingAmount).toFixed(2);
-        }
+        payload.name = payload.name.trim();
+        payload.startingAmount = payload.type === 'crypto' ? '0' : (payload.startingAmount || '0');
         await WalletService.saveWallet(payload);
         emit('success', true);
       } catch (error) {
@@ -128,6 +134,9 @@ export default {
     };
 
     return {
+      blockInvalidChars,
+      blockInvalidAmountInput,
+      handleAmountPaste,
       isSaving,
       state,
       walletTypes,

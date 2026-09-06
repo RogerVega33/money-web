@@ -9,7 +9,7 @@
           <label class="block text-grey-darker text-sm font-medium mb-2" for="username">
             Usuario
           </label>
-          <input :disabled="isSubmitting" id="username" type="text" v-model="state.user.username" :class="{ 'border-red-500': v$.user.username.$error }"
+          <input :disabled="isSubmitting" id="username" maxlength="25" type="text" v-model="state.user.username" :class="{ 'border-red-500': v$.user.username.$error }"
                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
           <p v-if="v$.user.username.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.username.$errors[0].$message}}</p>
         </div>
@@ -18,7 +18,7 @@
             Contraseña
           </label>
           <div class="input-wrapper">
-            <input :disabled="isSubmitting" id="password" :type="showPassword ? 'text' : 'password'" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
+            <input :disabled="isSubmitting" id="password" maxlength="64" :type="showPassword ? 'text' : 'password'" v-model="state.user.password" :class="{ 'border-red-500': v$.user.password.$error }"
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
             <!-- Ojo para mostrar contraseña -->
             <button :disabled="isSubmitting" type="button" class="eye-btn" @click="showPassword = !showPassword">

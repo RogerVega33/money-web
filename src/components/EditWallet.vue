@@ -28,7 +28,7 @@
           <div class="mt-2">
             <label for="categoryName">Nombre:</label>
             <br>
-            <input :disabled="isSavingCategory" id="categoryName" type="text" v-model="newCategory.name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5" required>
+            <input :disabled="isSavingCategory" id="categoryName" type="text" maxlength="50" v-model="newCategory.name" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5" required>
           </div>
           <div class="mt-2">
             <label>Tipo:</label>
@@ -68,6 +68,7 @@
 </template>
 
 <script>
+import { textError } from '@/utils/dataValidation'
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, watch } from 'vue';
 import { useLatestRequest } from '@/composables/useLatestRequest';
@@ -107,8 +108,10 @@ export default {
 
     const saveCategory = async () => {
       if (isSavingCategory.value) return;
-      if (!newCategory.value.name) {
-        errorMessage.value = "Ingrese el nombre de la categoría";
+      errorMessage.value = textError(newCategory.value.name);
+      if (errorMessage.value) return;
+      if (!['income', 'expense'].includes(newCategory.value.type)) {
+        errorMessage.value = 'Seleccione Ingreso o Gasto.';
         return;
       }
       isSavingCategory.value = true;

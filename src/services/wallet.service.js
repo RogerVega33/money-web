@@ -1,3 +1,4 @@
+import { normalizeAmount } from '@/utils/dataValidation'
 import axios from 'axios'
 import authHeader from './auth-header';
 
@@ -7,7 +8,7 @@ class WalletService {
     }
 
     async saveWallet(wallet){
-        return await axios.post(`/api/wallet`, wallet, { headers: authHeader() });
+        return await axios.post(`/api/wallet`, { ...wallet, startingAmount: normalizeAmount(wallet.startingAmount) }, { headers: authHeader() });
     }
 }
 

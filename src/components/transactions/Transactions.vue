@@ -41,6 +41,8 @@
             <input
                 type="text"
                 v-model="newCryptoTransaction.symbol"
+                maxlength="10"
+                :disabled="isSavingTransaction"
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5"
             />
           </div>
@@ -48,11 +50,17 @@
           <div class="mt-2">
             <label>Monto:</label>
             <input
-                type="number"
-                v-model="newCryptoTransaction.amount"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5"
+                type="text" inputmode="decimal" maxlength="12"
                 @keydown="blockInvalidChars"
+                @beforeinput="blockInvalidAmountInput"
+                @paste="handleAmountPaste"
+                @drop.prevent
+                :disabled="isSavingTransaction"
+                v-model="newCryptoTransaction.amount"
+                :aria-invalid="!!cryptoAmountError"
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5"
             />
+            <p v-if="cryptoAmountError" role="alert" class="text-red-500 text-xs italic mt-2">{{ cryptoAmountError }}</p>
           </div>
 
           <div class="mt-4">
@@ -62,7 +70,7 @@
             <button
                 type="button"
                 class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
-                :disabled="!newCryptoTransaction.symbol || !newCryptoTransaction.amount || isSavingTransaction"
+                :disabled="!newCryptoTransaction.symbol || !newCryptoTransaction.amount || !!cryptoAmountError || isSavingTransaction"
                 @click="saveTransaction(newCryptoTransaction)"
             >
               <template v-if="isSavingTransaction">Guardando<LoadingDots /></template>
@@ -143,6 +151,7 @@
 </template>
 
 <script setup>
+import { blockInvalidChars, blockInvalidAmountInput, handleAmountPaste } from '@/utils/inputValidation'
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import {ref, computed, watch, nextTick} from 'vue'
 import { useLatestRequest } from '@/composables/useLatestRequest'
@@ -157,7 +166,7 @@ import Pagination from './Pagination.vue'
 import CategoryService from "../../services/category.service"
 import TransactionService from "../../services/transaction.service"
 import { exportToCSV } from '@/utils/exportCSV'
-import { blockInvalidChars } from '@/utils/inputValidation'
+import { amountError, symbolError } from '@/utils/dataValidation'
 
 const props = defineProps([
   'loading',
@@ -197,6 +206,9 @@ const currentPage = ref(1)
 const pageSize = 10
 
 const newCryptoTransaction = ref({})
+const cryptoAmountError = computed(() =>
+  newCryptoTransaction.value.amount === undefined ? '' : amountError(newCryptoTransaction.value.amount, true)
+)
 /* =======================
    SEARCH
 ======================= */
@@ -258,6 +270,10 @@ function cancelNewTransaction() {
 ======================= */
 function saveTransaction(form) {
   if (isSavingTransaction.value) return
+  if (props.selectedWallet.type === 'crypto') {
+    errorMessage.value = symbolError(form.symbol)
+    if (errorMessage.value || amountError(form.amount, true)) return
+  }
   isSavingTransaction.value = true
   errorMessage.value = ''
 
@@ -318,7 +334,7 @@ function updateTransaction(transaction) {
           transactionFilter.value = ""
           emit('update-transaction')
         })
-        .catch(() => Swal.fire("No se pudo editar la transacción", "", "error"))
+        .catch(error => Swal.fire({ title: "No se pudo editar la transacción", text: error.response?.data?.body?.message || "Inténtalo de nuevo.", icon: "error" }))
         .finally(() => { isUpdatingTransaction.value = false })
 
   } else {
@@ -328,7 +344,7 @@ function updateTransaction(transaction) {
           transactionFilter.value = ""
           emit('update-crypto-transaction')
         })
-        .catch(() => Swal.fire("No se pudo editar la transacción", "", "error"))
+        .catch(error => Swal.fire({ title: "No se pudo editar la transacción", text: error.response?.data?.body?.message || "Inténtalo de nuevo.", icon: "error" }))
         .finally(() => { isUpdatingTransaction.value = false })
   }
 }

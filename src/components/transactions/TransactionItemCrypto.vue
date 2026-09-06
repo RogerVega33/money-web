@@ -2,26 +2,32 @@
   <div class="flex items-center space-x-4 text-gray-900">
 
     <!-- ================= EDICIÓN ================= -->
-    <template v-if="isEditing">
+    <div v-if="isEditing" class="w-full">
       <div :aria-busy="saving" class="flex items-center w-full bg-gray-50 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 px-3 py-1.5">
         <input
             v-model="localEdit.amount"
-            type="number"
+            type="text" inputmode="decimal" maxlength="12"
+                @keydown="blockInvalidChars"
+                @beforeinput="blockInvalidAmountInput"
+                @paste="handleAmountPaste"
+                @drop.prevent
             class="bg-transparent flex-1 text-sm text-gray-900 outline-none border-none ring-0 focus:ring-0"
             :disabled="saving"
+            :aria-invalid="!!validationError"
             @keyup.enter="emitUpdate"
         />
         <span class="text-sm font-medium text-gray-700 mx-2">
           {{ transaction.symbol }}
         </span>
-        <button @click="emitUpdate" :disabled="saving" class="text-green-600 hover:text-green-700 mx-1 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:text-green-600">
+        <button @click="emitUpdate" :disabled="saving || !!validationError" class="text-green-600 hover:text-green-700 mx-1 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:text-green-600">
           <fa :icon="saving ? 'spinner' : 'check'" :class="{ 'animate-spin': saving }" />
         </button>
         <button @click="$emit('cancel-edit')" :disabled="saving" class="text-red-500 hover:text-red-600 mx-1 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:text-red-500">
           <fa icon="times" />
         </button>
       </div>
-    </template>
+      <p v-if="validationError" role="alert" class="text-red-500 text-xs italic mt-2">{{ validationError }}</p>
+    </div>
 
     <!-- ================= NORMAL ================= -->
     <template v-else>
@@ -80,7 +86,9 @@
 </template>
 
 <script setup>
+import { blockInvalidChars, blockInvalidAmountInput, handleAmountPaste } from '@/utils/inputValidation'
 import { ref, computed, watch } from 'vue'
+import { amountError } from '@/utils/dataValidation'
 import { formatCurrency } from '@/utils/formats'
 import Dropdown from '@/components/common/Dropdown.vue'
 import { formatDateTime } from '@/utils/formats'
@@ -98,6 +106,9 @@ const props = defineProps({
 const emit = defineEmits(['edit', 'delete', 'update', 'cancel-edit'])
 
 const localEdit = ref({})
+const validationError = computed(() =>
+    localEdit.value.amount === undefined ? '' : amountError(localEdit.value.amount, true)
+)
 
 const isEditing = computed(() =>
     props.showEdit &&
@@ -108,7 +119,7 @@ watch(
     () => props.transactionSelected,
     (val) => {
       if (val?.id === props.transaction?.id) {
-        localEdit.value = { ...props.transaction }
+        localEdit.value = { ...props.transaction, amount: props.transaction.exactAmount ?? props.transaction.amount }
       }
     },
     { immediate: true }
@@ -116,10 +127,11 @@ watch(
 
 function emitUpdate() {
   if (props.saving) return
+  if (validationError.value) return
 
   emit('update', {
     ...localEdit.value,
-    amount: Number(localEdit.value.amount)
+    amount: localEdit.value.amount
   })
 }
 

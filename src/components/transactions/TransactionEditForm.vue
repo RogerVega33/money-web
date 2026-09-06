@@ -7,6 +7,7 @@
       <Multiselect
           v-if="categories && categories.length"
           v-model="localEdit.categoryId"
+          :disabled="props.saving"
           :options="categories"
           valueProp="id"
           :groups="true"
@@ -22,6 +23,8 @@
       <label>Detalle</label>
       <input
           v-model="localEdit.detail"
+          maxlength="150"
+          :disabled="props.saving"
           class="input"
           @keydown.enter.prevent="emitSave"
       />
@@ -30,19 +33,25 @@
     <div class="mt-2">
       <label>Monto</label>
       <input
-          type="number"
+          type="text" inputmode="decimal" maxlength="13"
+          @keydown="blockInvalidChars"
+          @beforeinput="blockInvalidAmountInput"
+          @paste="handleAmountPaste"
+          @drop.prevent
+          :disabled="props.saving"
           v-model="localEdit.amount"
           class="input"
-          @keydown="blockInvalidChars"
           @keydown.enter.prevent="emitSave"
-          @paste="handleAmountPaste"
+          :aria-invalid="!!amountValidationError"
       />
+      <p v-if="amountValidationError" role="alert" class="text-red-500 text-xs italic mt-2">{{ amountValidationError }}</p>
     </div>
 
     <div class="mt-2">
       <label>Fecha</label>
       <Datepicker
           v-model="localEdit.date"
+          :disabled="props.saving"
           autoApply
           :enableTimePicker="false"
           format="dd/MM/yyyy"
@@ -50,6 +59,7 @@
     </div>
 
     <div class="mt-4">
+      <p v-if="otherValidationError" class="text-red-500 text-xs mb-2">{{ otherValidationError }}</p>
       <p v-if="error" class="text-red-500 text-xs italic mb-2">
         {{ error }}
       </p>
@@ -75,9 +85,11 @@
 </template>
 
 <script setup>
+import { blockInvalidChars, blockInvalidAmountInput, handleAmountPaste } from '@/utils/inputValidation'
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, computed, watch } from 'vue'
-import { blockInvalidChars } from '@/utils/inputValidation'
+import { amountError, textError, dateError } from '@/utils/dataValidation'
+import moment from 'moment'
 
 const props = defineProps({
   transaction: {
@@ -106,7 +118,22 @@ const emit = defineEmits(['save', 'cancel'])
 
 const localEdit = ref({ ...props.transaction })
 
+const amountValidationError = computed(() =>
+  localEdit.value.amount === undefined ? '' : amountError(localEdit.value.amount)
+)
+
+const otherValidationError = computed(() => {
+  const value = localEdit.value
+  const detailMessage = textError(value.detail, 'El detalle', 150, true)
+  if (detailMessage) return detailMessage
+  if (value.date) return dateError(moment(value.date).format('YYYY-MM-DD'))
+  return ''
+})
+
+const validationError = computed(() => amountValidationError.value || otherValidationError.value)
+
 const canSave = computed(() =>
+    !validationError.value &&
     !props.saving &&
     !!localEdit.value?.amount &&
     !!localEdit.value?.categoryId &&
@@ -117,14 +144,6 @@ watch(() => props.transaction, (val) => {
   if (val) localEdit.value = { ...val }
 })
 
-function handleAmountPaste(event) {
-  event.preventDefault()
-  const text = (event.clipboardData || window.clipboardData)
-      .getData('text')
-      .replace(',', '.')
-  const num = parseFloat(text)
-  if (!isNaN(num)) localEdit.value.amount = num
-}
 
 function emitSave() {
   if (!canSave.value) return

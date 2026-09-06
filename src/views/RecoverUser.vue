@@ -68,7 +68,7 @@
             Confirmar contraseña
           </label>
           <div class="input-wrapper">
-            <input :disabled="isSubmitting" id="confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" v-model="state.user.confirmPassword" :class="{ 'border-red-500': v$.user.confirmPassword.$error }"
+            <input :disabled="isSubmitting" id="confirmPassword" maxlength="64" :type="showConfirmPassword ? 'text' : 'password'" v-model="state.user.confirmPassword" :class="{ 'border-red-500': v$.user.confirmPassword.$error }"
                    class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker" required>
             <!-- Ojo para mostrar contraseña -->
             <button :disabled="isSubmitting" type="button" class="eye-btn" @click="showConfirmPassword = !showConfirmPassword">

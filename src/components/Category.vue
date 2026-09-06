@@ -4,7 +4,7 @@
     <ul class="divide-y divide-gray-200">
       <li class="py-3 sm:py-4" v-for="category in categories" :key="category.id">
         <div class="relative w-full" v-if="categorySelected && category.id === categorySelected.id">
-          <input :disabled="isSaving" type="text" id="voice-search" v-model="categorySelected.name"
+          <input :disabled="isSaving" type="text" id="voice-search" maxlength="50" v-model="categorySelected.name"
                  v-on:keyup.enter="editCategory" v-on:keyup.esc="cancel"
                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full pl-4 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" required>
           <button type="button" :disabled="isSaving" @click="editCategory" :aria-label="isSaving ? 'Guardando categoría' : 'Guardar categoría'" class="flex absolute inset-y-0 right-6 items-center pr-3 disabled:opacity-75 disabled:cursor-not-allowed">
@@ -39,6 +39,7 @@
 </template>
 
 <script>
+import { textError } from '@/utils/dataValidation'
 import CategoryService from "../services/category.service";
 import { ref } from 'vue';
 
@@ -57,10 +58,8 @@ export default {
 
     const editCategory = async () => {
       if (isSaving.value) return;
-      if (!categorySelected.value?.name) {
-        errorMessage.value = 'Ingrese el nombre de la categoría';
-        return;
-      }
+      errorMessage.value = textError(categorySelected.value?.name);
+      if (errorMessage.value) return;
       isSaving.value = true;
       errorMessage.value = '';
       try {
