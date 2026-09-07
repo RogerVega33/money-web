@@ -62,6 +62,7 @@
 </template>
 
 <script setup>
+import { authErrorMessage } from '@/utils/authError'
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import useVuelidate from '@vuelidate/core'
 import { required, helpers } from '@vuelidate/validators'
@@ -102,10 +103,7 @@ async function login() {
     store.commit('app/SET_HIDE_MONEY', state.hideMoney)
     await router.push('/dashboard')
   } catch (error) {
-    state.errorMessage =
-        error?.response?.data?.body?.message ||
-        error.message ||
-        error.toString()
+    state.errorMessage = authErrorMessage(error)
   } finally {
     isSubmitting.value = false
   }
