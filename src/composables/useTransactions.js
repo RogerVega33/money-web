@@ -10,22 +10,23 @@ export function useTransactions(selectedWallet, searchSettings) {
     const transactionFilter = ref('')
     const request = useLatestRequest()
 
-    function loadTransactions(load) {
-        transactions.value = { transactions: [] }
-        transactionsTemp.value = []
-        transactionFilter.value = ''
+    function loadTransactions(load, background = false) {
+        if (!background) {
+            transactions.value = { transactions: [] }
+            transactionsTemp.value = []
+            transactionFilter.value = ''
+        }
         return request.run(load, (response) => {
             transactions.value = response.data.body
             transactionsTemp.value = [...response.data.body.transactions]
             filterTransactions()
-        })
+        }, { background })
     }
 
     /* =======================
        OBTENER TRANSACCIONES
     ======================= */
-    function getTransactions(walletId, year, month) {
-        transactionFilter.value = ''
+    function getTransactions(walletId, year, month, background = false) {
 
         let monthSelected = month
         let yearSelected = year
@@ -34,21 +35,21 @@ export function useTransactions(selectedWallet, searchSettings) {
             searchSettings.value.dateRangePicked === 'all') monthSelected = null
         if (searchSettings.value.dateRangePicked === 'all') yearSelected = null
 
-        return loadTransactions(() => TransactionService.getTransactions(walletId, yearSelected, monthSelected))
+        return loadTransactions(() => TransactionService.getTransactions(walletId, yearSelected, monthSelected), background)
     }
 
-    function getCryptoWalletTransactions(walletId) {
-        return loadTransactions(() => TransactionService.getCryptoWalletTransactions(walletId))
+    function getCryptoWalletTransactions(walletId, background = false) {
+        return loadTransactions(() => TransactionService.getCryptoWalletTransactions(walletId), background)
     }
 
-    function getAllFiatTransactions() {
+    function getAllFiatTransactions(background = false) {
         const { id } = selectedWallet.value
         const { year, month } = searchSettings.value.dateSelected
-        getTransactions(id, year, month + 1)
+        return getTransactions(id, year, month + 1, background)
     }
 
-    function getAllCryptoTransactions() {
-        getCryptoWalletTransactions(selectedWallet.value.id)
+    function getAllCryptoTransactions(background = false) {
+        return getCryptoWalletTransactions(selectedWallet.value.id, background)
     }
 
     /* =======================

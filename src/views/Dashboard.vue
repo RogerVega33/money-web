@@ -1,5 +1,10 @@
 <template>
   <div class="dashboard">
+    <p
+        v-if="!realtimeConnected"
+        class="pointer-events-none fixed bottom-0 right-0 z-50 m-0 rounded-tl-lg bg-white px-3 py-2 text-sm text-gray-500 shadow-lg"
+        role="status"
+    >Conectando <LoadingDots /></p>
     <div class="container mx-auto flex flex-col lg:flex-row">
 
       <!-- Col 1: wallets y configuración -->
@@ -132,7 +137,7 @@
 
 <script setup>
 import LoadingDots from '@/components/common/LoadingDots.vue'
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import store from '@/store'
 
 import WalletService from '@/services/wallet.service'
@@ -149,6 +154,7 @@ import EditWallet from '@/components/EditWallet.vue'
 import { useLatestRequest } from '@/composables/useLatestRequest'
 import { useTransactions } from '@/composables/useTransactions'
 import { useCharts } from '@/composables/useCharts'
+import { useRealtime } from '@/composables/useRealtime'
 
 /* =======================
    WALLETS
@@ -174,10 +180,13 @@ const searchSettings = ref({
   showTransactionsByCategory: true
 })
 
-function getWallets() {
+function getWallets(background = false) {
   return walletsRequest.run(() => WalletService.getWallets(), (response) => {
     wallets.value = response.data.body
-  })
+    if (selectedWallet.value) {
+      selectedWallet.value = wallets.value.find(wallet => wallet.id === selectedWallet.value.id) || null
+    }
+  }, { background: background === true })
 }
 
 function selectWallet(wallet) {
@@ -248,15 +257,39 @@ function retryTransactions() {
   else if (selectedWallet.value?.id) getAllFiatTransactions()
 }
 
-function onTransactionChanged() {
-  getWallets()
-  // La selección pudo cambiar mientras se guardaba o eliminaba el movimiento.
-  retryTransactions()
-  if (selectedWallet.value?.id && selectedWallet.value.type !== 'crypto') {
-    getProfitLoss(selectedWallet.value.id)
+let refreshTimer
+let refreshing = false
+let refreshPending = false
+let disposed = false
+
+async function refreshData() {
+  refreshTimer = null
+  if (refreshing) { refreshPending = true; return }
+  refreshing = true
+  try {
+    const requests = [getWallets(true)]
+    if (selectedWallet.value?.id) {
+      if (selectedWallet.value.type === 'crypto') requests.push(getAllCryptoTransactions(true))
+      else requests.push(getAllFiatTransactions(true), getProfitLoss(selectedWallet.value.id, true))
+    }
+    await Promise.all(requests)
+  } finally {
+    refreshing = false
+    if (refreshPending && !disposed) {
+      refreshPending = false
+      onTransactionChanged()
+    }
   }
 }
+
+function onTransactionChanged() {
+  if (disposed) return
+  clearTimeout(refreshTimer)
+  refreshTimer = setTimeout(refreshData, 150)
+}
 function onCryptoTransactionChanged() { onTransactionChanged() }
+const { connected: realtimeConnected } = useRealtime(onTransactionChanged)
+onUnmounted(() => { disposed = true; clearTimeout(refreshTimer) })
 
 /* =======================
    WATCHERS

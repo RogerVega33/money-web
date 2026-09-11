@@ -47,11 +47,13 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
     /* =======================
        PROFIT / LOSS CHART
     ======================= */
-    function getProfitLoss(walletId) {
-        historyRequest.invalidate()
-        profitLoss.value = []
-        chartLabelsProfitLoss.value = []
-        chartDataProfitLoss.value = []
+    function getProfitLoss(walletId, background = false) {
+        if (!background || !walletId) {
+            historyRequest.invalidate()
+            profitLoss.value = []
+            chartLabelsProfitLoss.value = []
+            chartDataProfitLoss.value = []
+        }
         if (!walletId) return
 
         return historyRequest.run(() => TransactionService.getProfitLoss(walletId), (response) => {
@@ -74,7 +76,7 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
                 })
 
                 chartDataProfitLoss.value.push(income, expense, savings, total)
-            })
+            }, { background })
     }
 
     /* =======================
@@ -175,12 +177,12 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
        WATCHERS
     ======================= */
     watch(transactionsByCategory, () => {
-        if (selectedWallet.value.type === 'crypto') return
+        if (selectedWallet.value?.type === 'crypto') return
         buildIncomeExpenseCharts()
     }, { deep: true })
 
     watch(transactions, () => {
-        if (selectedWallet.value.type === 'crypto') return
+        if (selectedWallet.value?.type === 'crypto') return
         buildTotalByCategoryChart()
     }, { deep: true })
 

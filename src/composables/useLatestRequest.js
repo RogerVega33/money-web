@@ -12,9 +12,9 @@ export function useLatestRequest() {
         error.value = null
     }
 
-    async function run(load, apply) {
+    async function run(load, apply, { background = false } = {}) {
         const current = ++version
-        loading.value = true
+        loading.value = loading.value || !background
         error.value = null
         try {
             const response = await load()

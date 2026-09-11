@@ -8,6 +8,7 @@ module.exports = defineConfig({
       '/api': {
         target: 'http://localhost:3000',
         changeOrigin: true,
+        ws: true,
         // Vue actúa como proxy al ejecutar npm run serve.
         // No aceptar una IP reenviada inventada por el cliente.
         onProxyReq(proxyReq, req) {
