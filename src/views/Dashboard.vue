@@ -88,7 +88,7 @@
       <div v-if="showForm" class="lg:basis-1/3 p-1 lg:p-2">
         <div class="flex flex-col w-full">
           <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
-          <EditWallet v-if="selectedWallet && showFormEditWallet" :selected-wallet="selectedWallet"/>
+          <EditWallet v-if="selectedWallet && showFormEditWallet" :selected-wallet="selectedWallet" @success="getWallets"/>
         </div>
       </div>
 

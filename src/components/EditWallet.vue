@@ -3,12 +3,44 @@
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
       <div class="flex justify-between items-center mb-4">
         <h5 class="text-xl font-bold leading-none text-gray-900">Billetera</h5>
+        <button type="button" :disabled="isSavingWallet" @click="toggleWalletEdit"
+                :aria-label="isEditingWallet ? 'Cerrar' : 'Editar'" class="disabled:opacity-75 disabled:cursor-not-allowed">
+          <fa :icon="isEditingWallet ? 'xmark' : 'pencil'" :class="isEditingWallet ? 'text-red-600' : 'text-sky-500'" />
+        </button>
       </div>
-      <div class="">
-        <p>Id: {{selectedWallet.id}}</p>
+      <form v-if="isEditingWallet" :aria-busy="isSavingWallet" @submit.prevent="saveWallet">
+        <h6 class="font-semibold mb-4">Editar billetera</h6>
+        <div>
+          <label for="editWalletName" class="block text-grey-darker text-sm font-medium mb-2">Nombre</label>
+          <input id="editWalletName" v-model="walletDraft.name" :disabled="isSavingWallet" type="text" maxlength="50" required
+                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker">
+        </div>
+        <div class="mt-4">
+          <label for="editWalletDetail" class="block text-grey-darker text-sm font-medium mb-2">Descripción</label>
+          <input id="editWalletDetail" v-model="walletDraft.detail" :disabled="isSavingWallet" type="text" maxlength="150" placeholder="Opcional"
+                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker">
+        </div>
+        <div v-if="selectedWallet.type === 'fiat'" class="mt-4">
+          <label for="editWalletAmount" class="block text-grey-darker text-sm font-medium mb-2">Monto inicial</label>
+          <input id="editWalletAmount" v-model="walletDraft.startingAmount" :disabled="isSavingWallet" type="text" inputmode="decimal" maxlength="16" placeholder="$ 0.00"
+                 @keydown="blockInvalidChars" @beforeinput="blockInvalidAmountInput" @paste="handleAmountPaste" @drop.prevent
+                 class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker">
+        </div>
+        <div class="mt-4">
+          <p v-if="walletError" role="alert" class="text-red-500 text-xs italic mt-2 mb-2">{{ walletError }}</p>
+          <button type="submit" :disabled="isSavingWallet" :aria-label="isSavingWallet ? 'Guardando billetera' : 'Guardar billetera'"
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-500">
+            <template v-if="isSavingWallet">Guardando<LoadingDots /></template>
+            <template v-else>Guardar</template>
+          </button>
+          <button type="button" :disabled="isSavingWallet" @click="cancelWalletEdit"
+                  class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-500">Cancelar</button>
+        </div>
+      </form>
+      <div v-else>
         <p>Nombre: {{selectedWallet.name}}</p>
         <p v-show="selectedWallet.detail">Detalle: {{selectedWallet.detail}}</p>
-        <p>Monto inicial: {{formatCurrency(selectedWallet.startingAmount)}}</p>
+        <p v-if="selectedWallet.type !=='crypto'">Monto inicial: {{formatCurrency(selectedWallet.startingAmount)}}</p>
       </div>
     </div>
 
@@ -68,7 +100,9 @@
 </template>
 
 <script>
-import { textError } from '@/utils/dataValidation'
+import { blockInvalidChars, blockInvalidAmountInput, handleAmountPaste } from '@/utils/inputValidation'
+import WalletService from '@/services/wallet.service'
+import { amountError, textError } from '@/utils/dataValidation'
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, watch } from 'vue';
 import { useLatestRequest } from '@/composables/useLatestRequest';
@@ -82,7 +116,57 @@ export default {
   props: {
     selectedWallet: Object,
   },
-  setup(props) {
+  emits: ['success'],
+  setup(props, { emit }) {
+    const isEditingWallet = ref(false);
+    const isSavingWallet = ref(false);
+    const walletDraft = ref({});
+    const walletError = ref('');
+    let walletEditVersion = 0;
+
+    const resetWalletEdit = () => {
+      walletEditVersion++;
+      isEditingWallet.value = false;
+      walletDraft.value = {};
+      walletError.value = '';
+    };
+    const cancelWalletEdit = () => {
+      if (!isSavingWallet.value) resetWalletEdit();
+    };
+    const toggleWalletEdit = () => {
+      if (isSavingWallet.value) return;
+      if (isEditingWallet.value) return cancelWalletEdit();
+      walletDraft.value = {
+        name: props.selectedWallet.name,
+        detail: props.selectedWallet.detail ?? '',
+        startingAmount: String(props.selectedWallet.startingAmount ?? 0),
+      };
+      walletError.value = '';
+      isEditingWallet.value = true;
+    };
+    const saveWallet = async () => {
+      if (isSavingWallet.value) return;
+      const fiat = props.selectedWallet.type === 'fiat';
+      walletError.value = textError(walletDraft.value.name) ||
+          textError(walletDraft.value.detail, 'La descripción', 150, true) ||
+          (fiat ? amountError(walletDraft.value.startingAmount || '0', false, true) : '');
+      if (walletError.value) return;
+      const payload = { id: props.selectedWallet.id, name: walletDraft.value.name.trim(), detail: walletDraft.value.detail.trim() };
+      if (fiat) payload.startingAmount = walletDraft.value.startingAmount || '0';
+      const version = walletEditVersion;
+      isSavingWallet.value = true;
+      try {
+        await WalletService.updateWallet(payload);
+        if (version === walletEditVersion) resetWalletEdit();
+        emit('success');
+      } catch (error) {
+        if (version !== walletEditVersion) return;
+        walletError.value = error.response?.data?.body?.message || error.message || error.toString();
+      } finally {
+        isSavingWallet.value = false;
+      }
+    };
+
     const categories = ref({ income: [], expense: [] });
     const categoriesRequest = useLatestRequest();
     const showIconNewCategory = ref(true);
@@ -145,11 +229,15 @@ export default {
     };
 
     watch(() => props.selectedWallet?.id, () => {
+      resetWalletEdit();
       resetNewCategory();
       getCategories();
     }, { immediate: true });
 
     return {
+      isEditingWallet, isSavingWallet, walletDraft, walletError,
+      toggleWalletEdit, cancelWalletEdit, saveWallet,
+      blockInvalidChars, blockInvalidAmountInput, handleAmountPaste,
       isSavingCategory,
       loadingCategories: categoriesRequest.loading,
       categoriesError: categoriesRequest.error,

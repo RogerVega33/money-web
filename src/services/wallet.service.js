@@ -7,6 +7,14 @@ class WalletService {
         return await axios.get(`/api/wallet`, { headers: authHeader() });
     }
 
+    async updateWallet(wallet){
+        const payload = { ...wallet };
+        if (Object.prototype.hasOwnProperty.call(payload, 'startingAmount')) {
+            payload.startingAmount = normalizeAmount(payload.startingAmount);
+        }
+        return await axios.put(`/api/wallet`, payload, { headers: authHeader() });
+    }
+
     async saveWallet(wallet){
         return await axios.post(`/api/wallet`, { ...wallet, startingAmount: normalizeAmount(wallet.startingAmount) }, { headers: authHeader() });
     }
