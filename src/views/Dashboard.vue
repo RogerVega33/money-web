@@ -11,7 +11,9 @@
       <div class="lg:basis-1/3 p-1 lg:p-2">
         <div class="flex flex-col w-full">
           <Wallet
-              :wallets="wallets"
+              :wallets="visibleWallets"
+              :selected-wallet="selectedWallet"
+              :has-archived-wallets="wallets.some(wallet => wallet.isArchived)"
               :loading="loadingWallets"
               :load-error="walletsError"
               :show-form-new-wallet="showFormNewWallet"
@@ -23,7 +25,8 @@
               @edit-wallet="editWallet"
           />
           <SearchSettings
-              v-if="selectedWallet && !showForm"
+              v-if="!showForm"
+              v-model:showArchivedWallets="showArchivedWallets"
               :selected-wallet="selectedWallet"
               @change-search-settings="changeSearchSettings"
           />
@@ -160,6 +163,8 @@ import { useRealtime } from '@/composables/useRealtime'
    WALLETS
 ======================= */
 const wallets = ref([])
+const showArchivedWallets = ref(false)
+const visibleWallets = computed(() => wallets.value.filter(wallet => showArchivedWallets.value || !wallet.isArchived))
 const walletsRequest = useLatestRequest()
 const loadingWallets = walletsRequest.loading
 const walletsError = walletsRequest.error
@@ -188,6 +193,13 @@ function getWallets(background = false) {
     }
   }, { background: background === true })
 }
+
+watch(visibleWallets, (visible) => {
+  if (selectedWallet.value && !visible.some(wallet => wallet.id === selectedWallet.value.id)) {
+    selectedWallet.value = null
+    showFormEditWallet.value = false
+  }
+})
 
 function selectWallet(wallet) {
   selectedWallet.value = wallet

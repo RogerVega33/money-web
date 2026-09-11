@@ -27,6 +27,20 @@
                  class="shadow appearance-none border rounded-lg w-full py-2 px-3 text-grey-darker">
         </div>
         <div class="mt-4">
+          <label for="editWalletExclude" class="relative inline-flex items-center mb-4 cursor-pointer">
+            <input type="checkbox" id="editWalletExclude" class="sr-only peer" v-model="walletDraft.excludeFromTotal" :disabled="isSavingWallet">
+            <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Excluir del total</span>
+          </label>
+        </div>
+        <div class="mt-4">
+          <label for="editWalletArchived" class="relative inline-flex items-center mb-4 cursor-pointer">
+            <input type="checkbox" id="editWalletArchived" class="sr-only peer" v-model="walletDraft.isArchived" :disabled="isSavingWallet">
+            <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-blue-600"></div>
+            <span class="ml-3 text-sm font-medium text-gray-900 dark:text-gray-300">Archivar billetera</span>
+          </label>
+        </div>
+        <div class="mt-4">
           <p v-if="walletError" role="alert" class="text-red-500 text-xs italic mt-2 mb-2">{{ walletError }}</p>
           <button type="submit" :disabled="isSavingWallet" :aria-label="isSavingWallet ? 'Guardando billetera' : 'Guardar billetera'"
                   class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-500">
@@ -139,6 +153,8 @@ export default {
       walletDraft.value = {
         name: props.selectedWallet.name,
         detail: props.selectedWallet.detail ?? '',
+        excludeFromTotal: props.selectedWallet.excludeFromTotal ?? false,
+        isArchived: props.selectedWallet.isArchived ?? false,
         startingAmount: String(props.selectedWallet.startingAmount ?? 0),
       };
       walletError.value = '';
@@ -151,7 +167,8 @@ export default {
           textError(walletDraft.value.detail, 'La descripción', 150, true) ||
           (fiat ? amountError(walletDraft.value.startingAmount || '0', false, true) : '');
       if (walletError.value) return;
-      const payload = { id: props.selectedWallet.id, name: walletDraft.value.name.trim(), detail: walletDraft.value.detail.trim() };
+      const payload = { id: props.selectedWallet.id, name: walletDraft.value.name.trim(), detail: walletDraft.value.detail.trim(),
+        excludeFromTotal: walletDraft.value.excludeFromTotal, isArchived: walletDraft.value.isArchived };
       if (fiat) payload.startingAmount = walletDraft.value.startingAmount || '0';
       const version = walletEditVersion;
       isSavingWallet.value = true;
