@@ -27,7 +27,8 @@
                 <fa :icon="['fab', 'bitcoin']" class="text-yellow-300 h-8" v-if="wallet.type === 'crypto'"/>
               </div>
               <div class="flex-1 min-w-0">
-                <p class="text-sm truncate" :class="selectedWallet?.id === wallet.id? 'font-bold':'font-medium'">
+                <p class="text-sm truncate group-hover:text-blue-500"
+                   :class="[selectedWallet?.id === wallet.id ? 'font-bold' : 'font-medium', { 'text-gray-500': wallet.isArchived && selectedWallet?.id !== wallet.id }]">
                   {{wallet.name}}
                 </p>
                 <div v-if="wallet.isArchived || wallet.excludeFromTotal" class="flex flex-wrap gap-1 mt-1">
