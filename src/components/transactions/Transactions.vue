@@ -484,4 +484,10 @@ const totalPages = computed(() => {
   return Math.ceil(total / pageSize)
 })
 
+// Evita quedar en una página fuera de rango
+// Escoge el número más pequeño entre la página actual y el total de páginas.
+watch(totalPages, (pages) => {
+  currentPage.value = Math.max(1, Math.min(currentPage.value, pages))
+})
+
 </script>
