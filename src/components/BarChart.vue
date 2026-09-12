@@ -58,6 +58,7 @@ export default defineComponent({
           // color de las líneas de la cuadrícula vertical, con 15% de opacidad
           grid: { color: 'rgba(107, 114, 128, 0.15)' },
           ticks: {
+            display: !props.hideMoney,
             color: '#6b7280',  // color gris para los números del eje
             // formatea el número: 1500 → "$1.5k", 20000 → "$20.0k"
             callback: (v) => '$' + (v / 1000).toFixed(1) + 'k'
