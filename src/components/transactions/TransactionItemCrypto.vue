@@ -42,14 +42,14 @@
         <p class="text-sm font-medium truncate">
           {{ formatCryptoHoldings(transaction.amount) }} {{ transaction.symbol }}
         </p>
-        <p class="text-sm truncate" :title="'Última actualización: ' + formatDateTime(transaction.date)">
+        <p class="text-sm truncate" :class="{ 'text-gray-500': transaction.priceUpdateFailed || transaction.hasPrice === false }" :title="'Última actualización: ' + (transaction.hasPrice === false || !transaction.date ? '-' : formatDateTime(transaction.date))">
           1 {{ transaction.symbol }} =
           {{ formatCurrency(transaction.price?.toFixed(2)) }}
         </p>
       </div>
 
       <!-- TOTAL -->
-      <div class="inline-flex items-center text-base font-semibold text-green-500">
+      <div class="inline-flex items-center text-base font-semibold" :class="transaction.hasPrice === false ? 'text-gray-500' : 'text-green-500'">
         {{ formatCurrency(transaction.total?.toFixed(2)) }}
       </div>
 
