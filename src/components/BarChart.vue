@@ -1,11 +1,13 @@
 <template>
-  <div class="w-full card mx-auto p-4 bg-white rounded-lg border shadow-md sm:p-8" :class="{'max-w-md': !fullScreen}">
-    <div class="flex justify-between items-center mb-4">
+  <div class="w-full card mx-auto p-4 bg-white rounded-lg border shadow-md sm:p-8" :class="{'max-w-md': !fullScreen, 'chart-fullscreen': fullScreen}">
+    <div class="flex shrink-0 justify-between items-center mb-4">
       <h5 class="text-xl font-bold leading-none text-gray-900">{{title}}</h5>
-      <fa icon="up-right-and-down-left-from-center" class="cursor-pointer" @click="requestFullScreen"/>
+      <button type="button" :aria-label="fullScreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'" :title="fullScreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'" @click="requestFullScreen">
+        <fa icon="up-right-and-down-left-from-center"/>
+      </button>
     </div>
-    <div v-if="labels.length && values.length">
-      <BarChart :key="chartKey" :chartData="chartData" :options="options"/>
+    <div v-if="labels.length && values.length" :class="{ 'chart-plot': fullScreen }">
+      <BarChart :styles="fullScreen ? { height: '100%' } : {}" :key="chartKey" :chartData="chartData" :options="options"/>
     </div>
     <span v-else>Sin registro</span>
   </div>
@@ -36,7 +38,7 @@ export default defineComponent({
 
     const options = ref({
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: !props.fullScreen,
       indexAxis: 'y',
       plugins: {
         legend: {
@@ -133,10 +135,8 @@ export default defineComponent({
     });
 
     watch(() => props.fullScreen, (newVal) => {
-      options.value.maintainAspectRatio = !newVal || undefined;
-      // en fullscreen usa '1:2' (más alto que ancho) para aprovechar la pantalla
-      // al salir restaura el ratio que se calculó en updateChart() según la cantidad de barras
-      options.value.aspectRatio = newVal ? '1:2' : savedAspectRatio.value;
+      options.value.maintainAspectRatio = !newVal;
+      options.value.aspectRatio = savedAspectRatio.value;
 
       // fuerza a Vue a destruir y recrear el componente para que
       // Chart.js aplique las nuevas opciones de aspecto correctamente
@@ -159,3 +159,20 @@ export default defineComponent({
   }
 });
 </script>
+
+<style scoped>
+.chart-fullscreen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+}
+.chart-plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+</style>

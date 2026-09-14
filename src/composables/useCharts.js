@@ -155,23 +155,32 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
     /* =======================
        FULLSCREEN
     ======================= */
-    function fullScreenChart(refId) {
+    let fullscreenPending = false
+    async function fullScreenChart(refId) {
+        if (fullscreenPending) return
         const elem = document.getElementById(refId)
-        if (elem.requestFullscreen && !document.webkitIsFullScreen) {
-            elem.requestFullscreen()
-        } else {
-            document.exitFullscreen()
+        if (!elem) return
+        fullscreenPending = true
+        try {
+            if (document.fullscreenElement) {
+                await document.exitFullscreen()
+            } else if (elem.requestFullscreen) {
+                await elem.requestFullscreen()
+            }
+        } catch {
+            // Si el navegador rechaza la solicitud, conservar el estado real.
+        } finally {
+            handleFullScreen()
+            fullscreenPending = false
         }
     }
 
-    function handleFullScreen(event) {
-        const id = event.target.id
-        const isFullScreen = document.webkitIsFullScreen
-
-        fullScreenExpense.value        = isFullScreen && id === 'expenseChartContainer'
-        fullScreenIncome.value         = isFullScreen && id === 'incomeChartContainer'
-        fullScreenProfitLoss.value     = isFullScreen && id === 'profitLossContainer'
-        fullScreenTotalByCategory.value = isFullScreen && id === 'totalByCategoryContainer'
+    function handleFullScreen() {
+        const id = document.fullscreenElement?.id
+        fullScreenExpense.value = id === 'expenseChartContainer'
+        fullScreenIncome.value = id === 'incomeChartContainer'
+        fullScreenProfitLoss.value = id === 'profitLossContainer'
+        fullScreenTotalByCategory.value = id === 'totalByCategoryContainer'
     }
 
     /* =======================

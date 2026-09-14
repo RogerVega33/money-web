@@ -1,10 +1,14 @@
 <template>
-  <div class="w-full card mx-auto p-4 bg-white rounded-lg border shadow-md sm:p-8" :class="{'max-w-md': !fullScreen}">
-    <div class="flex justify-between items-center mb-4">
+  <div class="w-full card mx-auto p-4 bg-white rounded-lg border shadow-md sm:p-8" :class="{'max-w-md': !fullScreen, 'chart-fullscreen': fullScreen}">
+    <div class="flex shrink-0 justify-between items-center mb-4">
       <h5 class="text-xl font-bold leading-none text-gray-900">{{title}}</h5>
-      <fa icon="up-right-and-down-left-from-center" class="cursor-pointer" @click="requestFullScreen"/>
+      <button type="button" :aria-label="fullScreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'" :title="fullScreen ? 'Salir de pantalla completa' : 'Ver en pantalla completa'" @click="requestFullScreen">
+        <fa icon="up-right-and-down-left-from-center"/>
+      </button>
     </div>
-    <LineChart :chartData="chartData" :options="options" v-if="labels.length && datasets.length"/>
+    <div v-if="labels.length && datasets.length" :class="{ 'chart-plot': fullScreen }">
+      <LineChart :styles="fullScreen ? { height: '100%' } : {}" :chartData="chartData" :options="options"/>
+    </div>
   </div>
 </template>
 
@@ -34,7 +38,8 @@ export default defineComponent({
 
     const options = ref({
       responsive: true,
-      aspectRatio: '1',
+      aspectRatio: 1,
+      maintainAspectRatio: !props.fullScreen,
       plugins: {
         legend: {
           position: 'top',
@@ -164,8 +169,8 @@ export default defineComponent({
     }, { immediate: true });
 
     watch(() => props.fullScreen, (newData) => {
-      options.value.maintainAspectRatio = !newData || undefined;
-      options.value.aspectRatio = newData ? '1:2' : '1';
+      options.value.maintainAspectRatio = !newData;
+      options.value.aspectRatio = 1;
     });
 
     watch(() => props.hideMoney, (newData) => {
@@ -177,3 +182,19 @@ export default defineComponent({
   }
 });
 </script>
+<style scoped>
+.chart-fullscreen {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-width: none;
+  margin: 0;
+  border-radius: 0;
+}
+.chart-plot {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+</style>
