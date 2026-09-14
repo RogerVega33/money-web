@@ -89,11 +89,12 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
 
         if (!transactions.value?.transactions?.length) return
 
-        // Paso 1: agrupar por fecha-categoría-tipo
+        // Paso 1: sumar por mes-categoría-tipo
         const byDateCategory = transactions.value.transactions.reduce((acc, t) => {
-            const key = `${t.date}-${t.categoryName}-${t.type}`
+            const month = `${t.date.slice(0, 7)}-01`
+            const key = `${month}-${t.categoryName}-${t.type}`
             if (!acc[key]) {
-                acc[key] = { date: t.date, detail: t.categoryName, type: t.type, totalAmount: t.amount }
+                acc[key] = { date: month, detail: t.categoryName, type: t.type, totalAmount: t.amount }
             } else {
                 acc[key].totalAmount += t.amount
             }
@@ -128,8 +129,19 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
             totalByCategory.value[0]
         )
 
-        const labels = biggerCategory.transactions.map((t) => t.date.split('T')[0])
-        const data   = biggerCategory.transactions.map((t) => +t.totalAmount.toFixed(2))
+        const monthlyTotals = [...biggerCategory.transactions].sort((a, b) => a.date.localeCompare(b.date))
+        const monthIndex = date => {
+            const [year, month] = date.split('-').map(Number)
+            return year * 12 + month - 1
+        }
+        const amounts = new Map(monthlyTotals.map(t => [monthIndex(t.date), t.totalAmount]))
+        const labels = []
+        const data = []
+        const lastMonth = monthIndex(monthlyTotals[monthlyTotals.length - 1].date)
+        for (let month = monthIndex(monthlyTotals[0].date); month <= lastMonth; month++) {
+            labels.push(`${Math.floor(month / 12)}-${String(month % 12 + 1).padStart(2, '0')}-01`)
+            data.push(+(amounts.get(month) ?? 0).toFixed(2))
+        }
 
         chartLabelsTotalByCategory.value = labels
         chartDataTotalByCategory.value = [{
