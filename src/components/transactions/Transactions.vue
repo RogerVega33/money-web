@@ -8,7 +8,7 @@
           :has-transactions="transactions?.transactions?.length > 0"
           :show-form="!showIconNewTransaction"
           :is-crypto="selectedWallet.type === 'crypto'"
-          :show-by-category="searchSettings.showTransactionsByCategory"
+          :show-by-category="showByCategory"
           @toggle-form="addTransaction"
           @download="downloadTransactions"
       />
@@ -133,8 +133,8 @@
 
       <TransactionList
           v-else
-          :transactions="searchSettings.showTransactionsByCategory ? transactions : paginatedTransactions"
-          :transactions-by-category="searchSettings.showTransactionsByCategory ? paginatedCategories : transactionsByCategory"
+          :transactions="showByCategory ? transactions : paginatedTransactions"
+          :transactions-by-category="showByCategory ? paginatedCategories : transactionsByCategory"
           :search-settings="searchSettings"
           :wallet="selectedWallet"
           :categories="categories"
@@ -214,6 +214,9 @@ const showEditTransactionSection = ref(false)
 const transactionList = ref(null)
 const currentPage = ref(1)
 const pageSize = 10
+const showByCategory = computed(() =>
+  props.selectedWallet.type !== 'crypto' && props.searchSettings.showTransactionsByCategory
+)
 
 const newCryptoTransaction = ref({})
 const cryptoAmountError = computed(() =>
@@ -439,7 +442,7 @@ watch(() => props.searchSettings, () => {
   currentPage.value = 1
 }, { deep: true })
 
-watch(() => props.searchSettings.showTransactionsByCategory, () => {
+watch(showByCategory, () => {
   currentPage.value = 1
 })
 
@@ -485,7 +488,7 @@ const paginatedCategories = computed(() => {
 })
 
 const totalPages = computed(() => {
-  if (props.searchSettings.showTransactionsByCategory) {
+  if (showByCategory.value) {
     return Math.ceil((props.transactionsByCategory?.length || 0) / pageSize)
   }
 
