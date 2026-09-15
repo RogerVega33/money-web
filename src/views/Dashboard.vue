@@ -44,6 +44,7 @@
           <p v-else-if="!transactionsTemp.length" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600">No hay movimientos en este período.</p>
           <Summary
               v-else
+              :title="summaryTitle"
               :selected-wallet="selectedWallet"
               :transactions="transactions"
               :show-starting-amount="searchSettings.dateRangePicked === 'all'"
@@ -199,6 +200,13 @@ const searchSettings = ref({
   },
   dateRangePicked: 'month',
   showTransactionsByCategory: true
+})
+
+const summaryTitle = computed(() => {
+  const { dateRangePicked, dateSelected } = searchSettings.value
+  if (dateRangePicked === 'all') return 'Resumen histórico'
+  if (dateRangePicked === 'year') return `Resumen ${dateSelected.year}`
+  return `Resumen ${String(dateSelected.month + 1).padStart(2, '0')}/${dateSelected.year}`
 })
 
 function getWallets(background = false) {

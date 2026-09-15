@@ -19,8 +19,8 @@
             <label for="all"> Histórico</label>
           </div>
           <div v-if="searchSettings.dateRangePicked !== 'all'" class="mt-2">
-            <Datepicker v-model="searchSettings.dateSelected" monthPicker autoApply v-if="searchSettings.dateRangePicked === 'month'"/>
-            <Datepicker v-model="searchSettings.dateSelected.year" yearPicker autoApply v-if="searchSettings.dateRangePicked === 'year'"/>
+            <Datepicker v-model="searchSettings.dateSelected" monthPicker autoApply :year-range="yearRange" :min-date="minDate" :max-date="maxDate" preventMinMaxNavigation v-if="searchSettings.dateRangePicked === 'month'"/>
+            <Datepicker v-model="searchSettings.dateSelected.year" yearPicker autoApply :year-range="yearRange" :min-date="minDate" :max-date="maxDate" preventMinMaxNavigation v-if="searchSettings.dateRangePicked === 'year'"/>
           </div>
           <div class="mt-4">
             <label for="checked-toggle" class="relative inline-flex items-center mb-4 cursor-pointer">
@@ -61,6 +61,11 @@ export default {
     showArchivedWallets: Boolean,
   },
   setup(props, { emit }) {
+    const maxYear = new Date().getFullYear() + 1
+    const yearRange = [2000, maxYear]
+    const minDate = new Date(2000, 0, 1)
+    const maxDate = new Date(maxYear, 11, 31)
+
     const searchSettings = ref({
       dateSelected: {
         month: new Date().getMonth(),
@@ -85,6 +90,7 @@ export default {
     })
 
     return {
+      yearRange, minDate, maxDate,
       searchSettings,
       hideMoney,
     }

@@ -2,7 +2,7 @@
   <div class="summary">
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
       <div class="flex justify-between items-center mb-4">
-        <h5 class="text-xl font-bold leading-none text-gray-900">Resumen</h5>
+        <h5 class="text-xl font-bold leading-none text-gray-900">{{ title }}</h5>
       </div>
       <div class="flow-root">
         <div class="flex space-x-4 text-gray-900">
@@ -36,7 +36,7 @@
               <div class="basis-1/2">
                 Ahorro
               </div>
-              <div class="basis-1/2 text-right">
+              <div class="basis-1/2 text-right" :class="savingsColor">
                 {{formatCurrency(totalSavings)}}
               </div>
             </div>
@@ -62,6 +62,7 @@ import { formatCurrency } from '../utils/formats'
 export default {
   name: 'Summary',
   props: {
+    title: { type: String, default: 'Resumen' },
     selectedWallet: Object,
     transactions: Object,
     showStartingAmount: Boolean,
@@ -74,6 +75,11 @@ export default {
       return (savings + startingAmount).toFixed(2)
     })
 
+    const savingsColor = computed(() => {
+      const savings = Number(totalSavings.value)
+      return savings > 0 ? 'text-green-500' : savings < 0 ? 'text-red-500' : 'text-black'
+    })
+
     const savingsPercentage = computed(() => {
       const income = Number(props.transactions.totalIncome)
       const savings = Number(props.transactions.savings)
@@ -84,6 +90,7 @@ export default {
 
     return {
       totalSavings,
+      savingsColor,
       savingsPercentage,
       formatCurrency
     }
