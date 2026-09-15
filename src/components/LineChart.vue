@@ -6,6 +6,7 @@
         <fa icon="up-right-and-down-left-from-center"/>
       </button>
     </div>
+    <div v-if="$slots.navigation" class="shrink-0 mb-4"><slot name="navigation" /></div>
     <div v-if="labels.length && datasets.length" :class="{ 'chart-plot': fullScreen }">
       <LineChart :styles="fullScreen ? { height: '100%' } : {}" :chartData="chartData" :options="options"/>
     </div>
@@ -30,6 +31,7 @@ export default defineComponent({
     fullScreen: Boolean,
     hideMoney: Boolean,
     showAverage: Boolean,
+    showLegend: { type: Boolean, default: true },
   },
 
   setup(props, { emit }) {
@@ -43,6 +45,7 @@ export default defineComponent({
       plugins: {
         legend: {
           position: 'top',
+          display: props.showLegend,
         },
         title: {
           display: false,
@@ -141,6 +144,7 @@ export default defineComponent({
             ...options.value.plugins,
             legend: {
               position: 'top',
+          display: props.showLegend,
               labels: {
                 filter: (legendItem) => {
                   // oculta de la leyenda cualquier dataset llamado con avgLabel
@@ -171,6 +175,10 @@ export default defineComponent({
     watch(() => props.fullScreen, (newData) => {
       options.value.maintainAspectRatio = !newData;
       options.value.aspectRatio = 1;
+    });
+
+    watch(() => props.showLegend, (value) => {
+      options.value.plugins.legend.display = value;
     });
 
     watch(() => props.hideMoney, (newData) => {

@@ -55,7 +55,7 @@
                 :fullScreen="fullScreenIncome"
                 :hideMoney="hideMoney"
                 color="#1D9E75"
-                title="Ingresos"
+                :title="transactionFilter ? 'Ingresos (búsqueda)' : 'Ingresos'"
                 @requestFullScreen="fullScreenChart('incomeChartContainer')"
             />
           </div>
@@ -66,7 +66,7 @@
                 :fullScreen="fullScreenExpense"
                 :hideMoney="hideMoney"
                 color="#D85A30"
-                title="Gastos"
+                :title="transactionFilter ? 'Gastos (búsqueda)' : 'Gastos'"
                 @requestFullScreen="fullScreenChart('expenseChartContainer')"
             />
           </div>
@@ -120,7 +120,7 @@
             v-if="selectedWallet &&
                   selectedWallet.type !== 'crypto' &&
                   transactionFilter &&
-                  chartLabelsTotalByCategory.length > 1"
+                  chartLabelsTotalByCategory.length > 0"
         >
           <LineChart
               :labels="chartLabelsTotalByCategory"
@@ -128,9 +128,25 @@
               :fullScreen="fullScreenTotalByCategory"
               :hideMoney="hideMoney"
               :showAverage="true"
+              :showLegend="false"
               title="Total por categoría"
               @requestFullScreen="fullScreenChart('totalByCategoryContainer')"
-          />
+          >
+            <template #navigation>
+              <div class="flex items-center gap-3">
+                <button v-if="categoryChartCount > 1" type="button" aria-label="Categoría anterior"
+                        :disabled="categoryChartIndex === 0" @click="changeChartCategory(-1)"
+                        class="shrink-0 rounded px-3 py-2 text-xl hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">‹</button>
+                <div class="flex-1 min-w-0 text-center" aria-live="polite">
+                  <p class="font-medium text-gray-900 break-words">{{ categoryChartName }}</p>
+                  <p v-if="categoryChartCount > 1" class="text-sm text-gray-500">{{ categoryChartIndex + 1 }} de {{ categoryChartCount }}</p>
+                </div>
+                <button v-if="categoryChartCount > 1" type="button" aria-label="Categoría siguiente"
+                        :disabled="categoryChartIndex >= categoryChartCount - 1" @click="changeChartCategory(1)"
+                        class="shrink-0 rounded px-3 py-2 text-xl hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed">›</button>
+              </div>
+            </template>
+          </LineChart>
         </div>
       </div>
 
@@ -250,6 +266,7 @@ const {
 } = useTransactions(selectedWallet, searchSettings)
 
 const {
+  categoryChartIndex, categoryChartCount, categoryChartName, changeChartCategory,
   loadingHistory,
   historyError,
   chartLabelsExpense,
@@ -266,7 +283,7 @@ const {
   fullScreenTotalByCategory,
   getProfitLoss,
   fullScreenChart,
-} = useCharts(selectedWallet, transactions, transactionsByCategory)
+} = useCharts(selectedWallet, transactions, transactionsByCategory, transactionFilter)
 
 /* =======================
    EVENTOS DE TRANSACCIONES

@@ -1,12 +1,22 @@
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useLatestRequest } from './useLatestRequest'
 import TransactionService from '@/services/transaction.service'
 
-export function useCharts(selectedWallet, transactions, transactionsByCategory) {
+export function useCharts(selectedWallet, transactions, transactionsByCategory, transactionFilter) {
 
     const profitLoss = ref([])
     const historyRequest = useLatestRequest()
     const totalByCategory = ref([])
+    const selectedCategoryId = ref(null)
+    const categoryChartIndex = computed(() => totalByCategory.value.findIndex(c => c.id === selectedCategoryId.value))
+    const categoryChartCount = computed(() => totalByCategory.value.length)
+    const categoryChartName = computed(() => totalByCategory.value[categoryChartIndex.value]?.detail ?? '')
+    function changeChartCategory(offset) {
+        const category = totalByCategory.value[categoryChartIndex.value + offset]
+        if (!category) return
+        selectedCategoryId.value = category.id
+        renderCategoryChart()
+    }
 
     const chartLabelsExpense = ref([])
     const chartLabelsIncome = ref([])
@@ -89,47 +99,31 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
 
         if (!transactions.value?.transactions?.length) return
 
-        // Paso 1: sumar por mes-categoría-tipo
-        const byDateCategory = transactions.value.transactions.reduce((acc, t) => {
-            const month = `${t.date.slice(0, 7)}-01`
-            const key = `${month}-${t.categoryName}-${t.type}`
-            if (!acc[key]) {
-                acc[key] = { date: month, detail: t.categoryName, type: t.type, totalAmount: t.amount }
-            } else {
-                acc[key].totalAmount += t.amount
+        // El orden proviene de la misma lista de resultados.
+        totalByCategory.value = transactionsByCategory.value.map(group => {
+            const months = new Map()
+            for (const t of group.transactions) {
+                const month = `${t.date.slice(0, 7)}-01`
+                months.set(month, (months.get(month) ?? 0) + t.amount)
             }
-            return acc
-        }, {})
-
-        // Paso 2: agrupar por categoría-tipo para armar las series del chart
-        const byCategory = Object.values(byDateCategory).reduce((acc, t) => {
-            const key = `${t.detail}-${t.type}`
-            const label = `${t.detail} ${t.type === 'income' ? '(+)' : '(-)'}`
-
-            if (!acc[key]) {
-                acc[key] = { detail: label, transactions: [{ date: t.date, totalAmount: t.totalAmount }] }
-            } else {
-                const existing = acc[key].transactions.find((x) => x.date === t.date)
-                if (existing) {
-                    existing.totalAmount += t.totalAmount
-                } else {
-                    acc[key].transactions.push({ date: t.date, totalAmount: t.totalAmount })
-                }
+            return {
+                id: group.transactions[0].categoryId,
+                detail: `${group.categoryName} (${group.type === 'income' ? 'ingreso' : 'gasto'})`,
+                transactions: [...months].map(([date, totalAmount]) => ({ date, totalAmount })),
             }
-            return acc
-        }, {})
+        })
+        if (!totalByCategory.value.some(c => c.id === selectedCategoryId.value)) {
+            selectedCategoryId.value = totalByCategory.value[0]?.id ?? null
+        }
+        renderCategoryChart()
+    }
 
-        totalByCategory.value = Object.values(byCategory)
-
-        if (!totalByCategory.value.length) return
-
-        // Toma la categoría con más entradas para usarla como serie principal
-        const biggerCategory = totalByCategory.value.reduce((max, obj) =>
-                obj.transactions.length > max.transactions.length ? obj : max,
-            totalByCategory.value[0]
-        )
-
-        const monthlyTotals = [...biggerCategory.transactions].sort((a, b) => a.date.localeCompare(b.date))
+    function renderCategoryChart() {
+        chartLabelsTotalByCategory.value = []
+        chartDataTotalByCategory.value = []
+        const category = totalByCategory.value[categoryChartIndex.value]
+        if (!category) return
+        const monthlyTotals = [...category.transactions].sort((a, b) => a.date.localeCompare(b.date))
         const monthIndex = date => {
             const [year, month] = date.split('-').map(Number)
             return year * 12 + month - 1
@@ -145,7 +139,7 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
 
         chartLabelsTotalByCategory.value = labels
         chartDataTotalByCategory.value = [{
-            label: biggerCategory.detail,
+            label: category.detail,
             data,
             fill: false,
             borderColor: '#109618'
@@ -202,16 +196,19 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory) 
         buildIncomeExpenseCharts()
     }, { deep: true })
 
-    watch(transactions, () => {
-        if (selectedWallet.value?.type === 'crypto') return
-        buildTotalByCategoryChart()
-    }, { deep: true })
+    watch([transactionsByCategory, transactionFilter, () => selectedWallet.value?.id],
+        (current, previous) => {
+            if (current[1] !== previous[1] || current[2] !== previous[2]) selectedCategoryId.value = null
+            if (selectedWallet.value?.type === 'crypto') return
+            buildTotalByCategoryChart()
+        }, { deep: true })
 
     return {
         loadingHistory: historyRequest.loading,
         historyError: historyRequest.error,
         profitLoss,
         totalByCategory,
+        categoryChartIndex, categoryChartCount, categoryChartName, changeChartCategory,
 
         chartLabelsExpense,
         chartLabelsIncome,
