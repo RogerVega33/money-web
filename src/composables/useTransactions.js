@@ -14,7 +14,6 @@ export function useTransactions(selectedWallet, searchSettings) {
         if (!background) {
             transactions.value = { transactions: [] }
             transactionsTemp.value = []
-            transactionFilter.value = ''
         }
         return request.run(load, (response) => {
             transactions.value = response.data.body

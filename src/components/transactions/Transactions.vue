@@ -107,8 +107,18 @@
             v-model="transactionFilter"
             placeholder="Buscar transacciones..."
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg
-                 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 p-2.5"
+                 focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 pr-10 p-2.5"
         >
+        <button
+            v-if="transactionFilter"
+            type="button"
+            aria-label="Limpiar"
+            title="Limpiar"
+            class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-500 rounded-r-lg"
+            @click="transactionFilter = ''"
+        >
+          <fa icon="eraser" />
+        </button>
       </div>
 
       <!-- LISTA -->
@@ -426,7 +436,6 @@ watch(transactionFilter, () => {
 })
 
 watch(() => props.searchSettings, () => {
-  transactionFilter.value = ""
   currentPage.value = 1
 }, { deep: true })
 
