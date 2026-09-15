@@ -28,6 +28,12 @@ export function useTransactions(selectedWallet, searchSettings) {
     ======================= */
     function getTransactions(walletId, year, month, background = false) {
 
+        if (searchSettings.value.dateRangePicked === 'range') {
+            const [start, end] = searchSettings.value.monthRange
+            const format = date => `${date.year}-${String(Number(date.month) + 1).padStart(2, '0')}`
+            return loadTransactions(() => TransactionService.getTransactions(walletId, null, null, format(start), format(end)), background)
+        }
+
         let monthSelected = month
         let yearSelected = year
 

@@ -15,12 +15,21 @@
             <input type="radio" id="year" value="year" v-model="searchSettings.dateRangePicked">
             <label for="year"> Año</label>
             <br>
+            <input type="radio" id="range" value="range" v-model="searchSettings.dateRangePicked">
+            <label for="range"> Rango</label>
+            <br>
             <input type="radio" id="all" value="all" v-model="searchSettings.dateRangePicked">
             <label for="all"> Histórico</label>
           </div>
           <div v-if="searchSettings.dateRangePicked !== 'all'" class="mt-2">
             <Datepicker v-model="searchSettings.dateSelected" monthPicker autoApply :year-range="yearRange" :min-date="minDate" :max-date="maxDate" preventMinMaxNavigation v-if="searchSettings.dateRangePicked === 'month'"/>
             <Datepicker v-model="searchSettings.dateSelected.year" yearPicker autoApply :year-range="yearRange" :min-date="minDate" :max-date="maxDate" preventMinMaxNavigation v-if="searchSettings.dateRangePicked === 'year'"/>
+          </div>
+          <div v-if="searchSettings.dateRangePicked === 'range'" class="mt-2">
+            <Datepicker :model-value="searchSettings.monthRange" @update:model-value="updateMonthRange"
+                        monthPicker range autoApply :partial-range="false" :clearable="false"
+                        format="MM/yyyy" :year-range="yearRange" :min-date="minDate" :max-date="maxDate"
+                        preventMinMaxNavigation />
           </div>
           <div class="mt-4">
             <label for="checked-toggle" class="relative inline-flex items-center mb-4 cursor-pointer">
@@ -57,6 +66,7 @@ import store from '../store'
 export default {
   name: 'SearchSettings',
   props: {
+    settings: { type: Object, required: true },
     selectedWallet: Object,
     showArchivedWallets: Boolean,
   },
@@ -66,14 +76,14 @@ export default {
     const minDate = new Date(2000, 0, 1)
     const maxDate = new Date(maxYear, 11, 31)
 
-    const searchSettings = ref({
-      dateSelected: {
-        month: new Date().getMonth(),
-        year: new Date().getFullYear()
-      },
-      dateRangePicked: "month",
-      showTransactionsByCategory: true
-    });
+    const searchSettings = ref(props.settings);
+    const updateMonthRange = value => {
+      if (!Array.isArray(value) || value.length !== 2 || !value.every(date => date &&
+          Number.isInteger(Number(date.year)) && Number(date.year) >= 2000 && Number(date.year) <= maxYear &&
+          Number.isInteger(Number(date.month)) && Number(date.month) >= 0 && Number(date.month) <= 11)) return
+      searchSettings.value.monthRange = value.map(date => ({ year: Number(date.year), month: Number(date.month) }))
+        .sort((a, b) => a.year - b.year || a.month - b.month)
+    }
 
     const hideMoney = ref(store.state.app.hideMoney)
 
@@ -90,7 +100,7 @@ export default {
     })
 
     return {
-      yearRange, minDate, maxDate,
+      yearRange, minDate, maxDate, updateMonthRange,
       searchSettings,
       hideMoney,
     }

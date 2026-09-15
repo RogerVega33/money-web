@@ -3,8 +3,8 @@ import axios from 'axios'
 import authHeader from './auth-header';
 
 class TransactionService {
-    async getTransactions(walletId, year, month){
-        return await axios.get(`/api/transaction?walletId=${walletId}${year?'&year='+year:''}${month?'&month='+month:''}`,
+    async getTransactions(walletId, year, month, startMonth, endMonth){
+        return await axios.get(`/api/transaction?walletId=${walletId}${year?'&year='+year:''}${month?'&month='+month:''}${startMonth ? '&startMonth=' + encodeURIComponent(startMonth) + '&endMonth=' + encodeURIComponent(endMonth) : ''}`,
             { headers: authHeader() });
     }
 

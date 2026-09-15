@@ -25,6 +25,7 @@
               @edit-wallet="editWallet"
           />
           <SearchSettings
+              :settings="searchSettings"
               v-if="!showForm"
               v-model:showArchivedWallets="showArchivedWallets"
               :selected-wallet="selectedWallet"
@@ -198,6 +199,10 @@ const searchSettings = ref({
     month: new Date().getMonth(),
     year: new Date().getFullYear()
   },
+  monthRange: [
+    { month: new Date().getMonth(), year: new Date().getFullYear() - 1 },
+    { month: new Date().getMonth(), year: new Date().getFullYear() },
+  ],
   dateRangePicked: 'month',
   showTransactionsByCategory: true
 })
@@ -205,6 +210,10 @@ const searchSettings = ref({
 const summaryTitle = computed(() => {
   const { dateRangePicked, dateSelected } = searchSettings.value
   if (dateRangePicked === 'all') return 'Resumen histórico'
+  if (dateRangePicked === 'range') {
+    const format = date => `${String(Number(date.month) + 1).padStart(2, '0')}/${date.year}`
+    return `Resumen ${searchSettings.value.monthRange.map(format).join(' - ')}`
+  }
   if (dateRangePicked === 'year') return `Resumen ${dateSelected.year}`
   return `Resumen ${String(dateSelected.month + 1).padStart(2, '0')}/${dateSelected.year}`
 })
