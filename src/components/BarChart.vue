@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { defineComponent, ref, watch, onMounted, nextTick } from 'vue';
+import { defineComponent, ref, watch, onMounted } from 'vue';
 import { BarChart } from 'vue-chart-3';
 import { Chart, registerables } from "chart.js";
 
@@ -124,15 +124,11 @@ export default defineComponent({
       updateChart();
     });
 
-    watch(() => props.labels, async () => {
-      await nextTick();
-      updateChart();
-    });
-
-    watch(() => props.values, async () => {
-      await nextTick();
-      updateChart();
-    });
+    watch(
+      [() => props.labels, () => props.values],
+      () => updateChart(),
+      { flush: 'post' }
+    );
 
     watch(() => props.fullScreen, (newVal) => {
       options.value.maintainAspectRatio = !newVal;
