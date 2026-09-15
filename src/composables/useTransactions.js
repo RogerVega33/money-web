@@ -85,11 +85,12 @@ export function useTransactions(selectedWallet, searchSettings) {
 
         transactions.value.transactions.forEach((t) => {
             const existing = grouped.find(
-                (g) => g.categoryName === t.categoryName && g.type === t.type
+                (g) => g.categoryId === t.categoryId
             )
 
             if (!existing) {
                 grouped.push({
+                    categoryId: t.categoryId,
                     categoryName: t.categoryName,
                     type: t.type,
                     total: t.amount,

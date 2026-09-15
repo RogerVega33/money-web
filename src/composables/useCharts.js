@@ -107,7 +107,7 @@ export function useCharts(selectedWallet, transactions, transactionsByCategory, 
                 months.set(month, (months.get(month) ?? 0) + t.amount)
             }
             return {
-                id: group.transactions[0].categoryId,
+                id: group.categoryId,
                 detail: `${group.categoryName} (${group.type === 'income' ? 'ingreso' : 'gasto'})`,
                 transactions: [...months].map(([date, totalAmount]) => ({ date, totalAmount })),
             }

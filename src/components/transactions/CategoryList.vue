@@ -6,7 +6,7 @@
       <ul role="list" class="divide-y divide-gray-200">
         <CategoryItem
             v-for="category in transactionsByCategory"
-            :key="category.categoryName + category.total"
+            :key="category.categoryId"
             :category="category"
             :categories="categories"
             :transactions-by-category="transactionsByCategory"

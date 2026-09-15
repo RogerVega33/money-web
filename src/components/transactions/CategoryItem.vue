@@ -131,7 +131,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import moment from 'moment'
 import { formatCurrency } from '@/utils/formats'
 import Dropdown from '@/components/common/Dropdown.vue'
@@ -187,6 +187,10 @@ const paginatedTransactions = computed(() => {
 
 const totalPages = computed(() => {
   return Math.ceil((props.category?.transactions?.length || 0) / pageSize)
+})
+
+watch(totalPages, (pages) => {
+  currentPage.value = Math.max(1, Math.min(currentPage.value, pages))
 })
 
 function getTransactionDate(date) {
