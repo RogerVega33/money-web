@@ -28,7 +28,7 @@
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm truncate group-hover:text-blue-500"
-                   :class="[selectedWallet?.id === wallet.id ? 'font-bold' : 'font-medium', { 'text-gray-500': wallet.isArchived && selectedWallet?.id !== wallet.id }]">
+                   :class="[selectedWallet?.id === wallet.id ? 'font-bold' : 'font-medium', { 'text-gray-400': wallet.isArchived && selectedWallet?.id !== wallet.id }]">
                   {{wallet.name}}
                 </p>
                 <div v-if="wallet.isArchived || wallet.excludeFromTotal" class="flex flex-wrap gap-1 mt-1">
@@ -37,7 +37,7 @@
                 </div>
               </div>
               <div class="inline-flex items-center text-base font-semibold group-hover:text-blue-500"
-                   :class="{ 'text-gray-500': (wallet.isArchived || wallet.excludeFromTotal) && selectedWallet?.id !== wallet.id }">
+                   :class="{ 'text-gray-400': (wallet.isArchived || wallet.excludeFromTotal) && selectedWallet?.id !== wallet.id }">
                 {{formatCurrency(wallet.total)}}
               </div>
             </div>
