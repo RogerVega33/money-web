@@ -376,11 +376,22 @@ onUnmounted(() => { disposed = true; clearTimeout(refreshTimer) })
 /* =======================
    WATCHERS
 ======================= */
-watch(searchSettings, () => {
+// Comparar solo los valores que afectan a la consulta, no la presentación.
+const transactionPeriod = computed(() => {
+  const { dateRangePicked, dateSelected, monthRange } = searchSettings.value
+  if (dateRangePicked === 'all') return 'all'
+  if (dateRangePicked === 'range') {
+    return `range:${monthRange.map(date => `${date.year}-${date.month}`).join(':')}`
+  }
+  if (dateRangePicked === 'year') return `year:${dateSelected.year}`
+  return `month:${dateSelected.year}-${dateSelected.month}`
+})
+
+watch(transactionPeriod, () => {
   if (!selectedWallet.value?.id || selectedWallet.value.type === 'crypto') return
   const { year, month } = searchSettings.value.dateSelected
   getTransactions(selectedWallet.value.id, year, month + 1)
-}, { deep: true })
+})
 
 watch(() => store.state.app.hideMoney, (val) => {
   hideMoney.value = val
