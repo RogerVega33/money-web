@@ -2,7 +2,10 @@
   <div>
     <Menu :loggedIn="loggedIn"/>
     <div>
-      <router-view/>
+      <router-view v-slot="{ Component, route }">
+        <component :is="Component" :key="sessionKey"
+                   v-if="route.name !== 'Dashboard' || loggedIn" />
+      </router-view>
     </div>
   </div>
   <!--fa :icon="['fab', 'youtube']" /-->
@@ -14,6 +17,7 @@ import { computed, onMounted, onBeforeMount } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
 import Menu from './components/Menu.vue'
+import { useSessionSync } from './composables/useSessionSync'
 
 export default {
   name: 'App',
@@ -25,6 +29,8 @@ export default {
     const router = useRouter()
 
     const loggedIn = computed(() => store.state.auth.status.loggedIn)
+    const sessionKey = computed(() => store.state.auth.user?.token ?? 'anonymous')
+    useSessionSync(store, router)
 
     onBeforeMount(() => {
       if (loggedIn.value) {
@@ -37,7 +43,8 @@ export default {
     })
 
     return {
-      loggedIn
+      loggedIn,
+      sessionKey
     }
   }
 }

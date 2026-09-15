@@ -1,5 +1,6 @@
 import AuthService from '../services/auth.service';
-const user = JSON.parse(localStorage.getItem('user'));
+import { readSession } from '../utils/session';
+const user = readSession();
 const initialState = user
     ? { status: { loggedIn: true }, user }
     : { status: { loggedIn: false }, user: null };
@@ -25,6 +26,10 @@ export const auth = {
         },
     },
     mutations: {
+        syncSession(state, user) {
+            state.status.loggedIn = Boolean(user);
+            state.user = user;
+        },
         loginSuccess(state, user) {
             state.status.loggedIn = true;
             state.user = user;

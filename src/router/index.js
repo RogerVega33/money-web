@@ -1,4 +1,5 @@
 import {createRouter, createWebHistory} from "vue-router"
+import { readSession } from '../utils/session'
 
 import Home from '../views/Home.vue'
 import Login from '../views/Login.vue'
@@ -23,7 +24,7 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     const publicPages = ['/', '/login', '/newUser', '/recoverUser']
     const authRequired = !publicPages.includes(to.path)
-    const loggedIn = localStorage.getItem('user')
+    const loggedIn = readSession()
     if (authRequired && !loggedIn) {
         next('/login')
     } else {

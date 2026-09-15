@@ -26,7 +26,7 @@ export function useRealtime(onChanged) {
         socket.on('connect_error', () => { connected.value = false })
         socket.on('transactions:changed', onChanged)
         socket.connect()
-    }, { immediate: true })
+    }, { immediate: true, flush: 'sync' })
 
     onScopeDispose(stop)
     return { connected }
