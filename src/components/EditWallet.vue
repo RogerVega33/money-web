@@ -175,7 +175,7 @@ export default {
       try {
         await WalletService.updateWallet(payload);
         if (version === walletEditVersion) resetWalletEdit();
-        emit('success');
+        emit('success', { id: payload.id, type: fiat ? 'fiat' : 'crypto' });
       } catch (error) {
         if (version !== walletEditVersion) return;
         walletError.value = error.response?.data?.body?.message || error.message || error.toString();

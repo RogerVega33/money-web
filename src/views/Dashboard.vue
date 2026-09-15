@@ -91,7 +91,7 @@
       <div v-if="showForm" class="lg:basis-1/3 p-1 lg:p-2">
         <div class="flex flex-col w-full">
           <NewWallet v-if="showFormNewWallet" @success="walletSaved"/>
-          <EditWallet v-if="selectedWallet && showFormEditWallet" :selected-wallet="selectedWallet" @success="getWallets"/>
+          <EditWallet v-if="selectedWallet && showFormEditWallet" :selected-wallet="selectedWallet" @success="walletUpdated"/>
         </div>
       </div>
 
@@ -219,6 +219,13 @@ function addWallet() { showFormNewWallet.value = true }
 function hideForms() { showFormNewWallet.value = false; showFormEditWallet.value = false }
 function editWallet() { showFormEditWallet.value = true }
 function changeSearchSettings(val) { searchSettings.value = val }
+
+async function walletUpdated(wallet) {
+  await getWallets()
+  if (!disposed && wallet.type === 'fiat' && selectedWallet.value?.id === wallet.id) {
+    await getProfitLoss(wallet.id)
+  }
+}
 
 function walletSaved(value) {
   if (value) getWallets()
