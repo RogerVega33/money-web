@@ -164,6 +164,7 @@
 import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import store from '@/store'
+import { isCalendarYear } from '@/config/calendar'
 
 import WalletService from '@/services/wallet.service'
 
@@ -222,7 +223,7 @@ function shiftedSummaryDate(direction) {
   const index = Number(year) * 12 + Number(month) +
     (searchSettings.value.dateRangePicked === 'year' ? direction * 12 : direction)
   const nextYear = Math.floor(index / 12)
-  if (nextYear < 2000 || nextYear > new Date().getFullYear() + 1) return null
+  if (!isCalendarYear(nextYear)) return null
   return { year: nextYear, month: index % 12 }
 }
 

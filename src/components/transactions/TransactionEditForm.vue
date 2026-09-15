@@ -54,6 +54,7 @@
           :disabled="props.saving"
           autoApply
           :enableTimePicker="false"
+          v-bind="calendarProps"
           format="dd/MM/yyyy"
       />
     </div>
@@ -90,6 +91,7 @@ import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, computed, watch } from 'vue'
 import { amountError, textError, dateError } from '@/utils/dataValidation'
 import moment from 'moment'
+import { calendarProps } from '@/config/calendar'
 
 const props = defineProps({
   transaction: {
