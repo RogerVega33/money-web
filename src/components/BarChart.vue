@@ -17,6 +17,7 @@
 import { defineComponent, ref, watch, onMounted } from 'vue';
 import { BarChart } from 'vue-chart-3';
 import { Chart, registerables } from "chart.js";
+import { formatCurrencyTick } from '@/utils/chartFormats';
 
 Chart.register(...registerables);
 
@@ -51,7 +52,7 @@ export default defineComponent({
           cornerRadius: 6,
           callbacks: {
             // muestra el valor con símbolo de moneda
-            label: (ctx) => ` $${ctx.parsed.x.toLocaleString('es-EC', { minimumFractionDigits: 2 })}`
+            label: (ctx) => ` $${ctx.parsed.x.toLocaleString('es-EC', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
           }
         },
       },
@@ -62,8 +63,7 @@ export default defineComponent({
           ticks: {
             display: !props.hideMoney,
             color: '#6b7280',  // color gris para los números del eje
-            // formatea el número: 1500 → "$1.5k", 20000 → "$20.0k"
-            callback: (v) => '$' + (v / 1000).toFixed(1) + 'k'
+            callback: formatCurrencyTick
           },
           beginAtZero: true  // el eje siempre empieza en 0, no en el valor mínimo del dataset
         },
@@ -160,8 +160,8 @@ export default defineComponent({
 .chart-fullscreen {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  height: 100vh; /* Respaldo para navegadores antiguos */
+  height: 100dvh; /* Se usa si el navegador lo admite */
   max-width: none;
   margin: 0;
   border-radius: 0;
