@@ -22,8 +22,8 @@
             <label for="all"> Histórico</label>
           </div>
           <div v-if="searchSettings.dateRangePicked !== 'all'" class="mt-2">
-            <Datepicker v-model="searchSettings.dateSelected" monthPicker autoApply :year-range="yearRange" :min-date="minDate" :max-date="maxDate" preventMinMaxNavigation v-if="searchSettings.dateRangePicked === 'month'"/>
-            <Datepicker v-model="searchSettings.dateSelected.year" yearPicker autoApply :year-range="yearRange" :min-date="minDate" :max-date="maxDate" preventMinMaxNavigation v-if="searchSettings.dateRangePicked === 'year'"/>
+            <Datepicker :model-value="searchSettings.dateSelected" @update:model-value="updateSelectedMonth" :clearable="false" monthPicker autoApply :year-range="yearRange" :min-date="minDate" :max-date="maxDate" preventMinMaxNavigation v-if="searchSettings.dateRangePicked === 'month'"/>
+            <Datepicker :model-value="searchSettings.dateSelected.year" @update:model-value="updateSelectedYear" :clearable="false" yearPicker autoApply :year-range="yearRange" :min-date="minDate" :max-date="maxDate" preventMinMaxNavigation v-if="searchSettings.dateRangePicked === 'year'"/>
           </div>
           <div v-if="searchSettings.dateRangePicked === 'range'" class="mt-2">
             <Datepicker :model-value="searchSettings.monthRange" @update:model-value="updateMonthRange"
@@ -77,6 +77,20 @@ export default {
     const maxDate = new Date(maxYear, 11, 31)
 
     const searchSettings = ref(props.settings);
+    const validYear = value => value !== null && value !== undefined && value !== '' &&
+      Number.isInteger(Number(value)) && Number(value) >= 2000 && Number(value) <= maxYear
+
+    const updateSelectedMonth = value => {
+      if (!value || !validYear(value.year) || value.month === null || value.month === undefined || value.month === '' ||
+          !Number.isInteger(Number(value.month)) || Number(value.month) < 0 || Number(value.month) > 11) return
+      searchSettings.value.dateSelected = { year: Number(value.year), month: Number(value.month) }
+    }
+
+    const updateSelectedYear = value => {
+      if (!validYear(value)) return
+      searchSettings.value.dateSelected = { ...searchSettings.value.dateSelected, year: Number(value) }
+    }
+
     const updateMonthRange = value => {
       if (!Array.isArray(value) || value.length !== 2 || !value.every(date => date &&
           Number.isInteger(Number(date.year)) && Number(date.year) >= 2000 && Number(date.year) <= maxYear &&
@@ -100,7 +114,7 @@ export default {
     })
 
     return {
-      yearRange, minDate, maxDate, updateMonthRange,
+      yearRange, minDate, maxDate, updateMonthRange, updateSelectedMonth, updateSelectedYear,
       searchSettings,
       hideMoney,
     }
