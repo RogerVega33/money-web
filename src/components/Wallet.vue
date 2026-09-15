@@ -23,7 +23,7 @@
                  :class="{ 'text-blue-700': selectedWallet?.id === wallet.id }"
                  class="group flex items-center space-x-4 text-gray-900 hover:text-blue-500 cursor-pointer">
               <div class="flex-shrink-0">
-                <fa icon="sack-dollar" class="text-green-500 h-8" v-if="wallet.type === 'fiat'"/>
+                <fa icon="sack-dollar" class="h-8" :class="wallet.isArchived ? 'text-gray-500' : 'text-green-500'" v-if="wallet.type === 'fiat'"/>
                 <fa :icon="['fab', 'bitcoin']" class="text-yellow-300 h-8" v-if="wallet.type === 'crypto'"/>
               </div>
               <div class="flex-1 min-w-0">
