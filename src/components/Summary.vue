@@ -1,10 +1,21 @@
 <template>
   <div class="summary">
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center gap-2 mb-4">
         <h5 class="text-xl font-bold leading-none text-gray-900">{{ title }}</h5>
+        <div v-if="navigationUnit" class="flex shrink-0 items-center gap-2">
+          <button type="button" :disabled="!canPrevious" :aria-label="`${navigationUnit} anterior`" :title="`${navigationUnit} anterior`"
+                  class="text-gray-600 hover:text-blue-500 disabled:opacity-30 disabled:cursor-not-allowed" @click="$emit('change-period', -1)">
+            <fa icon="chevron-left" />
+          </button>
+          <button type="button" :disabled="!canNext" :aria-label="`${navigationUnit} siguiente`" :title="`${navigationUnit} siguiente`"
+                  class="text-gray-600 hover:text-blue-500 disabled:opacity-30 disabled:cursor-not-allowed" @click="$emit('change-period', 1)">
+            <fa icon="chevron-right" />
+          </button>
+        </div>
       </div>
-      <div class="flow-root">
+      <p v-if="empty" class="text-gray-600">No hay movimientos en este período.</p>
+      <div v-else class="flow-root">
         <div class="flex space-x-4 text-gray-900">
           <div class="font-medium w-full">
             <div class="flex flex-row" v-if="selectedWallet && showStartingAmount">
@@ -61,8 +72,13 @@ import { formatCurrency } from '../utils/formats'
 
 export default {
   name: 'Summary',
+  emits: ['change-period'],
   props: {
     title: { type: String, default: 'Resumen' },
+    navigationUnit: { type: String, default: '' },
+    canPrevious: Boolean,
+    canNext: Boolean,
+    empty: Boolean,
     selectedWallet: Object,
     transactions: Object,
     showStartingAmount: Boolean,

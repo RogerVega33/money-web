@@ -42,10 +42,14 @@
         <div class="flex flex-col w-full">
           <p v-if="loadingTransactions" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="status">Cargando movimientos<LoadingDots /></p>
           <div v-else-if="transactionsError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert"><p>No se pudieron cargar los movimientos.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="retryTransactions">Reintentar</button></div>
-          <p v-else-if="!transactionsTemp.length" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600">No hay movimientos en este período.</p>
           <Summary
               v-else
               :title="summaryTitle"
+              :navigation-unit="summaryNavigationUnit"
+              :can-previous="canShiftSummaryPeriod(-1)"
+              :can-next="canShiftSummaryPeriod(1)"
+              :empty="!transactionsTemp.length"
+              @change-period="shiftSummaryPeriod"
               :selected-wallet="selectedWallet"
               :transactions="transactions"
               :show-starting-amount="searchSettings.dateRangePicked === 'all'"
@@ -206,6 +210,30 @@ const searchSettings = ref({
   dateRangePicked: 'month',
   showTransactionsByCategory: true
 })
+
+const summaryNavigationUnit = computed(() =>
+  searchSettings.value.dateRangePicked === 'month' ? 'Mes' :
+    searchSettings.value.dateRangePicked === 'year' ? 'Año' : ''
+)
+
+function shiftedSummaryDate(direction) {
+  if (![-1, 1].includes(direction) || !summaryNavigationUnit.value) return null
+  const { year, month } = searchSettings.value.dateSelected
+  const index = Number(year) * 12 + Number(month) +
+    (searchSettings.value.dateRangePicked === 'year' ? direction * 12 : direction)
+  const nextYear = Math.floor(index / 12)
+  if (nextYear < 2000 || nextYear > new Date().getFullYear() + 1) return null
+  return { year: nextYear, month: index % 12 }
+}
+
+function canShiftSummaryPeriod(direction) {
+  return shiftedSummaryDate(direction) !== null
+}
+
+function shiftSummaryPeriod(direction) {
+  const date = shiftedSummaryDate(direction)
+  if (date) searchSettings.value.dateSelected = date
+}
 
 const summaryTitle = computed(() => {
   const { dateRangePicked, dateSelected } = searchSettings.value
