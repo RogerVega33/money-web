@@ -43,8 +43,8 @@ export function useTransactions(selectedWallet, searchSettings) {
         return loadTransactions(() => TransactionService.getTransactions(walletId, yearSelected, monthSelected), background)
     }
 
-    function getCryptoWalletTransactions(walletId, background = false) {
-        return loadTransactions(() => TransactionService.getCryptoWalletTransactions(walletId), background)
+    function getCryptoWalletTransactions(walletId, background = false, refreshPrices = true) {
+        return loadTransactions(() => TransactionService.getCryptoWalletTransactions(walletId, refreshPrices), background)
     }
 
     function getAllFiatTransactions(background = false) {
@@ -53,8 +53,8 @@ export function useTransactions(selectedWallet, searchSettings) {
         return getTransactions(id, year, month + 1, background)
     }
 
-    function getAllCryptoTransactions(background = false) {
-        return getCryptoWalletTransactions(selectedWallet.value.id, background)
+    function getAllCryptoTransactions(background = false, refreshPrices = true) {
+        return getCryptoWalletTransactions(selectedWallet.value.id, background, refreshPrices)
     }
 
     /* =======================

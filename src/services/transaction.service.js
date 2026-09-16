@@ -8,8 +8,8 @@ class TransactionService {
             { headers: authHeader() });
     }
 
-    async getCryptoWalletTransactions(walletId){
-        return await axios.get(`/api/transaction/crypto?walletId=${walletId}`,
+    async getCryptoWalletTransactions(walletId, refreshPrices = true){
+        return await axios.get(`/api/transaction/crypto?walletId=${walletId}${refreshPrices ? '' : '&refreshPrices=false'}`,
             { headers: authHeader() });
     }
 

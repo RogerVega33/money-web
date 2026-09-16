@@ -2,7 +2,7 @@ import { onScopeDispose, ref, watch } from 'vue'
 import { io } from 'socket.io-client'
 import store from '@/store'
 
-export function useRealtime(onChanged) {
+export function useRealtime(onChanged, onPricesUpdated = () => {}) {
     const connected = ref(false)
     let socket
 
@@ -25,6 +25,7 @@ export function useRealtime(onChanged) {
         socket.on('disconnect', () => { connected.value = false })
         socket.on('connect_error', () => { connected.value = false })
         socket.on('transactions:changed', onChanged)
+        socket.on('crypto:pricesUpdated', onPricesUpdated)
         socket.connect()
     }, { immediate: true, flush: 'sync' })
 

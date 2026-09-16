@@ -247,8 +247,8 @@ const summaryTitle = computed(() => {
   return `Resumen ${String(dateSelected.month + 1).padStart(2, '0')}/${dateSelected.year}`
 })
 
-function getWallets(background = false) {
-  return walletsRequest.run(() => WalletService.getWallets(), (response) => {
+function getWallets(background = false, refreshPrices = true) {
+  return walletsRequest.run(() => WalletService.getWallets(refreshPrices), (response) => {
     wallets.value = response.data.body
     if (selectedWallet.value) {
       selectedWallet.value = wallets.value.find(wallet => wallet.id === selectedWallet.value.id) || null
@@ -370,8 +370,34 @@ function onTransactionChanged() {
   refreshTimer = setTimeout(refreshData, 150)
 }
 function onCryptoTransactionChanged() { onTransactionChanged() }
-const { connected: realtimeConnected } = useRealtime(onTransactionChanged)
-onUnmounted(() => { disposed = true; clearTimeout(refreshTimer) })
+let pricesTimer
+let refreshingPrices = false
+let pricesPending = false
+async function refreshPrices() {
+  pricesTimer = null
+  if (disposed) return
+  if (refreshingPrices) { pricesPending = true; return }
+  refreshingPrices = true
+  try {
+    // Solo leer precios guardados: este evento no debe volver a consultar Binance.
+    const requests = [getWallets(true, false)]
+    if (selectedWallet.value?.type === 'crypto') requests.push(getAllCryptoTransactions(true, false))
+    await Promise.all(requests)
+  } finally {
+    refreshingPrices = false
+    if (pricesPending && !disposed) {
+      pricesPending = false
+      onPricesUpdated()
+    }
+  }
+}
+function onPricesUpdated() {
+  if (disposed) return
+  clearTimeout(pricesTimer)
+  pricesTimer = setTimeout(refreshPrices, 150)
+}
+const { connected: realtimeConnected } = useRealtime(onTransactionChanged, onPricesUpdated)
+onUnmounted(() => { disposed = true; clearTimeout(refreshTimer); clearTimeout(pricesTimer) })
 
 /* =======================
    WATCHERS
