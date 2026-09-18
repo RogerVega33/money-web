@@ -431,6 +431,15 @@ onMounted(getWallets)
 
 <style src="@vueform/multiselect/themes/default.css"></style>
 
+<style scoped>
+@media (max-width: 767px) {
+  .dashboard {
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+}
+</style>
+
 <style>
 .card {
   margin-top: 1rem;

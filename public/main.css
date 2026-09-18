@@ -1,6 +1,23 @@
+html {
+    scrollbar-gutter: stable;
+    background-color: #14532d;
+}
+
+@supports not (scrollbar-gutter: stable) {
+    html {
+        overflow-y: scroll;
+    }
+}
+
 .dashboard, .home, .login{
-    min-height: 100vh;
     background-image: linear-gradient(to right bottom, #4dc294, #32c07e, #17bd63, #00b943, #00b40f);
+}
+
+@media (max-width: 767px) {
+    .login {
+        padding-top: 2rem;
+        padding-bottom: 1rem;
+    }
 }
 
 /* Para que no aparezca en los input tipo number las flechas */
