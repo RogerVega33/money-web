@@ -1,10 +1,20 @@
 <template>
   <div class="search-settings">
     <div class="w-full mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
-      <div class="flex justify-between items-center mb-4">
+      <div class="flex justify-between items-center lg:mb-4" :class="{ 'mb-4': expanded }">
         <h5 class="text-xl font-bold leading-none text-gray-900">Configuración</h5>
+        <button
+            type="button"
+            class="-my-3 -mr-3 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded text-gray-600 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 lg:hidden"
+            :aria-expanded="expanded"
+            aria-controls="search-settings-content"
+            :aria-label="expanded ? 'Ocultar configuración' : 'Mostrar configuración'"
+            @click="expanded = !expanded"
+        >
+          <fa :icon="expanded ? 'chevron-up' : 'chevron-down'" aria-hidden="true" />
+        </button>
       </div>
-      <div class="flow-root">
+      <div id="search-settings-content" class="lg:flow-root" :class="expanded ? 'flow-root' : 'hidden'">
         <template v-if="selectedWallet && selectedWallet.type !== 'crypto'">
           <div>
             <label>Buscar por:</label>
@@ -71,6 +81,7 @@ export default {
     showArchivedWallets: Boolean,
   },
   setup(props, { emit }) {
+    const expanded = ref(false)
     const searchSettings = ref(props.settings);
     const updateSelectedMonth = value => {
       if (!value || !isCalendarYear(value.year) || value.month === null || value.month === undefined || value.month === '' ||
@@ -106,6 +117,7 @@ export default {
     })
 
     return {
+      expanded,
       calendarProps, updateMonthRange, updateSelectedMonth, updateSelectedYear,
       searchSettings,
       hideMoney,

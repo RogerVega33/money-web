@@ -1,12 +1,5 @@
 html {
-    scrollbar-gutter: stable;
     background-color: #14532d;
-}
-
-@supports not (scrollbar-gutter: stable) {
-    html {
-        overflow-y: scroll;
-    }
 }
 
 .dashboard, .home, .login{
