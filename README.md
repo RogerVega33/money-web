@@ -1,6 +1,6 @@
-# Money app Frontend
+# Money App Frontend
 
-Money app te ayuda a llevar un registro de tus gastos
+Money App te ayuda a llevar un registro de tus gastos
 
 ## Instalación
 
@@ -84,3 +84,13 @@ docker compose up -d
 Puedes ingresar a la app con:
 * Desde tu máquina: http://localhost:8085
 * Desde otro dispositivo: http://IP_DEL_SERVIDOR:8085
+
+## Instalación en Android (PWA)
+
+La web incluye un manifiesto para instalar **Money App** en Android como acceso directo 
+y abrirla en una ventana independiente. Los siguientes pasos funcionan para el navegador Chrome:
+
+1. Desde Android, abrir en el navegador la URL donde se encuentre deplegado Money App.
+3. En el menú del navegador, elegir **Añadir a pantalla de inicio → Instalar**
+   o **Instalar aplicación**, según la versión del navegador.
+4. Se creará un ícono de acceso directo a Money App. Abrir Money App desde su icono.

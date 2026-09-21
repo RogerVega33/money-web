@@ -2,7 +2,7 @@
   <footer class="app-footer">
     <div class="footer-content md:container">
       <div>
-        <p class="text-sm text-green-100">© {{ currentYear }} Money app</p>
+        <p class="text-sm text-green-100">© {{ currentYear }} Money App</p>
       </div>
       <div class="footer-details">
         <nav class="social-links" aria-label="Enlaces del proyecto y redes sociales">

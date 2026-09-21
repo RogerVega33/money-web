@@ -3,7 +3,7 @@
     <nav class="container mx-auto">
       <div class="flex justify-between text-white p-1 lg:px-5">
         <router-link to="/">
-          <fa icon="sack-dollar" class="text-green-300" /> <span class="hover:text-cyan-300">Money app</span>
+          <fa icon="sack-dollar" class="text-green-300" /> <span class="hover:text-cyan-300">Money App</span>
         </router-link>
         <div class="w-full block w-auto text-white">
           <ul class="flex flex-row space-x-8 cursor-pointer">

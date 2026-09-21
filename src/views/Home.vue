@@ -38,7 +38,7 @@ import criptoGif from '../assets/bitcoin.gif'
 const features = [
   {
     id: 'section1',
-    label: 'Money app',
+    label: 'Money App',
     title: 'Lleva registro de tus gastos',
     description: 'Toma decisiones basadas en datos',
     image: moneyGif
