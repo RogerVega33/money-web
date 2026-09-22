@@ -85,7 +85,7 @@ import { required, helpers, minLength, maxLength } from '@vuelidate/validators'
 import { reactive, computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthService from '@/services/auth.service'
-import Swal from 'sweetalert2'
+import { showRecoveryPhrase } from '@/utils/recoveryPhraseDisplay'
 import { strongPassword, getPasswordStrength, strengthColors } from '@/utils/passwordValidator'
 
 const router = useRouter()
@@ -147,29 +147,7 @@ async function signIn() {
     })
     const recoveryPhrase = response.recoveryPhrase;
 
-    await Swal.fire({
-      title: '¡Usuario creado exitosamente!',
-      html: `
-            <p style="color:#6b7280; margin-bottom:16px;">
-              Antes de continuar, guarda tu frase de recuperación. La necesitarás para recuperar tu cuenta en caso de que olvides tu contraseña
-            </p>
-            <p style="color:#b45309; font-size:0.8em; text-transform:uppercase; font-weight:600; margin-bottom:8px;">
-                ⚠️ Solo aparecerá esta vez ⚠️
-            </p>
-            <div style="background:#fffbeb; border:1px solid #f59e0b; border-radius:10px; padding:14px; margin-top:15px; margin-bottom:15px;">
-              <p style="color:#92400e; font-size:0.95em; font-weight:bold; letter-spacing:1px; margin:0; word-break: keep-all;">
-                ${recoveryPhrase}
-              </p>
-            </div>
-            <p style="color:#9ca3af; font-size:0.8em; margin:0;">
-              Asegúrate de anotar las palabras en orden
-            </p>
-          `,
-      icon: 'success',
-      confirmButtonText: 'Ya la guardé',
-      allowOutsideClick: false, // obliga al usuario a hacer clic en el botón
-      allowEscapeKey: false, // no puede cerrar con ESC
-    })
+    await showRecoveryPhrase(recoveryPhrase)
 
     await router.push('/login')  // redirige solo después de que el usuario confirme
   } catch (error) {

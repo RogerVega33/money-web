@@ -16,10 +16,12 @@
 
         <div class="mt-4">
           <label class="block text-grey-darker text-sm font-medium mb-2" for="recoveryPhrase">
-            Frase de recuperación
+            Palabras de recuperación
           </label>
           <div class="input-wrapper">
             <input :disabled="isSubmitting" id="recoveryPhrase"
+                   autocapitalize="none" autocorrect="off" :spellcheck="false"
+                   aria-describedby="recoveryPhraseHelp"
                    :type="showRecoveryPhrase ? 'text' : 'password'"
                    v-model="state.user.recoveryPhrase"
                    :class="{ 'border-red-500': v$.user.recoveryPhrase.$error }"
@@ -30,6 +32,7 @@
               <fa icon="eye-slash" v-else class="text-sm"/>
             </button>
           </div>
+          <p id="recoveryPhraseHelp" class="text-gray-600 text-xs mt-2">Escribe las palabras en orden, sin números, separadas por espacios o guiones. No importan las mayúsculas o minúsculas.</p>
           <p v-if="v$.user.recoveryPhrase.$error" class="text-red-500 text-xs italic mt-2 mb-2">{{v$.user.recoveryPhrase.$errors[0].$message}}</p>
         </div>
 
@@ -142,7 +145,7 @@ const rules = computed(() => ({
           (value) => value === state.user.password
       ),
     },
-    recoveryPhrase: { required: helpers.withMessage('La frase de recuperación es requerida', required) },
+    recoveryPhrase: { required: helpers.withMessage('Las palabras de recuperación son requeridas', required) },
   },
 }))
 
