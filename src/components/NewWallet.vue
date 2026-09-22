@@ -55,12 +55,12 @@
           </div>
           <div class="mt-6">
             <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
-            <button :disabled="isSaving" type="button" @click="saveWallet"
-                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-500">
+            <button :disabled="isSaveDisabled" type="submit"
+                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
               <template v-if="isSaving">Guardando<LoadingDots /></template>
               <template v-else>Guardar</template>
             </button>
-            <button :disabled="isSaving" type="button" @click="cancel" class="mt-5 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-500">
+            <button :disabled="isSaving" type="button" @click="cancel" class="mt-5 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600">
               Cancelar
             </button>
           </div>
@@ -92,6 +92,7 @@ export default {
     });
 
     const isSaving = ref(false);
+    const isSaveDisabled = computed(() => isSaving.value || !state.newWallet.name?.trim());
 
     const walletTypes = ref([
       { name: "Fiat", value: "fiat" },
@@ -112,7 +113,7 @@ export default {
     const v$ = useVuelidate(rules, state);
 
     const saveWallet = async () => {
-      if (isSaving.value) return;
+      if (isSaveDisabled.value) return;
       isSaving.value = true;
       state.errorMessage = '';
 
@@ -146,6 +147,7 @@ export default {
       blockInvalidAmountInput,
       handleAmountPaste,
       isSaving,
+      isSaveDisabled,
       state,
       walletTypes,
       v$,

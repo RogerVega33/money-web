@@ -16,7 +16,7 @@
       </div>
       <div class="flow-root" :aria-busy="loading">
         <p v-if="loading" role="status" class="text-gray-600">Cargando billeteras<LoadingDots /></p>
-        <div v-else-if="loadError" role="alert"><p class="text-red-500">No se pudieron cargar las billeteras.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="$emit('retry')">Reintentar</button></div>
+        <div v-else-if="loadError" role="alert"><p class="text-red-500">No se pudieron cargar las billeteras.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="$emit('retry')">Reintentar</button></div>
         <ul role="list" class="divide-y divide-gray-200" v-else-if="wallets.length > 0">
           <li class="py-3 sm:py-4" v-for="wallet in wallets" :key="wallet.id">
             <div @click="selectWallet(wallet)"

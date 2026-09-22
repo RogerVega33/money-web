@@ -4,7 +4,7 @@
       <label class="block text-grey-darker text-2xl font-bold mb-4">
         Iniciar sesión
       </label>
-      <form :aria-busy="isSubmitting" @submit.prevent>
+      <form :aria-busy="isSubmitting" @submit.prevent="login">
         <div class="form-group">
           <label class="block text-grey-darker text-sm font-medium mb-2" for="username">
             Usuario
@@ -35,9 +35,9 @@
           </label>
         </div>
         <div class="mt-6">
-          <button type="button" @click="login" :disabled="isSubmitting || !state.user.username || !state.user.password"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-500
-                  disabled:opacity-75 disabled:hover:bg-blue-300">
+          <button type="submit" :disabled="isLoginDisabled"
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700
+                  disabled:opacity-75 disabled:hover:bg-blue-600">
             <template v-if="isSubmitting">Iniciando sesión<LoadingDots /></template>
             <template v-else>Iniciar sesión</template>
           </button>
@@ -45,13 +45,13 @@
         </div>
         <div class="mt-6">
           <button :disabled="isSubmitting" type="button" @click="$router.push('/newUser')"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-500">
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:hover:bg-blue-600">
             Registrarse
           </button>
         </div>
         <div class="mt-2">
           <button :disabled="isSubmitting" type="button" @click="$router.push('/recoverUser')"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-500">
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:hover:bg-blue-600">
             Recuperar usuario
           </button>
         </div>
@@ -87,11 +87,12 @@ const rules = computed(() => ({
 }))
 
 const isSubmitting = ref(false)
+const isLoginDisabled = computed(() => isSubmitting.value || !state.user.username || !state.user.password)
 const showPassword = ref(false)
 const v$ = useVuelidate(rules, state)
 
 async function login() {
-  if (isSubmitting.value) return
+  if (isLoginDisabled.value) return
   isSubmitting.value = true
   state.errorMessage = ''
 

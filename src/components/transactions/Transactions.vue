@@ -19,7 +19,7 @@
 
         <!-- FIAT -->
         <p v-if="loadingCategories" class="text-gray-600" role="status">Cargando categorías<LoadingDots /></p>
-        <div v-else-if="categoriesError" role="alert"><p>No se pudieron cargar las categorías.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="getCategories">Reintentar</button></div>
+        <div v-else-if="categoriesError" role="alert"><p>No se pudieron cargar las categorías.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="getCategories">Reintentar</button></div>
         <p v-else-if="selectedWallet.type !== 'crypto' && !categories.some(group => group.categoryList.length)" class="text-gray-600">Todavía no tienes categorías en esta billetera. Usa el botón ⚙️ para agregar una.</p>
         <TransactionEditForm
             v-else-if="selectedWallet.type !== 'crypto'"
@@ -33,7 +33,7 @@
         />
 
         <!-- CRYPTO -->
-        <div v-else :aria-busy="isSavingTransaction">
+        <form v-else :aria-busy="isSavingTransaction" @submit.prevent="saveNewCryptoTransaction">
           <h6 class="font-semibold">Nueva transacción</h6>
 
           <div class="mt-2">
@@ -68,24 +68,23 @@
               {{ errorMessage }}
             </p>
             <button
-                type="button"
-                class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
-                :disabled="!newCryptoTransaction.symbol || !newCryptoTransaction.amount || !!cryptoAmountError || isSavingTransaction"
-                @click="saveTransaction(newCryptoTransaction)"
+                type="submit"
+                class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
+                :disabled="isCryptoSaveDisabled"
             >
               <template v-if="isSavingTransaction">Guardando<LoadingDots /></template>
-        <template v-else>Guardar</template>
+              <template v-else>Guardar</template>
             </button>
             <button
                 type="button"
-                class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-500"
+                class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600"
                 :disabled="isSavingTransaction"
                 @click="cancelNewTransaction"
             >
               Cancelar
             </button>
           </div>
-        </div>
+        </form>
 
         <hr class="mt-5">
       </div>
@@ -125,7 +124,7 @@
       <p v-if="loading || loadingCategories" class="text-gray-600" role="status">Cargando transacciones<LoadingDots /></p>
       <div v-else-if="loadError || categoriesError" class="text-gray-600" role="alert">
         <p>{{ loadError ? 'No se pudieron cargar las transacciones.' : 'No se pudieron cargar las categorías.' }}</p>
-        <button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="retryFailedLoads">Reintentar</button>
+        <button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="retryFailedLoads">Reintentar</button>
       </div>
       <p v-else-if="!transactions?.transactions?.length" class="text-gray-600">
         {{ transactionFilter ? 'No hay transacciones que coincidan con tu búsqueda.' : 'No hay transacciones en este período.' }}
@@ -222,6 +221,9 @@ const newCryptoTransaction = ref({})
 const cryptoAmountError = computed(() =>
   newCryptoTransaction.value.amount === undefined ? '' : amountError(newCryptoTransaction.value.amount, true)
 )
+const isCryptoSaveDisabled = computed(() =>
+  !newCryptoTransaction.value.symbol || !newCryptoTransaction.value.amount || !!cryptoAmountError.value || isSavingTransaction.value
+)
 /* =======================
    SEARCH
 ======================= */
@@ -281,6 +283,11 @@ function cancelNewTransaction() {
 /* =======================
    GUARDAR
 ======================= */
+function saveNewCryptoTransaction() {
+  if (isCryptoSaveDisabled.value) return
+  saveTransaction(newCryptoTransaction.value)
+}
+
 function saveTransaction(form) {
   if (isSavingTransaction.value) return
   if (props.selectedWallet.type === 'crypto') {

@@ -81,8 +81,8 @@
 
         <div class="mt-6">
           <button type="button" @click="signIn" :disabled="isSubmitting || !state.user.username || !state.user.password || !state.user.confirmPassword || !state.user.recoveryPhrase"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600
-                  disabled:opacity-75 disabled:hover:bg-blue-500">
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700
+                  disabled:opacity-75 disabled:hover:bg-blue-600">
             <template v-if="isSubmitting">Recuperando<LoadingDots /></template>
             <template v-else>Recuperar</template>
           </button>
@@ -91,7 +91,7 @@
 
         <div class="mt-2">
           <button :disabled="isSubmitting" type="button" @click="router.push('/login')"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600">
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:hover:bg-gray-600">
             Cancelar
           </button>
         </div>

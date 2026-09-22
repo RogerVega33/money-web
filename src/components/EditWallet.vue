@@ -42,13 +42,13 @@
         </div>
         <div class="mt-4">
           <p v-if="walletError" role="alert" class="text-red-500 text-xs italic mt-2 mb-2">{{ walletError }}</p>
-          <button type="submit" :disabled="isSavingWallet" :aria-label="isSavingWallet ? 'Guardando billetera' : 'Guardar billetera'"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-500">
+          <button type="submit" :disabled="isWalletSaveDisabled" :aria-label="isSavingWallet ? 'Guardando billetera' : 'Guardar billetera'"
+                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
             <template v-if="isSavingWallet">Guardando<LoadingDots /></template>
             <template v-else>Guardar</template>
           </button>
           <button type="button" :disabled="isSavingWallet" @click="cancelWalletEdit"
-                  class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-500">Cancelar</button>
+                  class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600">Cancelar</button>
         </div>
       </form>
       <div v-else>
@@ -70,7 +70,7 @@
       </div>
       <div class="flow-root" v-if="!showIconNewCategory" :aria-busy="isSavingCategory">
         <h6 class="font-semibold">Nueva categoría</h6>
-        <div>
+        <form @submit.prevent="saveCategory">
           <div class="mt-2">
             <label for="categoryName">Nombre:</label>
             <br>
@@ -87,22 +87,22 @@
           </div>
           <div class="mt-4">
             <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
-            <button type="button" @click="saveCategory" :disabled="isSavingCategory"
+            <button type="submit" :disabled="isCategorySaveDisabled"
                     :aria-label="isSavingCategory ? 'Guardando categoría' : 'Guardar categoría'"
-                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-500 hover:bg-blue-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-500">
+                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
               <template v-if="isSavingCategory">Guardando<LoadingDots /></template>
               <template v-else>Guardar</template>
             </button>
             <button type="button" @click="cancelNewCategory" :disabled="isSavingCategory"
-                    class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-500 hover:bg-gray-600 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-500">
+                    class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600">
               Cancelar
             </button>
           </div>
-        </div>
+        </form>
       </div>
       <div class="flow-root" v-else :aria-busy="loadingCategories">
         <p v-if="loadingCategories" class="text-gray-600" role="status">Cargando categorías<LoadingDots /></p>
-        <div v-else-if="categoriesError" role="alert"><p>No se pudieron cargar las categorías.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="getCategories">Reintentar</button></div>
+        <div v-else-if="categoriesError" role="alert"><p>No se pudieron cargar las categorías.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="getCategories">Reintentar</button></div>
         <p v-else-if="!categories.income.length && !categories.expense.length" class="text-gray-600">Todavía no tienes categorías en esta billetera. Usa el botón + para agregar una.</p>
         <template v-else>
         <Category icon="arrow-up" icon-style="text-green-600" title="Ingresos" :categories="categories.income" @success="getCategories"/>
@@ -118,7 +118,7 @@ import { blockInvalidChars, blockInvalidAmountInput, handleAmountPaste } from '@
 import WalletService from '@/services/wallet.service'
 import { amountError, textError } from '@/utils/dataValidation'
 import LoadingDots from '@/components/common/LoadingDots.vue'
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useLatestRequest } from '@/composables/useLatestRequest';
 import CategoryService from "../services/category.service";
 import Category from "../components/Category.vue";
@@ -135,6 +135,7 @@ export default {
     const isEditingWallet = ref(false);
     const isSavingWallet = ref(false);
     const walletDraft = ref({});
+    const isWalletSaveDisabled = computed(() => isSavingWallet.value || !walletDraft.value.name?.trim());
     const walletError = ref('');
     let walletEditVersion = 0;
 
@@ -161,7 +162,7 @@ export default {
       isEditingWallet.value = true;
     };
     const saveWallet = async () => {
-      if (isSavingWallet.value) return;
+      if (isWalletSaveDisabled.value) return;
       const fiat = props.selectedWallet.type === 'fiat';
       walletError.value = textError(walletDraft.value.name) ||
           textError(walletDraft.value.detail, 'La descripción', 150, true) ||
@@ -190,6 +191,7 @@ export default {
     const newCategory = ref({ type: 'income' });
     const errorMessage = ref("");
     const isSavingCategory = ref(false);
+    const isCategorySaveDisabled = computed(() => isSavingCategory.value || !newCategory.value.name?.trim());
 
     const getCategories = () => {
       categories.value = { income: [], expense: [] };
@@ -208,7 +210,7 @@ export default {
     };
 
     const saveCategory = async () => {
-      if (isSavingCategory.value) return;
+      if (isCategorySaveDisabled.value) return;
       errorMessage.value = textError(newCategory.value.name);
       if (errorMessage.value) return;
       if (!['income', 'expense'].includes(newCategory.value.type)) {
@@ -252,10 +254,11 @@ export default {
     }, { immediate: true });
 
     return {
-      isEditingWallet, isSavingWallet, walletDraft, walletError,
+      isEditingWallet, isSavingWallet, isWalletSaveDisabled, walletDraft, walletError,
       toggleWalletEdit, cancelWalletEdit, saveWallet,
       blockInvalidChars, blockInvalidAmountInput, handleAmountPaste,
       isSavingCategory,
+      isCategorySaveDisabled,
       loadingCategories: categoriesRequest.loading,
       categoriesError: categoriesRequest.error,
       categories,

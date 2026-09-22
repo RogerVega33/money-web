@@ -42,7 +42,7 @@
         <div class="contents lg:block w-full">
           <div class="p-1 lg:p-0">
             <p v-if="loadingTransactions" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="status">Cargando movimientos<LoadingDots /></p>
-            <div v-else-if="transactionsError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert"><p>No se pudieron cargar los movimientos.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="retryTransactions">Reintentar</button></div>
+            <div v-else-if="transactionsError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert"><p>No se pudieron cargar los movimientos.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="retryTransactions">Reintentar</button></div>
             <Summary
                 v-else
                 :title="summaryTitle"
@@ -80,7 +80,7 @@
           </div>
           <div ref="profitLossContainer" id="profitLossContainer" class="order-last -mt-6 p-1 lg:order-none lg:mt-0 lg:p-0">
             <p v-if="loadingHistory" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="status">Cargando histórico<LoadingDots /></p>
-            <div v-else-if="historyError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert"><p>No se pudo cargar el histórico.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500" @click="getProfitLoss(selectedWallet.id)">Reintentar</button></div>
+            <div v-else-if="historyError" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600" role="alert"><p>No se pudo cargar el histórico.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="getProfitLoss(selectedWallet.id)">Reintentar</button></div>
             <p v-else-if="!chartLabelsProfitLoss.length" class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8 text-gray-600">Todavía no hay movimientos en el histórico de esta billetera.</p>
             <LineChart
                 v-else

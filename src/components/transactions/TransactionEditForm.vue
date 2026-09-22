@@ -66,7 +66,7 @@
       </p>
 
       <button
-          class="btn-primary disabled:opacity-75 disabled:cursor-not-allowed"
+          class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
           :disabled="!canSave"
           @click="emitSave"
       >
@@ -75,7 +75,7 @@
       </button>
 
       <button
-          class="btn-secondary mt-2 disabled:opacity-75 disabled:cursor-not-allowed"
+          class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600"
           :disabled="props.saving"
           @click="emit('cancel')"
       >
@@ -162,19 +162,4 @@ function emitSave() {
   width: 100%;
 }
 
-.btn-primary {
-  background: #3b82f6;
-  color: white;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  width: 100%;
-}
-
-.btn-secondary {
-  background: #6b7280;
-  color: white;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  width: 100%;
-}
 </style>
