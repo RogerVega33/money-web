@@ -71,7 +71,7 @@ import { computed } from 'vue'
 import { formatCurrency } from '../utils/formats'
 
 export default {
-  name: 'Summary',
+  name: 'WalletSummary',
   emits: ['change-period'],
   props: {
     title: { type: String, default: 'Resumen' },

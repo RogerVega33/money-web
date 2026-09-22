@@ -1,11 +1,11 @@
 <template>
   <div id="menu" class="bg-green-800 p-2">
     <nav class="container mx-auto">
-      <div class="flex justify-between text-white p-1 lg:px-5">
-        <router-link to="/">
+      <div class="flex items-center justify-between text-white p-1 lg:px-5">
+        <router-link to="/" class="shrink-0 whitespace-nowrap">
           <fa icon="sack-dollar" class="text-green-300" /> <span class="hover:text-cyan-300">Money App</span>
         </router-link>
-        <div class="w-full block w-auto text-white">
+        <div class="shrink-0 text-white">
           <ul class="flex flex-row space-x-8 cursor-pointer">
             <li v-if="!loggedIn" class="hover:text-cyan-300">
               <router-link to="/login">Login</router-link>
@@ -25,7 +25,7 @@ import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
 
 export default {
-  name: 'Menu',
+  name: 'AppMenu',
   props: {
     loggedIn: Boolean
   },

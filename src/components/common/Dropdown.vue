@@ -29,11 +29,11 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle', 'close'])
 
-const {openDropdown, closeDropdown, isOpen} = useDropdown()
+const {openDropdown, closeDropdown, isOpen: isDropdownOpen} = useDropdown()
 
 const currentOpen = computed(() => {
   if (props.isOpen !== undefined) return props.isOpen
-  if (props.dropdownId !== null) return isOpen(props.dropdownId)
+  if (props.dropdownId !== null) return isDropdownOpen(props.dropdownId)
   return false
 })
 
@@ -42,7 +42,7 @@ function toggle(e) {
   if (props.isOpen !== undefined) {
     emit('toggle')
   } else if (props.dropdownId !== null) {
-    if (isOpen(props.dropdownId)) {
+    if (isDropdownOpen(props.dropdownId)) {
       closeDropdown(props.dropdownId)
     } else {
       openDropdown(props.dropdownId)

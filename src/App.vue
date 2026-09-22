@@ -1,6 +1,6 @@
 <template>
   <div class="app-layout">
-    <Menu :loggedIn="loggedIn"/>
+    <AppMenu :loggedIn="loggedIn"/>
     <div class="app-content">
       <router-view v-slot="{ Component, route }">
         <component :is="Component" :key="sessionKey" class="app-page"
@@ -17,14 +17,14 @@ import './assets/tailwind.css'
 import { computed, onMounted, onBeforeMount } from 'vue'
 import { useStore } from 'vuex'
 import { useRouter } from 'vue-router'
-import Menu from './components/Menu.vue'
+import AppMenu from './components/Menu.vue'
 import AppFooter from './components/AppFooter.vue'
 import { useSessionSync } from './composables/useSessionSync'
 
 export default {
   name: 'App',
   components: {
-    Menu,
+    AppMenu,
     AppFooter
   },
   setup() {

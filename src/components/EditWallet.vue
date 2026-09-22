@@ -121,8 +121,8 @@ import LoadingDots from '@/components/common/LoadingDots.vue'
 import { ref, watch } from 'vue';
 import { useLatestRequest } from '@/composables/useLatestRequest';
 import CategoryService from "../services/category.service";
-import Category from "../components/Category";
-import { formatCurrency } from '../utils/formats';
+import Category from "../components/Category.vue";
+import { formatCurrency } from '@/utils/formats';
 
 export default {
   name: 'EditWallet',

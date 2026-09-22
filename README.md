@@ -20,21 +20,38 @@ reenvía esas peticiones al backend.
 
 | Ejecución | Configuración | Valor por defecto |
 | --- | --- | --- |
-| `npm run serve` | `BACKEND_URL` en `.env`, leída por `vue.config.js` | `http://localhost:3000` |
+| `npm run serve` | `BACKEND_URL` en `.env`, leída por `vite.config.mjs` | `http://localhost:3000` |
 | Docker Compose | `BACKEND_URL` definida directamente en `docker-compose.yml` | `http://backend:3000` |
 | Docker | `docker run -e BACKEND_URL="http://ip_backend:3000" ...` | Pasar la URL explícitamente |
 
 ### Node
 
-Instala las dependencias del proyecto:
+Usa Node.js 22.13+ o 24+.
+
+Instala las dependencias del proyecto fijadas en el lockfile:
 ```bash
-npm install
+npm ci
 ```
 
 Levanta el servidor:
 ```
 npm run serve
 ```
+
+El servidor de desarrollo abre en `http://localhost:8080`. `npm run dev` es un
+alias de `npm run serve`; el puerto debe estar libre. Los puertos están definidos 
+en el archivo `vite.config.mjs`
+
+```bash
+npm run lint
+npm test
+npm run build
+npm run preview
+```
+
+`build` genera `dist`. `preview` permite probar esa compilación en
+`http://localhost:4173` con el mismo proxy al backend; es una herramienta local,
+no un servidor de producción.
 
 ### Docker
 
