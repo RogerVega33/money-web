@@ -116,7 +116,7 @@
             class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-blue-500 rounded-r-lg"
             @click="transactionFilter = ''"
         >
-          <fa icon="eraser" />
+          <fa icon="xmark" />
         </button>
       </div>
 

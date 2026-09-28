@@ -111,3 +111,11 @@ y abrirla en una ventana independiente. Los siguientes pasos funcionan para el n
 3. En el menú del navegador, elegir **Añadir a pantalla de inicio → Instalar**
    o **Instalar aplicación**, según la versión del navegador.
 4. Se creará un ícono de acceso directo a Money App. Abrir Money App desde su icono.
+
+## Licencia
+
+Copyright 2026 Roger Vega.
+
+Este proyecto se distribuye bajo la [Apache License 2.0](LICENSE). Consulta
+también el archivo de [atribuciones](NOTICE). Las dependencias de terceros
+conservan sus respectivas licencias.
