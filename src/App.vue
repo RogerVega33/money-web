@@ -20,6 +20,7 @@ import { useRouter } from 'vue-router'
 import AppMenu from './components/Menu.vue'
 import AppFooter from './components/AppFooter.vue'
 import { useSessionSync } from './composables/useSessionSync'
+import { sessionKey as getSessionKey } from './utils/session'
 
 export default {
   name: 'App',
@@ -32,7 +33,7 @@ export default {
     const router = useRouter()
 
     const loggedIn = computed(() => store.state.auth.status.loggedIn)
-    const sessionKey = computed(() => store.state.auth.user?.token ?? 'anonymous')
+    const sessionKey = computed(() => getSessionKey(store.state.auth.user))
     useSessionSync(store, router)
 
     onBeforeMount(() => {

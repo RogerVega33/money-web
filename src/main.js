@@ -2,6 +2,8 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from "./store";
+import axios from 'axios'
+import { installSessionInterceptor } from './utils/sessionInterceptor'
 import './assets/tailwind.css'
 
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -13,7 +15,8 @@ import Datepicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css'
 import 'flowbite';
 import Multiselect from '@vueform/multiselect'
-import './services/interceptor.service'
+
+installSessionInterceptor(axios, store, router)
 
 library.add(fas, fab, far);
 

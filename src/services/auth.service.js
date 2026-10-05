@@ -27,7 +27,16 @@ class AuthService {
         return response.data.body
     }
 
-    logout() {
+    async logout(user) {
+        try {
+            await axios.post('/api/auth/logout', {}, { headers: { Authorization: `Bearer ${user.token}` } })
+        } catch (error) {
+            // Una sesión que el servidor ya rechaza puede limpiarse localmente.
+            if (![401, 403].includes(error.response?.status)) throw error
+        }
+    }
+
+    clearSession() {
         localStorage.removeItem('user')
     }
 }

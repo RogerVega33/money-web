@@ -1,5 +1,5 @@
 import { onScopeDispose } from 'vue'
-import { readSession } from '@/utils/session'
+import { readSession, sessionKey } from '../utils/session.js'
 
 export function useSessionSync(store, router) {
     function sync(event) {
@@ -8,8 +8,9 @@ export function useSessionSync(store, router) {
         const user = readSession()
         const previous = store.state.auth.user
         if (previous?.token === user?.token && previous?.id === user?.id) return
+        const changedSession = sessionKey(previous) !== sessionKey(user)
         store.commit('auth/syncSession', user)
-        router.replace(user ? '/dashboard' : '/login')
+        if (changedSession) router.replace(user ? '/dashboard' : '/login')
     }
 
     window.addEventListener('storage', sync)

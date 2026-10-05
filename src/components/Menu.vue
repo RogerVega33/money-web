@@ -11,7 +11,7 @@
               <router-link to="/login">Login</router-link>
             </li>
             <li v-else class="hover:text-cyan-300" @click.prevent="logOut">
-              <span>Logout</span>
+              <span>{{ closingSession ? 'Cerrando sesión…' : 'Logout' }}</span>
             </li>
           </ul>
         </div>
@@ -23,6 +23,8 @@
 <script>
 import { useRouter } from 'vue-router'
 import { useStore } from 'vuex'
+import { ref } from 'vue'
+import Swal from 'sweetalert2'
 
 export default {
   name: 'AppMenu',
@@ -33,13 +35,23 @@ export default {
     const router = useRouter()
     const store = useStore()
 
-    const logOut = () => {
-      store.dispatch('auth/logout')
-      router.push('/')
+    const closingSession = ref(false)
+    const logOut = async () => {
+      if (closingSession.value) return
+      closingSession.value = true
+      try {
+        if (await store.dispatch('auth/logout')) await router.push('/')
+      } catch {
+        await Swal.fire({ icon: 'error', title: 'No se pudo cerrar sesión',
+          text: 'No se pudo confirmar el cierre. Revisa tu conexión y vuelve a intentarlo.' })
+      } finally {
+        closingSession.value = false
+      }
     }
 
     return {
-      logOut
+      logOut,
+      closingSession
     }
   },
 }
