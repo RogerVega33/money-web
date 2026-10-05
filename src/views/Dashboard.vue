@@ -116,6 +116,7 @@
             :search-settings="searchSettings"
             :transactions-by-category="transactionsByCategory"
             :transactions="transactions"
+            :transaction-filter="transactionFilter"
             :selected-wallet="selectedWallet"
             @new-transaction="onTransactionChanged"
             @update-transaction="onTransactionChanged"

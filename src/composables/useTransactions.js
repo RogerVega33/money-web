@@ -109,6 +109,11 @@ export function useTransactions(selectedWallet, searchSettings) {
     /* =======================
        WATCHERS
     ======================= */
+    // La búsqueda pertenece a la billetera, no al ciclo de vida del formulario.
+    watch(() => selectedWallet.value?.id, () => {
+        updateTransactionFilter('')
+    }, { flush: 'sync' })
+
     watch(
         transactions,
         () => {

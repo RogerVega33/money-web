@@ -182,6 +182,7 @@ const props = defineProps([
   'loadError',
   'transactions',
   'transactionsByCategory',
+  'transactionFilter',
   'selectedWallet',
   'searchSettings'
 ])
@@ -227,7 +228,10 @@ const isCryptoSaveDisabled = computed(() =>
 /* =======================
    SEARCH
 ======================= */
-const transactionFilter = ref("")
+const transactionFilter = computed({
+  get: () => props.transactionFilter ?? '',
+  set: value => emit('update-transaction-filter', value)
+})
 
 /* =======================
    CATEGORÍAS
@@ -433,7 +437,6 @@ function handleError(error) {
    WATCHERS
 ======================= */
 watch(() => props.selectedWallet.id, () => {
-  transactionFilter.value = ""
   currentPage.value = 1
   cancel()
   cancelNewTransaction()
@@ -442,7 +445,6 @@ watch(() => props.selectedWallet.id, () => {
 
 watch(transactionFilter, () => {
   currentPage.value = 1
-  emit('update-transaction-filter', transactionFilter.value)
 })
 
 watch(() => props.searchSettings, () => {
