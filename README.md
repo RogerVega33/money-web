@@ -12,7 +12,7 @@ Para desarrollo con Vue, el archivo `.env` es opcional y
 La variable `BACKEND_URL` especifica la URL del backend.
 
 En Docker Compose, la URL está fijada en el YAML y `.env` contiene las variables
-del **backend**, no la configuración del frontend.
+del **backend** y, opcionalmente, `TRUSTED_PROXY_IP` para el Nginx del frontend.
 
 El navegador solicita
 `/api` al mismo sitio del frontend; el proxy de Vue (desarrollo) o Nginx (Docker)
@@ -84,7 +84,8 @@ money-app/
 └── .env
 ```
 
-El `.env` es obligatorio y contiene las variables **del backend**.
+El `.env` es obligatorio y contiene las variables **del backend**, también puede contener 
+`TRUSTED_PROXY_IP` si hay un proxy inverso delante del frontend.
 
 El frontend no necesita un archivo de variables de configuración:
 `BACKEND_URL=http://backend:3000` está definida directamente en el Compose.
@@ -101,6 +102,13 @@ docker compose up -d
 Puedes ingresar a la app con:
 * Desde tu máquina: http://localhost:8085
 * Desde otro dispositivo: http://IP_DEL_SERVIDOR:8085
+
+### IP del cliente detrás de un proxy inverso
+
+Cuando un proxy inverso recibe las conexiones antes del frontend, configura `TRUSTED_PROXY_IP` en el `.env` 
+usado por Compose con la IP desde la que ese proxy se conecta al frontend.
+Esto ayuda a obtener la IP real del cliente que se conecta a la aplicación, sin esta configuración 
+los dispositivos que se conectan tendrán la IP del proxy inverso; mantener `TRUST_PROXY=1`.
 
 ## Instalación en Android (PWA)
 
