@@ -15,10 +15,11 @@ export function formatCurrency(value) {
     return formatter.format(value);
 }
 
-export function formatCryptoHoldings(value){
+export function formatCryptoHoldings(value, { exact = false } = {}){
     if (store.state.app.hideMoney) {
         return "****";
     }
+    if (exact) return String(value ?? 0).replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '');
     return Number(value || 0).toFixed(6);
 }
 

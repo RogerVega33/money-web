@@ -43,12 +43,12 @@
         <div class="mt-4">
           <p v-if="walletError" role="alert" class="text-red-500 text-xs italic mt-2 mb-2">{{ walletError }}</p>
           <button type="submit" :disabled="isWalletSaveDisabled" :aria-label="isSavingWallet ? 'Guardando billetera' : 'Guardar billetera'"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
+                  class="form-action-save">
             <template v-if="isSavingWallet">Guardando<LoadingDots /></template>
             <template v-else>Guardar</template>
           </button>
           <button type="button" :disabled="isSavingWallet" @click="cancelWalletEdit"
-                  class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600">Cancelar</button>
+                  class="form-action-cancel mt-2">Cancelar</button>
         </div>
       </form>
       <div v-else>
@@ -89,12 +89,12 @@
             <p v-if="errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{errorMessage}}</p>
             <button type="submit" :disabled="isCategorySaveDisabled"
                     :aria-label="isSavingCategory ? 'Guardando categoría' : 'Guardar categoría'"
-                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
+                    class="form-action-save">
               <template v-if="isSavingCategory">Guardando<LoadingDots /></template>
               <template v-else>Guardar</template>
             </button>
             <button type="button" @click="cancelNewCategory" :disabled="isSavingCategory"
-                    class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600">
+                    class="form-action-cancel mt-2">
               Cancelar
             </button>
           </div>

@@ -4,6 +4,67 @@
 
 @tailwind utilities;
 
+.form-action-save,
+.form-action-cancel {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.625rem;
+    font-weight: 700;
+    text-align: center;
+    transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.form-action-save {
+    border-radius: 0.625rem;
+    background-color: #2563eb;
+    color: #fff;
+    box-shadow: 0 2px 5px rgba(37, 99, 235, 0.28);
+}
+
+.form-action-save:hover:not(:disabled) {
+    background-color: #1d4ed8;
+    box-shadow: 0 3px 7px rgba(37, 99, 235, 0.32);
+}
+
+.form-action-save.form-action-save:disabled {
+    cursor: not-allowed;
+    opacity: 1;
+    background-color: #4f7bea;
+    box-shadow: none;
+}
+
+.form-action-cancel:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.form-action-cancel {
+    border-color: #cbd5e1;
+    background-color: #fff;
+    color: #3f4b5d;
+}
+
+.form-action-cancel:hover:not(:disabled) {
+    border-color: #b8c2d0;
+    background-color: #f8fafc;
+}
+
+.form-action-save:focus-visible,
+.form-action-cancel:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+.transaction-form-card {
+    padding: 16px;
+    border: 1px solid #e2e5e9;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
 /* Fix específico para SweetAlert2 */
 button.swal2-confirm {
     background-color: #3085d6 !important;
@@ -13,4 +74,189 @@ button.swal2-confirm {
 button.swal2-cancel {
     background-color: #d74343 !important;
     color: white !important;
+}
+
+.transaction-delete-overlay.swal2-container {
+    padding: 1rem;
+    background: rgb(15 23 42 / 40%);
+}
+
+.transaction-delete-popup.swal2-popup {
+    box-sizing: border-box;
+    width: min(26rem, 100%);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: #fff;
+    box-shadow: 0 20px 65px rgb(15 23 42 / 22%);
+}
+
+.transaction-delete-popup .swal2-title {
+    margin: 0 1.75rem 0 0;
+    padding: 0;
+    color: #17243b;
+    font-size: 1.2rem;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: left;
+}
+
+.transaction-delete-heading {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+
+.transaction-delete-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: .7rem;
+    background: #fff1f2;
+    color: #b91c1c;
+}
+
+.transaction-delete-icon svg {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.transaction-delete-popup .swal2-html-container {
+    min-width: 0;
+    margin: 1rem 0 0;
+    padding: 0;
+    color: #607087;
+    font-size: .9rem;
+    line-height: 1.55;
+    text-align: left;
+    overflow-wrap: anywhere;
+}
+
+.transaction-delete-description {
+    margin: 0;
+}
+
+.transaction-delete-description strong {
+    color: #17243b;
+    font-weight: 600;
+}
+
+.transaction-delete-note {
+    margin: .7rem 0 0;
+    font-size: .8rem;
+}
+
+.transaction-delete-popup .swal2-actions {
+    justify-content: flex-end;
+    gap: .55rem;
+    width: 100%;
+    min-height: 42px;
+    margin: 1.25rem 0 0;
+    padding: 0;
+}
+
+.transaction-delete-popup button.swal2-confirm,
+.transaction-delete-popup button.swal2-cancel {
+    min-height: 42px;
+    margin: 0;
+    padding: .6rem .95rem;
+    border: 1px solid transparent;
+    border-radius: .5rem;
+    font: inherit;
+    font-size: .875rem;
+    font-weight: 600;
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+.transaction-delete-popup button.swal2-confirm {
+    background-color: #dc2626 !important;
+    color: white !important;
+}
+
+.transaction-delete-popup button.swal2-confirm:hover:not(:disabled) {
+    background-color: #b91c1c !important;
+}
+
+.transaction-delete-popup button.swal2-cancel {
+    border: 1px solid #cbd5e1 !important;
+    background-color: #fff !important;
+    color: #3f4b5d !important;
+}
+
+.transaction-delete-popup button.swal2-cancel:hover:not(:disabled) {
+    border-color: #b8c2d0 !important;
+    background-color: #f8fafc !important;
+}
+
+.transaction-delete-popup button.swal2-close {
+    position: absolute;
+    top: 1.4rem;
+    right: 1.25rem;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border-radius: .35rem;
+    color: #64748b;
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.transaction-delete-popup button.swal2-close:hover:not(:disabled) {
+    background: #f8fafc;
+    color: #17243b;
+}
+
+.transaction-delete-popup button:disabled {
+    cursor: wait;
+    opacity: .55;
+}
+
+.transaction-delete-popup button:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 3px;
+    box-shadow: none;
+}
+
+.transaction-delete-popup .swal2-loader {
+    width: 1.4rem;
+    height: 1.4rem;
+    margin: .5rem .75rem;
+    border-color: #dc2626 transparent #dc2626 transparent;
+}
+
+.transaction-delete-popup .swal2-validation-message {
+    margin: .85rem 0 0;
+    padding: .65rem .75rem;
+    border-radius: .5rem;
+    font-size: .85rem;
+    text-align: left;
+}
+
+@media (max-width: 380px) {
+    .transaction-delete-popup.swal2-popup {
+        padding: 1.15rem;
+    }
+
+    .transaction-delete-popup .swal2-title {
+        font-size: 1.1rem;
+    }
+
+    .transaction-delete-heading {
+        gap: .55rem;
+    }
+
+    .transaction-delete-icon {
+        flex-basis: 2.15rem;
+        width: 2.15rem;
+        height: 2.15rem;
+    }
+
+    .transaction-delete-popup button.swal2-close {
+        top: 1rem;
+        right: .85rem;
+    }
 }

@@ -56,11 +56,11 @@
           <div class="mt-6">
             <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
             <button :disabled="isSaveDisabled" type="submit"
-                    class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600">
+                    class="form-action-save">
               <template v-if="isSaving">Guardando<LoadingDots /></template>
               <template v-else>Guardar</template>
             </button>
-            <button :disabled="isSaving" type="button" @click="cancel" class="mt-5 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600">
+            <button :disabled="isSaving" type="button" @click="cancel" class="form-action-cancel mt-5">
               Cancelar
             </button>
           </div>

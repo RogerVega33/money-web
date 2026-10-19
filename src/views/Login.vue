@@ -36,24 +36,17 @@
         </div>
         <div class="mt-6">
           <button type="submit" :disabled="isLoginDisabled"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700
-                  disabled:opacity-75 disabled:hover:bg-blue-600">
+                  class="form-action-save">
             <template v-if="isSubmitting">Iniciando sesión<LoadingDots /></template>
             <template v-else>Iniciar sesión</template>
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
         </div>
-        <div class="mt-6">
-          <button :disabled="isSubmitting" type="button" @click="$router.push('/newUser')"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:hover:bg-blue-600">
-            Registrarse
+        <div class="auth-actions">
+          <button :disabled="isSubmitting" type="button" class="auth-link auth-recover" @click="$router.push('/recoverUser')">
+            ¿Olvidaste tu contraseña?
           </button>
-        </div>
-        <div class="mt-2">
-          <button :disabled="isSubmitting" type="button" @click="$router.push('/recoverUser')"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:hover:bg-blue-600">
-            Recuperar usuario
-          </button>
+          <p>¿Primera vez aquí? <button :disabled="isSubmitting" type="button" class="auth-link" @click="$router.push('/newUser')">Crea tu cuenta</button></p>
         </div>
       </form>
 
@@ -143,5 +136,53 @@ button:disabled {
 
 .eye-btn:hover {
   color: #374151;
+}
+
+.auth-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+  color: #4b5563;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.auth-link {
+  padding: 5px 0;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-link:hover {
+  color: #1d4ed8;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-recover {
+  color: #667085;
+  text-decoration: none;
+}
+
+.auth-recover:hover {
+  color: #475467;
+  text-decoration: none;
+}
+
+.auth-link:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid #2563eb;
+  outline-offset: 3px;
+}
+
+.auth-link:disabled {
+  cursor: not-allowed;
+  opacity: .65;
 }
 </style>

@@ -15,8 +15,6 @@
 
       <!-- NUEVA TRANSACCIÓN -->
       <div v-if="!showIconNewTransaction" class="mb-5">
-        <hr class="mb-5">
-
         <!-- FIAT -->
         <p v-if="loadingCategories" class="text-gray-600" role="status">Cargando categorías<LoadingDots /></p>
         <div v-else-if="categoriesError" role="alert"><p>No se pudieron cargar las categorías.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="getCategories">Reintentar</button></div>
@@ -33,7 +31,7 @@
         />
 
         <!-- CRYPTO -->
-        <form v-else :aria-busy="isSavingTransaction" @submit.prevent="saveNewCryptoTransaction">
+        <form v-else class="transaction-form-card" :aria-busy="isSavingTransaction" @submit.prevent="saveNewCryptoTransaction">
           <h6 class="font-semibold">Nueva transacción</h6>
 
           <div class="mt-2">
@@ -69,7 +67,7 @@
             </p>
             <button
                 type="submit"
-                class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
+                class="form-action-save"
                 :disabled="isCryptoSaveDisabled"
             >
               <template v-if="isSavingTransaction">Guardando<LoadingDots /></template>
@@ -77,7 +75,7 @@
             </button>
             <button
                 type="button"
-                class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600"
+                class="form-action-cancel mt-2"
                 :disabled="isSavingTransaction"
                 @click="cancelNewTransaction"
             >
@@ -86,7 +84,6 @@
           </div>
         </form>
 
-        <hr class="mt-5">
       </div>
 
       <!-- =======================
@@ -176,6 +173,7 @@ import CategoryService from "../../services/category.service"
 import TransactionService from "../../services/transaction.service"
 import { exportToCSV } from '@/utils/exportCSV'
 import { amountError, symbolError } from '@/utils/dataValidation'
+import { formatCurrency, formatCryptoHoldings } from '@/utils/formats'
 
 const props = defineProps([
   'loading',
@@ -378,17 +376,46 @@ function updateTransaction(transaction) {
 ======================= */
 function deleteTransaction(transaction) {
   const isCrypto = props.selectedWallet.type === 'crypto'
+  const heading = document.createElement('span')
+  heading.className = 'transaction-delete-heading'
+  heading.innerHTML = `
+    <span class="transaction-delete-icon" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6m4-6v6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+    </span>
+    <span>¿Eliminar transacción?</span>
+  `
+  const content = document.createElement('div')
+  const description = document.createElement('p')
+  description.className = 'transaction-delete-description'
+  const summary = document.createElement('strong')
+  summary.textContent = isCrypto
+    ? `${formatCryptoHoldings(transaction.exactAmount ?? transaction.amount, { exact: true })} ${transaction.symbol}`
+    : `${transaction.detail?.trim() || transaction.categoryName || 'Sin detalle'} · ${formatCurrency(transaction.amount)}`
+  description.append('Se eliminará ', summary, ` de la billetera ${props.selectedWallet.name}.`)
+  const note = document.createElement('p')
+  note.className = 'transaction-delete-note'
+  note.textContent = 'Esta acción no se puede deshacer.'
+  content.append(description, note)
 
   return Swal.fire({
-    title: 'Eliminar transacción',
-    text: '¿Seguro que deseas eliminar esta transacción?',
+    title: heading,
+    html: content,
     showCancelButton: true,
+    showCloseButton: true,
+    closeButtonAriaLabel: 'Cerrar',
     confirmButtonText: 'Eliminar',
     cancelButtonText: 'Cancelar',
+    buttonsStyling: false,
+    reverseButtons: true,
+    focusCancel: true,
+    customClass: { container: 'transaction-delete-overlay', popup: 'transaction-delete-popup' },
     showLoaderOnConfirm: true,
     allowOutsideClick: () => !Swal.isLoading(),
     allowEscapeKey: () => !Swal.isLoading(),
     preConfirm: async () => {
+      Swal.getCloseButton().disabled = true
       try {
         if (isCrypto) {
           await TransactionService.deleteCryptoTransaction(transaction.id)
@@ -397,6 +424,7 @@ function deleteTransaction(transaction) {
         }
         return true
       } catch {
+        Swal.getCloseButton().disabled = false
         Swal.showValidationMessage('No se pudo eliminar la transacción. Inténtalo de nuevo.')
         return false
       }

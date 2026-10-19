@@ -58,17 +58,16 @@
         </div>
         <div class="mt-6">
           <button type="button" @click="signIn" :disabled="isSubmitting || !state.user.username || !state.user.password || !state.user.confirmPassword"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700
-                  disabled:opacity-75 disabled:hover:bg-blue-600">
+                  class="form-action-save">
             <template v-if="isSubmitting">Guardando<LoadingDots /></template>
             <template v-else>Registrarse</template>
           </button>
           <p v-if="state.errorMessage" class="text-red-500 text-xs italic mt-2 mb-2">{{state.errorMessage}}</p>
         </div>
-        <div class="mt-2">
-          <button :disabled="isSubmitting" type="button" @click="$router.push('/login')"
-                  class="text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:hover:bg-gray-600">
-            Cancelar
+        <div class="auth-switch">
+          ¿Ya tienes una cuenta?
+          <button :disabled="isSubmitting" type="button" class="auth-link" @click="$router.push('/login')">
+            Inicia sesión
           </button>
         </div>
       </form>
@@ -190,6 +189,27 @@ button:disabled {
 .eye-btn:hover {
   color: #374151;
 }
+
+.auth-switch {
+  margin-top: 22px;
+  color: #4b5563;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.auth-link {
+  padding: 5px 0;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.auth-link:focus-visible { border-radius: 3px; outline: 2px solid #2563eb; outline-offset: 3px; }
+.auth-link:disabled { cursor: not-allowed; opacity: .65; }
 
 .strength-indicator {
   display: flex;

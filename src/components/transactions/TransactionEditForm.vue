@@ -1,86 +1,88 @@
 <template>
   <div class="relative w-full" :aria-busy="props.saving">
-    <h6 class="font-semibold">{{ title }}</h6>
+    <div class="transaction-form-card">
+      <h6 class="font-semibold">{{ title }}</h6>
 
-    <div class="mt-2">
-      <label>Categoría</label>
-      <Multiselect
-          v-if="categories && categories.length"
-          v-model="localEdit.categoryId"
-          :disabled="props.saving"
-          :options="categories"
-          valueProp="id"
-          :groups="true"
-          :searchable="true"
-          group-options="categoryList"
-          group-label="category"
-          track-by="name"
-          label="name"
-      />
-    </div>
+      <div class="mt-2">
+        <label>Categoría</label>
+        <Multiselect
+            v-if="categories && categories.length"
+            v-model="localEdit.categoryId"
+            :disabled="props.saving"
+            :options="categories"
+            valueProp="id"
+            :groups="true"
+            :searchable="true"
+            group-options="categoryList"
+            group-label="category"
+            track-by="name"
+            label="name"
+        />
+      </div>
 
-    <div class="mt-2">
-      <label>Detalle</label>
-      <input
-          v-model="localEdit.detail"
-          maxlength="150"
-          :disabled="props.saving"
-          class="input"
-          @keydown.enter.prevent="emitSave"
-      />
-    </div>
+      <div class="mt-2">
+        <label>Detalle</label>
+        <input
+            v-model="localEdit.detail"
+            maxlength="150"
+            :disabled="props.saving"
+            class="input"
+            @keydown.enter.prevent="emitSave"
+        />
+      </div>
 
-    <div class="mt-2">
-      <label>Monto</label>
-      <input
-          type="text" inputmode="decimal" maxlength="13"
-          @keydown="blockInvalidChars"
-          @beforeinput="blockInvalidAmountInput"
-          @paste="handleAmountPaste"
-          @drop.prevent
-          :disabled="props.saving"
-          v-model="localEdit.amount"
-          class="input"
-          @keydown.enter.prevent="emitSave"
-          :aria-invalid="!!amountValidationError"
-      />
-      <p v-if="amountValidationError" role="alert" class="text-red-500 text-xs italic mt-2">{{ amountValidationError }}</p>
-    </div>
+      <div class="mt-2">
+        <label>Monto</label>
+        <input
+            type="text" inputmode="decimal" maxlength="13"
+            @keydown="blockInvalidChars"
+            @beforeinput="blockInvalidAmountInput"
+            @paste="handleAmountPaste"
+            @drop.prevent
+            :disabled="props.saving"
+            v-model="localEdit.amount"
+            class="input"
+            @keydown.enter.prevent="emitSave"
+            :aria-invalid="!!amountValidationError"
+        />
+        <p v-if="amountValidationError" role="alert" class="text-red-500 text-xs italic mt-2">{{ amountValidationError }}</p>
+      </div>
 
-    <div class="mt-2">
-      <label>Fecha</label>
-      <Datepicker
-          v-model="localEdit.date"
-          :disabled="props.saving"
-          autoApply
-          :enableTimePicker="false"
-          v-bind="calendarProps"
-          format="dd/MM/yyyy"
-      />
-    </div>
+      <div class="mt-2">
+        <label>Fecha</label>
+        <Datepicker
+            v-model="localEdit.date"
+            :disabled="props.saving"
+            autoApply
+            :enableTimePicker="false"
+            v-bind="calendarProps"
+            format="dd/MM/yyyy"
+        />
+      </div>
 
-    <div class="mt-4">
-      <p v-if="otherValidationError" class="text-red-500 text-xs mb-2">{{ otherValidationError }}</p>
-      <p v-if="error" class="text-red-500 text-xs italic mb-2">
-        {{ error }}
-      </p>
+      <div class="mt-4">
+        <p v-if="otherValidationError" class="text-red-500 text-xs mb-2">{{ otherValidationError }}</p>
+        <p v-if="error" class="text-red-500 text-xs italic mb-2">
+          {{ error }}
+        </p>
 
-      <button
-          class="text-white font-bold py-2 px-4 rounded-lg w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-blue-600"
-          :disabled="!canSave"
-          @click="emitSave"
-      >
-        <template v-if="props.saving">Guardando<LoadingDots /></template>
-        <template v-else>Guardar</template>
-      </button>
+        <button
+            class="form-action-save"
+            :disabled="!canSave"
+            @click="emitSave"
+        >
+          <template v-if="props.saving">Guardando<LoadingDots /></template>
+          <template v-else>Guardar</template>
+        </button>
 
-      <button
-          class="mt-2 text-white font-bold py-2 px-4 rounded-lg w-full bg-gray-600 hover:bg-gray-700 disabled:opacity-75 disabled:cursor-not-allowed disabled:hover:bg-gray-600"
-          :disabled="props.saving"
-          @click="emit('cancel')"
-      >
-        Cancelar
-      </button>
+        <button
+            class="form-action-cancel mt-2"
+            :disabled="props.saving"
+            @click="emit('cancel')"
+        >
+          Cancelar
+        </button>
+      </div>
     </div>
   </div>
 </template>
