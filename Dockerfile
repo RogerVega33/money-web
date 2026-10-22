@@ -1,5 +1,5 @@
 # compilación
-FROM node:24.14-alpine AS build-stage
+FROM node:24.22.1-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
