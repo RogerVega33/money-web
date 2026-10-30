@@ -14,7 +14,7 @@
       />
 
       <!-- NUEVA TRANSACCIÓN -->
-      <div v-if="!showIconNewTransaction" class="mb-5">
+      <div v-if="!showIconNewTransaction" ref="newTransactionForm" class="mb-5 scroll-mt-4">
         <!-- FIAT -->
         <p v-if="loadingCategories" class="text-gray-600" role="status">Cargando categorías<LoadingDots /></p>
         <div v-else-if="categoriesError" role="alert"><p>No se pudieron cargar las categorías.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="getCategories">Reintentar</button></div>
@@ -202,6 +202,7 @@ const loadingCategories = categoriesRequest.loading
 const categoriesError = categoriesRequest.error
 const errorMessage = ref("")
 const showIconNewTransaction = ref(true)
+const newTransactionForm = ref(null)
 
 const isSavingTransaction = ref(false)
 const isUpdatingTransaction = ref(false)
@@ -258,9 +259,10 @@ function getCategories() {
 /* =======================
    NUEVA TRANSACCIÓN
 ======================= */
-const newTransactionTemplate = ref(null)  // ← añadir esto
+const newTransactionTemplate = ref(null)
 
-function addTransaction(transaction = null) {
+async function addTransaction(transaction = null) {
+  cancel()
   if (transaction?.id) {
     // Modo duplicar: abre el form con datos de la transacción como plantilla
     newTransactionTemplate.value = {
@@ -274,6 +276,15 @@ function addTransaction(transaction = null) {
     // Modo normal: toggle del form vacío
     newTransactionTemplate.value = null
     showIconNewTransaction.value = !showIconNewTransaction.value
+  }
+
+  if (!showIconNewTransaction.value) {
+    await nextTick()
+    newTransactionForm.value?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+      inline: 'nearest'
+    })
   }
 }
 
@@ -334,6 +345,7 @@ function saveTransaction(form) {
    EDITAR
 ======================= */
 function showEditTransaction(transaction) {
+  cancelNewTransaction()
   transactionSelected.value = {
     ...transaction,
     date: transaction.date

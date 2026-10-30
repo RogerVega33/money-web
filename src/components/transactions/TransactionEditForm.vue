@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full" :aria-busy="props.saving">
+  <div ref="formRoot" class="relative w-full scroll-mt-4" :aria-busy="props.saving">
     <div class="transaction-form-card">
       <h6 class="font-semibold">{{ title }}</h6>
 
@@ -90,7 +90,7 @@
 <script setup>
 import { blockInvalidChars, blockInvalidAmountInput, handleAmountPaste } from '@/utils/inputValidation'
 import LoadingDots from '@/components/common/LoadingDots.vue'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { amountError, textError, dateError } from '@/utils/dataValidation'
 import moment from 'moment'
 import { calendarProps } from '@/config/calendar'
@@ -115,12 +115,27 @@ const props = defineProps({
   title: {
     type: String,
     default: 'Nueva transacción'
+  },
+  scrollOnMount: {
+    type: Boolean,
+    default: false
   }
 })
 
 const emit = defineEmits(['save', 'cancel'])
 
+const formRoot = ref(null)
 const localEdit = ref({ ...props.transaction })
+
+onMounted(() => {
+  if (props.scrollOnMount) {
+    formRoot.value?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+      inline: 'nearest'
+    })
+  }
+})
 
 const amountValidationError = computed(() =>
   localEdit.value.amount === undefined ? '' : amountError(localEdit.value.amount)

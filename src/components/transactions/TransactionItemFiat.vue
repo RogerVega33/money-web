@@ -4,6 +4,7 @@
     <!-- ================= EDICIÓN ================= -->
     <TransactionEditForm
         v-if="isEditing"
+        scroll-on-mount
         :transaction="transactionSelected"
         :categories="categories"
         title="Editar transacción"

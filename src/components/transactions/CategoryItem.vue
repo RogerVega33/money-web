@@ -45,6 +45,7 @@
           <!-- EDICIÓN -->
           <TransactionEditForm
               v-if="isEditing(transaction)"
+              scroll-on-mount
               :transaction="props.transactionSelected"
               :categories="categories"
               :saving="saving"
