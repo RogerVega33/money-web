@@ -3,22 +3,34 @@
     <div class="w-full card mx-auto p-4 max-w-md bg-white rounded-lg border shadow-md sm:p-8">
       <div class="flex justify-between items-center mb-4">
         <h5 class="text-xl font-bold leading-none text-gray-900">Billeteras</h5>
-        <div>
+        <div class="flex items-center gap-2">
           <fa icon="plus" v-if="!showForm"
               class="cursor-pointer text-green-600" @click="addWallet"/>
           <fa icon="gear" v-if="selectedWallet?.id && !showForm" @click="editWallet"
-              class="cursor-pointer text-gray-600 pl-2"
+              class="cursor-pointer text-gray-600"
           />
           <fa icon="xmark" v-if="showForm" @click="hideForms"
               class="cursor-pointer text-red-600"
           />
+          <button
+              v-if="canCollapse && !loading && !loadError"
+              type="button"
+              class="-my-3 -mr-3 inline-flex h-11 w-11 shrink-0 items-center justify-center rounded text-gray-600 hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 lg:hidden"
+              :aria-expanded="expanded"
+              aria-controls="wallet-list"
+              :aria-label="expanded ? 'Mostrar solo la billetera seleccionada' : 'Mostrar todas las billeteras'"
+              @click="expanded = !expanded"
+          >
+            <fa :icon="expanded ? 'chevron-up' : 'chevron-down'" aria-hidden="true" />
+          </button>
         </div>
       </div>
       <div class="flow-root" :aria-busy="loading">
         <p v-if="loading" role="status" class="text-gray-600">Cargando billeteras<LoadingDots /></p>
         <div v-else-if="loadError" role="alert"><p class="text-red-500">No se pudieron cargar las billeteras.</p><button type="button" class="mt-3 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700" @click="$emit('retry')">Reintentar</button></div>
-        <ul role="list" class="divide-y divide-gray-200" v-else-if="wallets.length > 0">
-          <li class="py-3 sm:py-4" v-for="wallet in wallets" :key="wallet.id">
+        <ul id="wallet-list" role="list" class="divide-gray-200" :class="collapsed ? 'lg:divide-y' : 'divide-y'" v-else-if="wallets.length > 0">
+          <li :class="[collapsed ? 'py-0 lg:py-4' : 'py-3 sm:py-4', { 'hidden lg:block': collapsed && selectedWallet.id !== wallet.id }]"
+              v-for="wallet in wallets" :key="wallet.id">
             <div @click="selectWallet(wallet)"
                  :class="{ 'text-blue-700': selectedWallet?.id === wallet.id }"
                  class="group flex items-center space-x-4 text-gray-900 hover:text-blue-500 cursor-pointer">
@@ -42,7 +54,7 @@
               </div>
             </div>
           </li>
-          <li class="py-3 sm:py-4">
+          <li class="py-3 sm:py-4" :class="{ 'hidden lg:block': collapsed }">
             <div  class="flex items-center space-x-4 text-gray-900 hover:text-blue-500">
               <div class="flex-1 min-w-0">
                 <p class="text-sm truncate font-bold">
@@ -64,7 +76,7 @@
 
 <script>
 import LoadingDots from '@/components/common/LoadingDots.vue'
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { formatCurrency } from '../utils/formats'
 
 export default {
@@ -80,9 +92,16 @@ export default {
     showFormEditWallet: Boolean,
   },
   setup(props, { emit }) {
+    const expanded = ref(!props.selectedWallet?.id)
+    const canCollapse = computed(() => props.wallets.some(wallet => wallet.id === props.selectedWallet?.id))
+    const collapsed = computed(() => canCollapse.value && !expanded.value)
 
+    watch(() => props.selectedWallet?.id, (id) => {
+      expanded.value = !id
+    })
 
     const selectWallet = (wallet) => {
+      expanded.value = false
       emit('select-wallet', wallet)
     }
 
@@ -109,6 +128,9 @@ export default {
     })
 
     return {
+      expanded,
+      canCollapse,
+      collapsed,
       selectWallet,
       addWallet,
       editWallet,
